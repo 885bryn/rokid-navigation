@@ -30,6 +30,7 @@ class CxrGlassesLink(private val context:Context):GlassesLink {
     private var generation=0
     private var hudReplacedFor:String?=null
     private var helloFor=-1
+
     private fun onMain(action:()->Unit){if(Looper.myLooper()==Looper.getMainLooper())action() else main.post(action)}
     override fun checkEnvironment():EnvironmentStatus=when(val result=manager.checkRokidAppCompatibility(context)) {
         is RokidAppStatus.NotInstalled->EnvironmentStatus.RokidAppMissing(result.downloadUrl)
@@ -73,7 +74,8 @@ class CxrGlassesLink(private val context:Context):GlassesLink {
                 session?.close()
                 val created=manager.create(SessionConfig(sessionType=SessionType.CUSTOM_APP,
                     glassesPackageName=BuildConfig.GLASSES_PACKAGE,glassesActivityName=BuildConfig.GLASSES_ACTIVITY,
-                    glassesApkPath=apk.absolutePath,aiInterceptMode=AiInterceptMode.ALLOW_WITH_PAUSE))
+                    glassesApkPath=apk.absolutePath,aiInterceptMode=AiInterceptMode.ALLOW_WITH_PAUSE,
+                    terminatingGracePeriodMs=HUD_AWAY_GRACE_MS))
                 session=created
                 var connectionFailure: LinkState.Failed? = null
                 var terminating: TerminatingReason? = null
@@ -84,7 +86,11 @@ class CxrGlassesLink(private val context:Context):GlassesLink {
                     override fun onSessionResumed(){update(LinkState.Ready)}
                     override fun onSessionTerminating(reason:TerminatingReason,remainingMs:Long){
                         Log.i("RokidNavLink","session_terminating reason=${reason.name}")
-                        onMain {terminating=reason};update(LinkState.Paused("Closing"))
+                        onMain {terminating=reason}
+                        // HUD left the foreground: the session lingers for HUD_AWAY_GRACE_MS and still hears
+                        // the HUD's hello when it returns (see onFrame); the phone shows "Show on glasses".
+                        update(if(reason==TerminatingReason.GLASSES_APP_EXIT)LinkState.Closed(LinkState.Closed.HUD_CLOSED,false)
+                            else LinkState.Paused("Closing"))
                     }
                     override fun onSessionClosed(reason:CloseReason){onMain {
                         Log.i("RokidNavLink","session_closed reason=${reason.name}")
@@ -92,7 +98,8 @@ class CxrGlassesLink(private val context:Context):GlassesLink {
                             if(reauth)token=null
                             session=null;mutableState.value=if(reason==CloseReason.CONNECT_FAILED && connectionFailure!=null)
                                 connectionFailure!! else if(!reauth && terminating==TerminatingReason.GLASSES_APP_EXIT)
-                                LinkState.Closed(LinkState.Closed.HUD_CLOSED,false) else LinkState.Closed(reason.name,reauth)}
+                                LinkState.Closed(LinkState.Closed.HUD_CLOSED,false) else LinkState.Closed(reason.name,reauth)
+                        }
                     }}
                     override fun onConnectResult(success:Boolean,error:SessionErrorCode?){onMain {
                         Log.i("RokidNavLink","connect_result success=$success error=${error?.name ?: "none"}")
@@ -117,7 +124,14 @@ class CxrGlassesLink(private val context:Context):GlassesLink {
             val caps=Caps.fromBytes(data)
             if(caps.size()!=2)null else ProtocolCodec.decode(caps.at(0).string,caps.at(1).string)
         }.getOrNull() ?: return
-        if(msg is GlassesHello)onMain {checkHudVersion(msg,attempt)}
+        if(msg is GlassesHello)onMain {
+            // The HUD came back to the foreground while its session was lingering after it left: resume
+            // with a fresh session (the HUD is already in front, so nothing pops up) and resync the trip.
+            if(attempt==generation && (state.value as? LinkState.Closed)?.hudClosedOnGlasses==true) {
+                Log.i(TAG,"hud_returned");token?.let(::openSession);return@onMain
+            }
+            checkHudVersion(msg,attempt)
+        }
         messages.tryEmit(msg)
     }
 
@@ -186,9 +200,13 @@ class CxrGlassesLink(private val context:Context):GlassesLink {
     }
     override fun setBrightness(percent:Int){if(state.value==LinkState.Ready)session?.setGlassBrightness(percent.coerceIn(0,100))}
     override fun disconnect(){generation++;session?.close();session=null;mutableState.value=if(token==null)LinkState.Idle else LinkState.Authorized}
+
     private companion object {
         const val TAG="RokidNavLink"
         const val HUD_UNINSTALL_TIMEOUT_MS=30_000L
+        /** How long a session lingers after the HUD leaves the foreground, waiting for it to come back.
+         *  The SDK accepts 1–30 s (SessionConfig rejects anything else, seen in its bytecode). */
+        const val HUD_AWAY_GRACE_MS=30_000L
         const val HELLO_TIMEOUT_MS=8_000L
     }
 }

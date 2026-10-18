@@ -27,6 +27,8 @@ class HudViewModel(application:Application) : AndroidViewModel(application) {
         (link as? DemoPhoneLink)?.start()
     }
     private fun hello(){link.send(GlassesHello(seq.next(),BuildConfig.VERSION_NAME,width,height))}
+    /** Back in the foreground (e.g. reopened from the Rokid home screen): say hello so the phone resumes. */
+    fun onForeground(){if(::link.isInitialized && width>0)hello()}
     fun onDisplayReady(width:Int,height:Int){this.width=width;this.height=height;if(::link.isInitialized)hello()}
     /** Returns whether the HUD used the key (see [HudStore.onKey]). */
     fun onKey(key:GlassesKey):Boolean{if(::link.isInitialized)link.send(InputEvent(seq.next(),key.name));return store.onKey(key)}

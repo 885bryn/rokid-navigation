@@ -88,5 +88,6 @@ class MainActivity:AppCompatActivity() {
     }
     /** Back to the Rokid home screen. The task stays alive, so an active trip resumes where it was. */
     private fun exitToHome(){if(!moveTaskToBack(true))finish()}
+    override fun onStart(){super.onStart();vm.onForeground()}
     override fun onDestroy(){unregisterReceiver(keyReceiver);super.onDestroy()}
 }
