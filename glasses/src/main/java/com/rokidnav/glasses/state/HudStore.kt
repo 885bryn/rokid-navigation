@@ -13,6 +13,8 @@ class HudStore(private val clock:()->Long=System::currentTimeMillis,private val 
     private var lastSeq=-1L
     private var routePendingAt=0L
     private var routeId:String?=null
+    private var contextId=""
+    private val contextParts=HashMap<Int,List<ContextRoad>>()
     private val dismissed=HashSet<String>()
     private var menuTouched=0L
     private var arrivedAt=0L
@@ -23,7 +25,7 @@ class HudStore(private val clock:()->Long=System::currentTimeMillis,private val 
         lastSeq=m.seq
         when(m) {
             is SessionStart->{
-                assembler=RouteAssembler();routeId=null;routePendingAt=0;dismissed.clear()
+                assembler=RouteAssembler();routeId=null;routePendingAt=0;dismissed.clear();contextId="";contextParts.clear()
                 mutable.update {it.copy(units=m.units,clock24h=m.clock24h,destinationName=m.destinationName,
                     route=emptyList(),routeTotalMeters=0,traffic=emptyList(),contextRoads=emptyList(),
                     position=null,previousPosition=null,maneuver=null,progress=null,alerts=emptyList(),detour=null,navState=NavState.ROUTING)}
@@ -38,7 +40,7 @@ class HudStore(private val clock:()->Long=System::currentTimeMillis,private val 
             is ManeuverUpdate->mutable.update {it.copy(maneuver=m)}
             is TripProgress->mutable.update {it.copy(progress=m)}
             is TrafficSegments->if(m.routeId==routeId)mutable.update {it.copy(traffic=m.segments)}
-            is RoadContext->if(m.routeId==routeId)mutable.update {it.copy(contextRoads=m.roads.map {road->HudRoad(PolylineCodec.decode(road.encodedPolyline),road.name,road.major)})}
+            is RoadContext->if(m.routeId==routeId)acceptRoads(m)
             is Alert->if(m.id !in dismissed)mutable.update {s->s.copy(
                 alerts=(s.alerts.filterNot {it.id==m.id}+m).sortedBy {it.distanceAheadMeters},
                 mode=if(s.mode is HudMode.Menu && s.alerts.none {it.id==m.id})returnMode else s.mode)}
@@ -53,6 +55,17 @@ class HudStore(private val clock:()->Long=System::currentTimeMillis,private val 
             is SettingsUpdate->mutable.update {it.copy(voiceMuted=m.voiceMuted,units=m.units,mapZoom=m.mapZoomLevel.coerceIn(0,2),brightnessPercent=m.brightnessPercent.coerceIn(0,100))}
             else->Unit
         }
+    }
+    /** Streets replace the map only once every part of a snapshot is in, so the map never half-empties. */
+    private fun acceptRoads(m:RoadContext) {
+        if(m.partCount<=1){showRoads(m.roads);return}
+        if(m.contextId!=contextId){contextId=m.contextId;contextParts.clear()}
+        if(m.part !in 0 until m.partCount)return
+        contextParts[m.part]=m.roads
+        if(contextParts.size==m.partCount)showRoads((0 until m.partCount).flatMap {contextParts[it].orEmpty()})
+    }
+    private fun showRoads(roads:List<ContextRoad>)=mutable.update {
+        it.copy(contextRoads=roads.map {road->HudRoad(PolylineCodec.decode(road.encodedPolyline),road.name,road.major)})
     }
     fun onKey(key:GlassesKey) {
         menuTouched=clock()

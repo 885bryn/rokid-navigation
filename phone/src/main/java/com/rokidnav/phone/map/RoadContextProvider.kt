@@ -4,82 +4,119 @@ import com.rokidnav.protocol.*
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.*
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.util.concurrent.TimeUnit
-import kotlin.math.floor
 
-/** Local street geometry from OSM. Requests disclose a 2 km neighbourhood, never the destination. */
+/**
+ * Street geometry and names from OpenStreetMap, via OpenFreeMap's prebuilt vector tiles
+ * (https://openfreemap.org, OpenMapTiles schema, no key). Tiles come from a CDN, so they are far more
+ * dependable than live Overpass queries, which timed out or failed on 2026-10-18. Requests disclose
+ * only the z14 tiles (~2 km squares) around the driver and the next 2 km of route, never the destination.
+ * Decoded roads are cached per tile; offline or failed fetches fall back to the cache.
+ */
 class RoadContextProvider(private val directory:File,private val http:OkHttpClient=OkHttpClient.Builder()
-    .callTimeout(25,TimeUnit.SECONDS).build()) {
-    suspend fun roadsNear(center:LatLng):List<ContextRoad> = withContext(Dispatchers.IO) {
-        val latCell=floor(center.lat*100).toInt();val lonCell=floor(center.lng*100).toInt()
-        val tile=File(directory,"$latCell-$lonCell.json")
+    .callTimeout(20,TimeUnit.SECONDS).build()) {
+
+    /** [ahead] is the next stretch of the route; streets along it (and the next turn) are kept first. */
+    suspend fun roadsNear(center:LatLng,ahead:List<LatLng> = emptyList()):List<ContextRoad> = withContext(Dispatchers.IO) {
         directory.mkdirs()
-        var json=tile.takeIf {it.exists()}?.readText()
-        if(json==null || System.currentTimeMillis()-tile.lastModified()>86_400_000) {
-            val query="[out:json][timeout:20];way(around:2000,${center.lat},${center.lng})[\"highway\"~\"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|motorway_link|trunk_link|primary_link|secondary_link|tertiary_link)$\"];out tags geom;"
-            try {
-                val url="https://overpass-api.de/api/interpreter".toHttpUrl().newBuilder().addQueryParameter("data",query).build()
-                val request=Request.Builder().url(url)
-                    .header("User-Agent","RokidNavigation/0.1 (personal navigation HUD)")
-                    .header("Accept","application/json").get().build()
-                val downloaded=http.newCall(request).execute().use {response->
-                    require(response.isSuccessful)
-                    val body=requireNotNull(response.body)
-                    body.charStream().use {reader->
-                        val chars=CharArray(2_000_001);var count=0
-                        while(count<chars.size){val n=reader.read(chars,count,chars.size-count);if(n<0)break;count+=n}
-                        require(count<=2_000_000)
-                        String(chars,0,count)
-                    }
-                }
-                parse(downloaded,center) // Validate before replacing a working cache tile.
-                val temporary=File(directory,"$latCell-$lonCell.tmp")
-                temporary.writeText(downloaded)
-                java.nio.file.Files.move(temporary.toPath(),tile.toPath(),java.nio.file.StandardCopyOption.REPLACE_EXISTING,java.nio.file.StandardCopyOption.ATOMIC_MOVE)
-                json=downloaded
-                directory.listFiles {file->file.extension=="json"}?.sortedByDescending {it.lastModified()}?.drop(20)?.forEach {it.delete()}
-            }catch(_:java.io.IOException){/* Offline: retain cached streets. */}
-            catch(_:IllegalArgumentException){/* Invalid service response: retain cached streets. */}
-            catch(_:IllegalStateException){/* Invalid JSON shape: retain cached streets. */}
-            catch(_:NoSuchElementException){/* Missing required field: retain cached streets. */}
-        }
-        json?.let {runCatching {parse(it,center)}.getOrDefault(emptyList())}.orEmpty()
+        val roads=tilesFor(center,ahead).flatMap(::tileRoads)
+        if(roads.isEmpty())log("no street data for this area yet")
+        select(roads,center,ahead)
     }
 
-    companion object {
-        /** Simplifies to five-meter tolerance and packs the nearest streets into one transport-safe frame. */
-        fun parse(json:String,center:LatLng):List<ContextRoad> {
-            val root=Json.parseToJsonElement(json).jsonObject
-            require(root["remark"]==null) {"Incomplete Overpass response"}
-            val roads=root.getValue("elements").jsonArray.mapNotNull {element->runCatching {
-                val item=element.jsonObject
-                if(item["type"]?.jsonPrimitive?.content!="way")return@runCatching null
-                val tags=item.getValue("tags").jsonObject
-                val highway=tags.getValue("highway").jsonPrimitive.content
-                val points=item.getValue("geometry").jsonArray.take(2048).map {raw->
-                    val point=raw.jsonObject;val lat=point.getValue("lat").jsonPrimitive.double;val lon=point.getValue("lon").jsonPrimitive.double
-                    require(lat.isFinite() && lat in -90.0..90.0 && lon.isFinite() && lon in -180.0..180.0)
-                    LatLng(lat,lon)
+    /** The tile under the driver first, then tiles under the route ahead, at most [MAX_TILES]. */
+    private fun tilesFor(center:LatLng,ahead:List<LatLng>):List<TileId> {
+        val tiles=LinkedHashSet<TileId>()
+        tiles+=TileId.containing(center,ZOOM)
+        for(p in ahead){if(tiles.size>=MAX_TILES)break;tiles+=TileId.containing(p,ZOOM)}
+        return tiles.toList()
+    }
+
+    private fun tileRoads(tile:TileId):List<TileRoad> {
+        val cache=File(directory,"${tile.z}-${tile.x}-${tile.y}.json")
+        val cached=cache.takeIf {it.exists()}?.let {file->runCatching {readCache(file.readText())}.getOrNull()}
+        if(cached!=null && System.currentTimeMillis()-cache.lastModified()<TILE_MAX_AGE_MS)return cached
+        return try {
+            val url=tileUrl(tile) ?: return cached.orEmpty()
+            val bytes=http.newCall(Request.Builder().url(url).header("User-Agent",USER_AGENT).get().build()).execute().use {response->
+                require(response.isSuccessful) {"HTTP ${response.code}"}
+                val body=requireNotNull(response.body)
+                require(body.contentLength()<=MAX_TILE_BYTES) {"tile too large"}
+                body.bytes().also {require(it.size<=MAX_TILE_BYTES) {"tile too large"}}
+            }
+            val roads=VectorTile.roads(bytes,tile).map {TileRoad(simplify(it.points),it.name.filterNot(Char::isISOControl).take(40),it.major)}
+            val temporary=File(directory,"${tile.z}-${tile.x}-${tile.y}.tmp")
+            temporary.writeText(writeCache(roads))
+            java.nio.file.Files.move(temporary.toPath(),cache.toPath(),java.nio.file.StandardCopyOption.REPLACE_EXISTING,java.nio.file.StandardCopyOption.ATOMIC_MOVE)
+            directory.listFiles {file->file.extension=="json"}?.sortedByDescending {it.lastModified()}?.drop(MAX_CACHED_TILES)?.forEach {it.delete()}
+            roads
+        } catch(e:java.io.IOException){log("tile $tile offline, keeping cache: ${e.javaClass.simpleName}");cached.orEmpty()}
+        catch(e:IllegalArgumentException){log("tile $tile rejected: ${e.message}");cached.orEmpty()}
+    }
+
+    /** Tile URL template from OpenFreeMap's TileJSON (it names the weekly build); refreshed daily. */
+    private fun tileUrl(tile:TileId):String? {
+        val file=File(directory,"tilejson.txt")
+        var template=file.takeIf {it.exists() && System.currentTimeMillis()-it.lastModified()<86_400_000}?.readText()
+        if(template==null) {
+            template=runCatching {
+                http.newCall(Request.Builder().url(TILEJSON_URL).header("User-Agent",USER_AGENT).get().build()).execute().use {response->
+                    require(response.isSuccessful) {"HTTP ${response.code}"}
+                    Json.parseToJsonElement(requireNotNull(response.body).string()).jsonObject.getValue("tiles").jsonArray[0].jsonPrimitive.content
                 }
-                if(points.size<2)return@runCatching null
-                val name=(tags["name"]?:tags["ref"])?.jsonPrimitive?.content.orEmpty().filterNot {it.isISOControl()}.take(40)
-                val distance=Geo.projectOntoPolyline(points,center)?.distanceMeters ?: Double.MAX_VALUE
-                ContextRoad(PolylineCodec.encode(simplify(points)),name,highway in setOf("motorway","trunk","primary","secondary","tertiary")) to distance
-            }.getOrNull()}.sortedBy {it.second}
+            }.onSuccess {file.writeText(it)}.onFailure {log("tile index unavailable: $it")}.getOrNull()
+                ?: file.takeIf {it.exists()}?.readText()   // stale template still works for the weekly build it names
+        }
+        return template?.takeIf {it.startsWith("https://")}?.replace("{z}","${tile.z}")?.replace("{x}","${tile.x}")?.replace("{y}","${tile.y}")
+    }
+
+    private fun log(message:String)=android.util.Log.w("RokidNavMap",message)
+
+    companion object {
+        /** Total street payload per snapshot; [RoadContextChunker] splits it into ≤6 KB frames. */
+        const val SNAPSHOT_BUDGET_BYTES=30_000
+        private const val ZOOM=14
+        private const val MAX_TILES=6
+        private const val MAX_CACHED_TILES=60
+        private const val MAX_TILE_BYTES=4_000_000L
+        private const val TILE_MAX_AGE_MS=7*86_400_000L
+        private const val TILEJSON_URL="https://tiles.openfreemap.org/planet"
+        private const val USER_AGENT="RokidNavigation/0.2 (personal navigation HUD)"
+        private val cacheFormat=ListSerializer(ContextRoad.serializer())
+
+        private fun writeCache(roads:List<TileRoad>)=Json.encodeToString(cacheFormat,roads.map {ContextRoad(PolylineCodec.encode(it.points),it.name,it.major)})
+        private fun readCache(text:String)=Json.decodeFromString(cacheFormat,text).map {TileRoad(PolylineCodec.decode(it.encodedPolyline),it.name,it.major)}
+
+        /**
+         * Returns streets in priority order within [SNAPSHOT_BUDGET_BYTES]. Priority is distance to
+         * whichever is nearer: the driver, or the route ahead, so the cross streets before a turn and the
+         * turn street itself always make the cut. Major roads rank as if 150 m closer.
+         */
+        fun select(roads:List<TileRoad>,center:LatLng,ahead:List<LatLng> = emptyList()):List<ContextRoad> {
+            val ranked=roads.filter {road->road.points.size>=2 && road.points.all {it.lat.isFinite() && it.lat in -90.0..90.0 && it.lng.isFinite() && it.lng in -180.0..180.0}}
+                .map {road->
+                    var distance=Geo.projectOntoPolyline(road.points,center)?.distanceMeters ?: Double.MAX_VALUE
+                    if(ahead.size>=2)for(p in road.points)distance=minOf(distance,Geo.projectOntoPolyline(ahead,p)!!.distanceMeters)
+                    ContextRoad(PolylineCodec.encode(road.points),road.name,road.major) to distance-(if(road.major)150 else 0)
+                }.sortedBy {it.second}
             val selected=ArrayList<ContextRoad>()
-            for((road,_)in roads){
-                selected+=road
-                val size=ProtocolCodec.encode(RoadContext(Long.MAX_VALUE,"r".repeat(64),selected)).second.toByteArray(Charsets.UTF_8).size
-                if(size>6000){selected.removeAt(selected.lastIndex);continue}
-                if(selected.size>=100)break
+            var bytes=0
+            for((road,_) in ranked){
+                // JSON per road ≈ polyline + name + field names and punctuation.
+                val size=road.encodedPolyline.length*2+road.name.length+48
+                if(bytes+size>SNAPSHOT_BUDGET_BYTES)continue
+                selected+=road;bytes+=size
+                if(selected.size>=400)break
             }
             return selected
         }
-        private fun simplify(points:List<LatLng>):List<LatLng> {
+
+        /** Douglas–Peucker to five-meter tolerance. */
+        internal fun simplify(points:List<LatLng>):List<LatLng> {
             if(points.size<3)return points
             val keep=BooleanArray(points.size);keep[0]=true;keep[points.lastIndex]=true
             val ranges=java.util.ArrayDeque<Pair<Int,Int>>();ranges.add(0 to points.lastIndex)

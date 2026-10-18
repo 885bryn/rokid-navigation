@@ -39,7 +39,7 @@ class NavSessionCoordinator(private val scope:CoroutineScope,private val link:Gl
             sendStateful("nav_state",NavStateUpdate(seq.next(),it))
         }}
         scope.launch {engine.activeRoute.filterNotNull().collect {
-            lastSent.remove("road_context");lastSent.remove("traffic");sendRoute()
+            lastSent.keys.removeAll {it.startsWith("road_context")};lastSent.remove("traffic");sendRoute()
         }}
         scope.launch {traffic.segments.collect {
             val id=engine.activeRoute.value?.routeId ?: return@collect
@@ -51,11 +51,16 @@ class NavSessionCoordinator(private val scope:CoroutineScope,private val link:Gl
                 val provider=roads ?: return@collectLatest
                 if(route==null)return@collectLatest
                 var center:LatLng?=null
+                val routePoints=PolylineCodec.decode(route.encodedPolyline)
                 engine.position.collect {fix ->
                     val point=LatLng(fix.lat,fix.lng)
                     if(center==null || Geo.distanceMeters(center!!,point)>=600) {
-                        val nearby=provider.roadsNear(point)
-                        sendStateful("road_context",RoadContext(seq.next(),route.routeId,nearby))
+                        val started=System.currentTimeMillis()
+                        val nearby=provider.roadsNear(point,routeAhead(routePoints,fix.metersAlongRoute,2_000))
+                        val parts=RoadContextChunker.split(route.routeId,"c${seq.next()}",nearby,seq::next)
+                        android.util.Log.i("RokidNavMap","road_context roads=${nearby.size} parts=${parts.size} along=${fix.metersAlongRoute} took=${System.currentTimeMillis()-started}ms")
+                        lastSent.keys.removeAll {it.startsWith("road_context")}
+                        parts.forEach {sendStateful("road_context#${it.part}",it)}
                         center=point.takeIf {nearby.isNotEmpty()};delay(30_000)
                     }
                 }
@@ -82,6 +87,19 @@ class NavSessionCoordinator(private val scope:CoroutineScope,private val link:Gl
     private fun activeGuidance()=combine(engine.activeRoute,engine.navState){route,state->
         route.takeIf {state in listOf(NavState.ACTIVE,NavState.REROUTING,NavState.GPS_LOST)}}.distinctUntilChanged()
     private fun sendStateful(key:String,message:NavMessage){lastSent[key]=message;link.send(message)}
+    /** The next [meters] of route from [along] (from the start when position on it is unknown). */
+    internal fun routeAhead(points:List<LatLng>,alongOrUnknown:Int,meters:Int):List<LatLng> {
+        if(points.size<2)return points
+        val along=alongOrUnknown.coerceAtLeast(0)
+        val out=ArrayList<LatLng>();var travelled=0.0
+        for(i in 1 until points.size){
+            val step=Geo.distanceMeters(points[i-1],points[i])
+            if(travelled+step>=along){if(out.isEmpty())out+=points[i-1];out+=points[i]}
+            travelled+=step
+            if(travelled>=along+meters)break
+        }
+        return out.ifEmpty {listOf(points.last())}
+    }
     private fun sendAlert(m:NavMessage) {
         val id=when(m){is Alert->{activeAlerts[m.id]=m;m.id};is AlertCleared->{activeAlerts.remove(m.id);m.id};else->return}
         sendStateful("alert:$id",m)

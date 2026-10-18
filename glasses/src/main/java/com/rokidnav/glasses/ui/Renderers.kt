@@ -15,12 +15,24 @@ class HudRenderer(context: Context) {
     private val ink = Paint(Paint.ANTI_ALIAS_FLAG).apply { strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND; fontFeatureSettings = "tnum" }
     private val glyphs = ManeuverGlyphs()
     private val routePath = Path()
-    private var roads = emptyArray<Path>()
+    private val minorRoads = Path()
+    private val majorRoads = Path()
+    private var hasRoads = false
     private var roadNames = emptyArray<String>()
+    private var roadMajor = BooleanArray(0)
     private var roadEast = FloatArray(0)
     private var roadNorth = FloatArray(0)
-    private val placedLabelX = FloatArray(6)
-    private val placedLabelY = FloatArray(6)
+    /** Road indices by label priority: turn street, the "after" street, major roads, the rest. */
+    private var labelOrder = IntArray(0)
+    private var turnRoad = -1
+    private var cueRoad = -1
+    private val placedLabelX = FloatArray(MAX_LABELS)
+    private val placedLabelY = FloatArray(MAX_LABELS)
+    private val placedLabelW = FloatArray(MAX_LABELS)
+    private var maneuverX = 0f
+    private var maneuverY = 0f
+    private var hasManeuverPoint = false
+    private var cue = ""
     private var trafficPaths = emptyArray<Path>()
     private var trafficLevels = emptyArray<TrafficLevel>()
     private val chevron = Path().apply { moveTo(0f,-24f); lineTo(12f,6f); lineTo(0f,0f); lineTo(-12f,6f); close() }
@@ -85,14 +97,18 @@ class HudRenderer(context: Context) {
         }
         if (geometryChanged || old.contextRoads !== next.contextRoads) {
             val usedNames=HashSet<String>()
-            roads = next.contextRoads.map { road ->
-                Path().apply { road.points.forEachIndexed { i,p -> if(i==0) moveTo(x(p.lng),y(p.lat)) else lineTo(x(p.lng),y(p.lat)) } }
-            }.toTypedArray()
+            minorRoads.reset();majorRoads.reset()
+            for(road in next.contextRoads) {
+                val path=if(road.major)majorRoads else minorRoads
+                road.points.forEachIndexed { i,p -> if(i==0) path.moveTo(x(p.lng),y(p.lat)) else path.lineTo(x(p.lng),y(p.lat)) }
+            }
+            hasRoads=next.contextRoads.isNotEmpty()
             roadNames=next.contextRoads.map { road ->
-                if(road.name.isNotBlank() && usedNames.add(road.name))ellipsize(road.name,15f,110f) else ""
+                if(road.name.isNotBlank() && usedNames.add(road.name))ellipsize(road.name,15f,130f) else ""
             }.toTypedArray()
-            roadEast=FloatArray(roads.size) {i->next.contextRoads[i].points.let {points->points.getOrNull(points.size/2)?.let {x(it.lng)} ?: 0f}}
-            roadNorth=FloatArray(roads.size) {i->next.contextRoads[i].points.let {points->points.getOrNull(points.size/2)?.let {y(it.lat)} ?: 0f}}
+            roadMajor=BooleanArray(next.contextRoads.size) {next.contextRoads[it].major}
+            roadEast=FloatArray(next.contextRoads.size)
+            roadNorth=FloatArray(next.contextRoads.size)
         }
         if (geometryChanged || old.traffic !== next.traffic) {
             trafficPaths = next.traffic.map { segment -> range(segment.startMeters.toDouble(),segment.endMeters.toDouble()) }.toTypedArray()
@@ -107,23 +123,48 @@ class HudRenderer(context: Context) {
                 receivedNanos=System.nanoTime()
             }
         }
-        if(geometryChanged || old.position !== next.position || old.contextRoads !== next.contextRoads) {
-            // Anchor names near the look-ahead window, rather than at a long street's distant midpoint.
-            val angle=Math.toRadians(currentBearing.toDouble())
-            val tx=currentX+sin(angle).toFloat()*350f
-            val ty=currentY-cos(angle).toFloat()*350f
-            for(index in next.contextRoads.indices) {
-                val points=next.contextRoads[index].points
-                var best=Float.MAX_VALUE
-                for(j in 1 until points.size) {
-                    val ax=x(points[j-1].lng);val ay=y(points[j-1].lat)
-                    val dx=x(points[j].lng)-ax;val dy=y(points[j].lat)-ay
-                    val fraction=if(dx*dx+dy*dy==0f)0f else (((tx-ax)*dx+(ty-ay)*dy)/(dx*dx+dy*dy)).coerceIn(0f,1f)
-                    val lx=ax+fraction*dx;val ly=ay+fraction*dy
-                    val squared=(lx-tx)*(lx-tx)+(ly-ty)*(ly-ty)
-                    if(squared<best){best=squared;roadEast[index]=lx;roadNorth[index]=ly}
+        if(geometryChanged || old.position !== next.position || old.contextRoads !== next.contextRoads || old.maneuver !== next.maneuver) {
+            val along=next.position?.metersAlongRoute ?: -1
+            val toStep=next.maneuver?.distanceToStepMeters
+            hasManeuverPoint=false
+            if(along>=0 && toStep!=null) {
+                val target=(along+toStep).toDouble()
+                var index=1
+                while(index<distances.size && distances[index]<target)index++
+                if(index<distances.size) {
+                    val f=((target-distances[index-1])/(distances[index]-distances[index-1]).coerceAtLeast(.01)).toFloat()
+                    maneuverX=east[index-1]+(east[index]-east[index-1])*f;maneuverY=north[index-1]+(north[index]-north[index-1])*f
+                    hasManeuverPoint=true
                 }
             }
+            cue=next.maneuver?.let { m -> TurnCue.compute(next.route,along,m.distanceToStepMeters,m.current.maneuver,next.contextRoads) }.orEmpty()
+            val turnName=normalizeName(next.maneuver?.current?.roadName.orEmpty())
+            val cueName=normalizeName(cue.substringAfter(" · after ","").takeIf {cue.contains(" · after ")}.orEmpty())
+            // Anchor names near the look-ahead window, not at a long street's distant midpoint. The turn
+            // street is labelled on its piece nearest the turn, the "after" street halfway to the turn.
+            val angle=Math.toRadians(currentBearing.toDouble())
+            val aheadX=currentX+sin(angle).toFloat()*350f
+            val aheadY=currentY-cos(angle).toFloat()*350f
+            val turnX=if(hasManeuverPoint)maneuverX else aheadX;val turnY=if(hasManeuverPoint)maneuverY else aheadY
+            val cueX=(currentX+turnX)/2;val cueY=(currentY+turnY)/2
+            turnRoad=-1;cueRoad=-1
+            var turnBest=Float.MAX_VALUE;var cueBest=Float.MAX_VALUE
+            for(index in next.contextRoads.indices) {
+                val name=normalizeName(next.contextRoads[index].name)
+                val (tx,ty)=when {
+                    name.isNotEmpty() && name==turnName -> turnX to turnY
+                    name.isNotEmpty() && name==cueName -> cueX to cueY
+                    else -> aheadX to aheadY
+                }
+                val best=anchor(next.contextRoads[index].points,index,tx,ty)
+                if(name.isNotEmpty() && name==turnName && best<turnBest){turnBest=best;turnRoad=index}
+                if(name.isNotEmpty() && name==cueName && best<cueBest){cueBest=best;cueRoad=index}
+            }
+            // The chosen piece carries the label even if an earlier piece of the same street took the name.
+            if(turnRoad>=0)roadNames[turnRoad]=ellipsize(next.contextRoads[turnRoad].name,17f,150f)
+            if(cueRoad>=0)roadNames[cueRoad]=ellipsize(next.contextRoads[cueRoad].name,15f,130f)
+            labelOrder=next.contextRoads.indices.filter { roadNames[it].isNotEmpty() }
+                .sortedBy { when { it==turnRoad->0; it==cueRoad->1; roadMajor[it]->2; else->3 } }.toIntArray()
         }
         val formatted = Format.distance(next.maneuver?.distanceToStepMeters ?: 0,next.units).split(' ',limit=2)
         number=formatted[0]; unit=formatted.getOrElse(1){""}
@@ -152,6 +193,25 @@ class HudRenderer(context: Context) {
         val along=next.position?.metersAlongRoute ?: 0
         val jam=next.traffic.firstOrNull { it.level==TrafficLevel.JAM && it.endMeters>along }
         jamLabel=if(jam==null) "" else "in ${Format.distance((jam.startMeters-along).coerceAtLeast(0),next.units)} · ${Format.distance(jam.endMeters-jam.startMeters,next.units)} long"
+    }
+    /** Sets the road's label anchor to its point nearest (tx,ty); returns that squared distance. */
+    private fun anchor(points:List<LatLng>,index:Int,tx:Float,ty:Float):Float {
+        var best=Float.MAX_VALUE
+        for(j in 1 until points.size) {
+            val ax=x(points[j-1].lng);val ay=y(points[j-1].lat)
+            val dx=x(points[j].lng)-ax;val dy=y(points[j].lat)-ay
+            val fraction=if(dx*dx+dy*dy==0f)0f else (((tx-ax)*dx+(ty-ay)*dy)/(dx*dx+dy*dy)).coerceIn(0f,1f)
+            val lx=ax+fraction*dx;val ly=ay+fraction*dy
+            val squared=(lx-tx)*(lx-tx)+(ly-ty)*(ly-ty)
+            if(squared<best){best=squared;roadEast[index]=lx;roadNorth[index]=ly}
+        }
+        return best
+    }
+    /** Google says "Bay St", OSM says "Bay Street": compare on a common short form. */
+    private fun normalizeName(name:String):String {
+        var n=name.lowercase().trim().replace(SPACES," ")
+        for((long,short) in NAME_ABBREVIATIONS) n=n.replace(long,short)
+        return n.replace(".","")
     }
     private fun x(lng: Double) = (Math.toRadians((lng-originLng+540)%360-180)*6_371_000*cos(Math.toRadians(originLat))).toFloat()
     private fun y(lat: Double) = (-Math.toRadians(lat-originLat)*6_371_000).toFloat()
@@ -239,6 +299,8 @@ class HudRenderer(context: Context) {
                 text(c,unit,82f+paint(36f,b=true).measureText(number),464f,20f,191)
                 text(c,compactRoad,18f,503f,22f,217)
             }
+            val lanesShown=m!=null && m.distanceToStepMeters<150 && m.current.lanes.isNotEmpty() && s.navState==NavState.ACTIVE
+            if(!lanesShown && cue.isNotEmpty() && s.navState==NavState.ACTIVE)text(c,ellipsize(cue,15f,220f),18f,528f,15f,166)
             if(m!=null && m.distanceToStepMeters<150 && s.navState==NavState.ACTIVE) {
                 var laneIndex=0
                 while(laneIndex<m.current.lanes.size && laneIndex<7) {
@@ -268,11 +330,14 @@ class HudRenderer(context: Context) {
     private fun banner(c:Canvas) {
         val m=s.maneuver ?: return
         glyphs.draw(c,m.current.maneuver,18f,16f,84f,paint(stroke=6.5f))
-        text(c,number,118f,65f,52f,b=true)
+        // With a turn cue the three lines move up 9 px so the cue fits above the progress bar.
+        val lift=if(cue.isNotEmpty())9f else 0f
+        text(c,number,118f,65f-lift,52f,b=true)
         val numberWidth=paint(52f,b=true).measureText(number)
-        text(c,unit,124f+numberWidth,65f,22f,191)
-        if(exit.isNotEmpty()) { box(c,118f,79f,200f,105f,6f); text(c,exit,124f,99f,18f,b=true); text(c,road,210f,101f,24f) }
-        else text(c,road,118f,99f,24f)
+        text(c,unit,124f+numberWidth,65f-lift,22f,191)
+        if(exit.isNotEmpty()) { box(c,118f,79f-lift,200f,105f-lift,6f); text(c,exit,124f,99f-lift,18f,b=true); text(c,road,210f,101f-lift,24f) }
+        else text(c,road,118f,99f-lift,24f)
+        if(cue.isNotEmpty())text(c,cue,118f,108f,16f,179)
         val nextStep=m.next
         if(nextStep!=null && m.distanceToStepMeters>=150) {
             box(c,380f,22f,462f,54f,10f,alpha=179)
@@ -280,8 +345,9 @@ class HudRenderer(context: Context) {
             glyphs.draw(c,nextStep.maneuver,430f,27f,22f,paint(alpha=179,stroke=9f))
         }
         if(m.distanceToStepMeters<150) {
-            c.drawLine(18f,110f,462f,110f,paint(alpha=89,stroke=4f))
-            c.drawLine(18f,110f,18f+444f*(m.distanceToStepMeters/150f).coerceIn(0f,1f),110f,paint(stroke=4f))
+            val barY=if(cue.isNotEmpty())115f else 110f
+            c.drawLine(18f,barY,462f,barY,paint(alpha=89,stroke=4f))
+            c.drawLine(18f,barY,18f+444f*(m.distanceToStepMeters/150f).coerceIn(0f,1f),barY,paint(stroke=4f))
         }
         if(s.navState==NavState.GPS_LOST || s.navState==NavState.REROUTING) {
             box(c,290f,78f,466f,110f,6f,fill=true,black=true)
@@ -314,8 +380,10 @@ class HudRenderer(context: Context) {
         c.save()
         if(compact)c.clipRect(254f,418f,466f,604f) else c.clipRect(0f,118f,450f,338f)
         c.translate(cx,anchor);c.rotate(-heading);c.scale(ppm,ppm);c.translate(-px,-py)
+        // Road hierarchy (docs/HUD_DESIGN.md "Rich map"): residential thin at 42%, major roads thick at 70%.
+        c.drawPath(minorRoads,paint(alpha=107,stroke=(if(compact)1.8f else if(zoom==0)3.5f else 2f)/ppm))
+        c.drawPath(majorRoads,paint(alpha=179,stroke=(if(compact)3.5f else if(zoom==0)6f else 4.5f)/ppm))
         var i=0
-        while(i<roads.size){c.drawPath(roads[i],paint(alpha=56,stroke=1.8f/ppm));i++}
         c.drawPath(routePath,paint(stroke=(if(compact)if(zoom==0)8f else 6f else if(zoom==0)14f else 10f)/ppm))
         c.drawPath(routePath,paint(black=true,stroke=(if(compact)if(zoom==0)4f else 3.5f else if(zoom==0)8f else 6f)/ppm))
         i=0
@@ -330,15 +398,8 @@ class HudRenderer(context: Context) {
             }
             i++
         }
-        if(zoom==0) {
-            val target=(position.metersAlongRoute.coerceAtLeast(0)+(s.maneuver?.distanceToStepMeters ?: 0)).toDouble()
-            var index=1
-            while(index<distances.size && distances[index]<target)index++
-            if(index<distances.size) {
-                val f=((target-distances[index-1])/(distances[index]-distances[index-1]).coerceAtLeast(.01)).toFloat()
-                val mx=east[index-1]+(east[index]-east[index-1])*f;val my=north[index-1]+(north[index]-north[index-1])*f
-                c.drawCircle(mx,my,9f/ppm,paint(black=true));c.drawCircle(mx,my,9f/ppm,paint(stroke=3f/ppm))
-            }
+        if(zoom==0 && hasManeuverPoint) {
+            c.drawCircle(maneuverX,maneuverY,9f/ppm,paint(black=true));c.drawCircle(maneuverX,maneuverY,9f/ppm,paint(stroke=3f/ppm))
         }
         if(s.alerts.isNotEmpty()) {
             val a=s.alerts[0];val ax=x(a.lng);val ay=y(a.lat)
@@ -347,27 +408,12 @@ class HudRenderer(context: Context) {
         }
         c.restore()
         if(compact) {
+            labels(c,px,py,heading,ppm,cx,anchor,258f,462f,426f,600f,3,0.75f)
             c.save();c.translate(cx,anchor);c.scale(.65f,.65f);c.drawPath(chevron,paint());c.restore()
-            if(roads.isNotEmpty())text(c,"© OpenStreetMap",258f,624f,15f,115)
             return
         }
-        var placed=0
-        i=0
-        val angle=Math.toRadians(heading.toDouble())
-        val cosine=cos(angle).toFloat();val sine=sin(angle).toFloat()
-        while(i<roadNames.size && placed<6) {
-            if(roadNames[i].isNotEmpty()) {
-                val dx=roadEast[i]-px;val dy=roadNorth[i]-py
-                val lx=cx+(dx*cosine+dy*sine)*ppm+8
-                val ly=306f+(-dx*sine+dy*cosine)*ppm-8
-                if(lx in 18f..334f && ly in 182f..282f) {
-                    var overlaps=false;var j=0
-                    while(j<placed){if(abs(lx-placedLabelX[j])<100 && abs(ly-placedLabelY[j])<25)overlaps=true;j++}
-                    if(!overlaps){text(c,roadNames[i],lx,ly,15f,153);placedLabelX[placed]=lx;placedLabelY[placed]=ly;placed++}
-                }
-            };i++
-        }
-        if(roads.isNotEmpty())text(c,"© OpenStreetMap contributors",18f,332f,15f,115)
+        val lanesShown=(s.maneuver?.current?.lanes?.isNotEmpty()==true) && (s.maneuver?.distanceToStepMeters ?: 9999)<150
+        labels(c,px,py,heading,ppm,cx,306f,18f,446f,if(lanesShown)192f else 136f,326f,MAX_LABELS,1f)
         c.save();c.translate(cx,306f);c.drawPath(chevron,paint());c.restore()
         // Remaining-route ribbon, normalized by meters rather than polyline point index.
         box(c,458f,130f,466f,326f,4f,alpha=204)
@@ -387,6 +433,38 @@ class HudRenderer(context: Context) {
             right(c,jamLabel,162f,210f,17f,204)
         }
         if(s.detour!=null) { val p=paint(stroke=4f);p.pathEffect=alternativeDash;c.drawLine(430f,282f,440f,128f,p) }
+    }
+    /**
+     * Upright street names in priority order ([labelOrder]) inside the given screen box: the turn street
+     * bold and bright, the "after" street and major roads brighter than the rest. Skips labels that would
+     * overlap one already placed or the chevron. A black halo cuts the road lines behind each name.
+     */
+    private fun labels(c:Canvas,px:Float,py:Float,heading:Float,ppm:Float,cx:Float,cy:Float,
+                       left:Float,right:Float,top:Float,bottom:Float,max:Int,scale:Float) {
+        val angle=Math.toRadians(heading.toDouble())
+        val cosine=cos(angle).toFloat();val sine=sin(angle).toFloat()
+        var placed=0;var k=0
+        while(k<labelOrder.size && placed<max) {
+            val i=labelOrder[k];k++
+            val turn=i==turnRoad;val after=i==cueRoad
+            val size=(if(turn)17f else if(after || roadMajor[i])15f else 14f)*scale
+            val alpha=if(turn)255 else if(after)166 else if(roadMajor[i])204 else 153
+            val w=paint(size,b=turn).measureText(roadNames[i])
+            val dx=roadEast[i]-px;val dy=roadNorth[i]-py
+            val lx=cx+(dx*cosine+dy*sine)*ppm+8*scale
+            val ly=cy+(-dx*sine+dy*cosine)*ppm-8*scale
+            if(lx<left || lx+w>right || ly-size<top || ly>bottom)continue
+            if(abs(lx+w/2-cx)<w/2+24*scale && abs(ly-cy)<40*scale)continue
+            var overlaps=false;var j=0
+            while(j<placed){
+                if(lx<placedLabelX[j]+placedLabelW[j]+6 && placedLabelX[j]<lx+w+6 && abs(ly-placedLabelY[j])<size+4)overlaps=true
+                j++
+            }
+            if(overlaps)continue
+            val halo=paint(size,b=turn,black=true,stroke=4f*scale);c.drawText(roadNames[i],lx,ly,halo)
+            c.drawText(roadNames[i],lx,ly,paint(size,alpha,b=turn))
+            placedLabelX[placed]=lx;placedLabelY[placed]=ly;placedLabelW[placed]=w;placed++
+        }
     }
     private val metricDashes = arrayOf(300f,800f,2000f).map { visible -> DashPathEffect(floatArrayOf(7f*visible/188f,6f*visible/188f),0f) }.toTypedArray()
     private fun metricSlowDash(zoom:Int)=metricDashes[zoom.coerceIn(0,2)]
@@ -469,5 +547,12 @@ class HudRenderer(context: Context) {
         center(c,"You've arrived",240f,204f,44f,b=true);center(c,destination,240f,247f,26f,217)
         center(c,eta,240f,286f,18f,140);center(c,"Closes in 10 s · 2× TAP to close now",240f,320f,15f,115)
     }
-    companion object { const val GREEN = 0xFF3DFF8A.toInt() }
+    companion object {
+        const val GREEN = 0xFF3DFF8A.toInt()
+        private const val MAX_LABELS = 10
+        private val SPACES = Regex("\\s+")
+        private val NAME_ABBREVIATIONS = listOf("street" to "st","avenue" to "ave","boulevard" to "blvd","road" to "rd",
+            "drive" to "dr","lane" to "ln","place" to "pl","court" to "ct","highway" to "hwy","parkway" to "pkwy",
+            "north" to "n","south" to "s","east" to "e","west" to "w").map { (long,short) -> Regex("\\b$long\\b") to short }
+    }
 }

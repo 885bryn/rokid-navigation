@@ -45,12 +45,19 @@ data class RouteChunk(
     val totalMeters: Int,
 ) : NavMessage
 
-/** Optional surrounding streets for the glasses map (see docs/DATA_SOURCES.md, "map context"). */
+/**
+ * Surrounding streets for the glasses map (see docs/DATA_SOURCES.md, "map context"). One snapshot may
+ * span several frames ([RoadContextChunker]): the glasses replace their streets once all [partCount]
+ * parts of [contextId] have arrived. Defaults keep single-frame senders valid.
+ */
 @Serializable @SerialName("road_context")
 data class RoadContext(
     override val seq: Long,
     val routeId: String,
     val roads: List<ContextRoad>,
+    val contextId: String = "",
+    val part: Int = 0,
+    val partCount: Int = 1,
 ) : NavMessage
 
 @Serializable

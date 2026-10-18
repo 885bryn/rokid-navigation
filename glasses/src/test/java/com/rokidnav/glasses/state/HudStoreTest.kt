@@ -12,6 +12,20 @@ class HudStoreTest {
     private val sent = mutableListOf<GlassesAction>()
     private val store = HudStore { sent += it }
 
+    @Test fun multiPartStreetSnapshotAppliesOnlyWhenComplete() {
+        val line=com.rokidnav.protocol.PolylineCodec.encode(listOf(com.rokidnav.protocol.LatLng(37.0,-122.0),com.rokidnav.protocol.LatLng(37.001,-122.0)))
+        store.onMessage(com.rokidnav.protocol.RouteChunk(1,"r",0,1,line,100))
+        val a=com.rokidnav.protocol.ContextRoad(line,"A");val b=com.rokidnav.protocol.ContextRoad(line,"B",true)
+        store.onMessage(com.rokidnav.protocol.RoadContext(2,"r",listOf(a),"c1",0,2))
+        assertEquals(0,store.state.value.contextRoads.size)
+        store.onMessage(com.rokidnav.protocol.RoadContext(3,"r",listOf(b),"c1",1,2))
+        assertEquals(listOf("A","B"),store.state.value.contextRoads.map {it.name})
+        assertEquals(true,store.state.value.contextRoads[1].major)
+        // A new snapshot replaces the old one only when it, too, is complete.
+        store.onMessage(com.rokidnav.protocol.RoadContext(4,"r",listOf(b),"c2",0,2))
+        assertEquals(listOf("A","B"),store.state.value.contextRoads.map {it.name})
+    }
+
     @Test fun tapAcceptsPendingDetour() {
         store.onMessage(DetourOffer(1, "d1", 300, 0, "via A", expiresAtMs = Long.MAX_VALUE))
         store.onKey(GlassesKey.TAP)

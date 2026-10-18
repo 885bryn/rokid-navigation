@@ -18,6 +18,31 @@ object RouteChunker {
     }
 }
 
+/** Packs a street snapshot, in priority order, into [RoadContext] frames that each fit the frame budget. */
+object RoadContextChunker {
+    private const val FRAME_BUDGET = 6_000
+
+    fun split(routeId: String, contextId: String, roads: List<ContextRoad>, nextSeq: () -> Long): List<RoadContext> {
+        val parts = ArrayList<List<ContextRoad>>()
+        var current = ArrayList<ContextRoad>()
+        for (road in roads) {
+            current += road
+            if (encodedSize(routeId, contextId, current) > FRAME_BUDGET) {
+                current.removeAt(current.lastIndex)
+                if (current.isEmpty()) continue // a single road too large for any frame is skipped
+                parts += current
+                current = arrayListOf(road)
+                if (encodedSize(routeId, contextId, current) > FRAME_BUDGET) current = ArrayList()
+            }
+        }
+        if (current.isNotEmpty() || parts.isEmpty()) parts += current
+        return parts.mapIndexed { i, part -> RoadContext(nextSeq(), routeId, part, contextId, i, parts.size) }
+    }
+
+    private fun encodedSize(routeId: String, contextId: String, roads: List<ContextRoad>) =
+        ProtocolCodec.encode(RoadContext(Long.MAX_VALUE, routeId, roads, contextId, 99, 99)).second.toByteArray().size
+}
+
 /** Glasses-side reassembly. Feed every [RouteChunk]; returns the full polyline once complete. */
 class RouteAssembler {
     private var routeId: String? = null

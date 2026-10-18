@@ -15,6 +15,7 @@ class ProtocolCodecTest {
             GlassesAction(6, ActionType.ACCEPT_DETOUR, "d1"),
             RouteChunk(7, "r1", 0, 1, "??", 100),
             RoadContext(8, "r1", listOf(ContextRoad("??", "Main St", true))),
+            RoadContext(20, "r1", listOf(ContextRoad("??", "Bay St")), "c7", 1, 3),
             PositionUpdate(9, 37.0, -122.0, 90f, 12f, 300, 1000L),
             TrafficSegments(10, "r1", listOf(TrafficSegment(0, 100, TrafficLevel.JAM))),
             AlertCleared(11, "a1"),

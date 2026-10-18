@@ -90,7 +90,7 @@ class MainActivity:ComponentActivity() {
         lifecycleScope.launch {
             val nearby=com.rokidnav.phone.map.RoadContextProvider(java.io.File(cacheDir,"streets"))
                 .roadsNear(LatLng(37.803,-122.431))
-            app.coordinator.sendTestSnapshot {next->listOf(RoadContext(next(),"test-$now",nearby))}
+            app.coordinator.sendTestSnapshot {next->RoadContextChunker.split("test-$now","test-$now",nearby,next)}
             events.add(0,if(nearby.isEmpty())"Street data is unavailable; the route preview is still active." else "Sent nearby streets from OpenStreetMap.")
         }
     }
@@ -128,7 +128,7 @@ private fun SetupScreen(link:GlassesLink,events:List<String>,authorize:()->Unit,
             OutlinedButton(onClick={runCatching(preview)}){Text("Preview on this phone")}
         }
         if(BuildConfig.MAPS_API_KEY.isBlank())Text("Google navigation needs an API key before live routing can be enabled.",color=Color.Gray)
-        TextButton(onClick={context.startActivity(Intent(Intent.ACTION_VIEW,Uri.parse("https://www.openstreetmap.org/copyright")))}){Text("Street data © OpenStreetMap contributors")}
+        TextButton(onClick={context.startActivity(Intent(Intent.ACTION_VIEW,Uri.parse("https://www.openstreetmap.org/copyright")))}){Text("Street data © OpenStreetMap contributors · tiles © OpenMapTiles, OpenFreeMap")}
         if(events.isNotEmpty()){
             Text("Connection activity",style=MaterialTheme.typography.titleMedium)
             events.forEach {Text(it,style=MaterialTheme.typography.bodyMedium,color=Color.LightGray)}

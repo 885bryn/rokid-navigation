@@ -12,7 +12,7 @@ Requires one Google Cloud project with billing and an API key restricted to the 
 | Detour options | Routes API alternatives from current position (with heading) → `DetourEvaluator` | accepted detour → `navigator.setDestinations(..., routeToken)` |
 | Police reports | **WzSabre** Android plugin via SABRE broadcasts | user-selected source; install plugin on phone |
 | Speed cameras | **WzSabre** ExCam database | cached on phone; daily update check when a route starts |
-| Map context streets | OpenStreetMap / Overpass | enabled for active guidance; cached on phone |
+| Map context streets | OpenStreetMap via **OpenFreeMap** vector tiles (no key) | z14 tiles around driver + route ahead; decoded roads cached on phone |
 
 ## WzSabre police reports and speed cameras
 
@@ -52,24 +52,31 @@ Nearest-segment projection cannot disambiguate every overlapping road or loop; v
 TomTom for other incident categories remains a separate M7 follow-up.
 
 ## Map context streets
-The user requested visible side streets and intersections as a normal part of the HUD. The phone
-fetches actual road geometry and names from [Overpass](https://wiki.openstreetmap.org/wiki/Overpass_API),
-using `GET https://overpass-api.de/api/interpreter` with a 2 km `around` query and `out tags geom`.
-The query includes the current neighbourhood's centre; it does not include the destination or full route.
-Public road classes include residential streets and major-road links. No API key is required.
+**Source (since 2026-10-18): [OpenFreeMap](https://openfreemap.org) vector tiles**, OpenMapTiles schema,
+free, no key, served from a CDN. Replaced live Overpass queries: on 2026-10-18 `overpass-api.de` timed
+out or returned 406, and the kumi.systems / private.coffee / mail.ru mirrors returned 500 or timed out,
+so a drive got no streets at all. A single z14 tile downloaded in 0.16 s.
 
-`RoadContextProvider` simplifies geometry to ~5 m, chooses nearby streets, and limits the existing
-`road_context` message to 6 KB. It can omit some roads in dense areas to fit the link budget. Cache
-tiles last 24 hours and are bounded to 20 tiles. While guiding, refresh after 600 m of movement,
-no more than once every 30 seconds; retain cached data on errors. A cold cache without service
-access temporarily shows the route alone. The read-only live check in the public demo area returned
-173 ways, including Bay, Beach, Buchanan, and Chestnut Streets. POST returned HTTP 406 in this
-environment; the documented GET form succeeded and is used by the app.
+- `RoadContextProvider` reads `https://tiles.openfreemap.org/planet` (TileJSON, refreshed daily) for the
+  weekly build's tile URL, then fetches the z14 tiles (~2 km squares) under the driver and the next 2 km
+  of route, at most 6. Requests disclose only those tile coordinates, never the destination.
+- `VectorTile` is a minimal MVT/protobuf reader that keeps the `transportation_name` layer (named road
+  lines with `class`); classes motorway…tertiary are `major`, `minor` and `*_link` are kept, paths and
+  tracks dropped. Geometry is simplified to 5 m and cached per tile as JSON (7 days, ≤60 tiles).
+- `select` ranks streets by distance to the nearer of the driver and the route ahead (major roads as if
+  150 m closer) and fills a 30 KB snapshot; `RoadContextChunker` splits it into ≤6 KB `road_context`
+  parts. Refresh after 600 m of movement, at most every 30 s; offline uses the cache.
+- Unnamed streets are not in `transportation_name`, so they are not drawn (rare for drivable roads).
 
-The HUD draws dim 1.8 px streets and up to six upright labels around its bright route. Phone setup
-links to [OpenStreetMap attribution/license information](https://www.openstreetmap.org/copyright);
-the HUD also displays credit while context is present. The checked-in demo uses synthetic streets,
-clearly marked in its generator. Actual street-map drive acceptance remains pending hardware access.
+Glasses rendering (docs/HUD_DESIGN.md "Visual spec", canvas row "Richer street map"): residential 2 px at
+42%, major 4.5 px at 70%, up to 10 upright labels (turn street bold at the turn, the "after" street next,
+then majors), 3 labels in the compact corner, and a turn cue such as "2nd right · after Francisco St"
+computed from street geometry (`TurnCue`, blank whenever the count is uncertain).
+
+Attribution: shown on the phone's Glasses screen ("Street data © OpenStreetMap contributors · tiles ©
+OpenMapTiles, OpenFreeMap", linking to [OpenStreetMap copyright](https://www.openstreetmap.org/copyright)).
+Removed from the HUD at the user's request (2026-10-18); OSM's attribution guidelines allow credit
+outside the map where the display is too small.
 
 ## Cost guardrails
 - Traffic poll only while moving and ACTIVE; stop in the final ~2 km.

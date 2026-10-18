@@ -44,7 +44,7 @@ and opens a new session, which installs and opens the bundled APK. Tried once pe
 | `hello_request` | each session start | ask the HUD for `hello` (version check) |
 | `session_start` | once per trip + resync | units, 24h clock, destination name |
 | `route_chunk` | per route / reroute / resync | encoded polyline split into chunks; glasses reassemble with `RouteAssembler` |
-| `road_context` | optional, per route | nearby street polylines for map context (v2) |
+| `road_context` | after 600 m of movement (≤ every 30 s) | nearby streets; one ~30 KB snapshot split into ≤6 KB parts (`contextId`, `part`, `partCount`, defaults 0/1 = single frame); glasses swap streets only when all parts arrived |
 | `pos` | ~1 Hz | lat/lng, bearing, speed, metersAlongRoute |
 | `maneuver` | on change + ~1 Hz distance updates | current step, distance/time to it, next step |
 | `progress` | ~every 5 s | ETA, remaining m/s, traffic delay s |
