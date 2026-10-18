@@ -13,8 +13,10 @@ import kotlinx.coroutines.flow.*
 class NavSessionCoordinator(private val scope:CoroutineScope,private val link:GlassesLink,
     private val engine:NavigationEngine,private val traffic:TrafficMonitor,private val incidents:IncidentProvider,
     private val roads:com.rokidnav.phone.map.RoadContextProvider?=null,
-    private val settings:SettingsRepository?=null) {
+    private val settings:SettingsRepository?=null,
+    private val speaker:AlertSpeaker?=null) {
     private val seq=SeqCounter()
+    private val announcer=AlertAnnouncer({preferences})
     private val lastSent=linkedMapOf<String,NavMessage>()
     private val activeAlerts=linkedMapOf<String,Alert>()
     private var pending:DetourEvaluator.Decision?=null
@@ -70,7 +72,7 @@ class NavSessionCoordinator(private val scope:CoroutineScope,private val link:Gl
             activeGuidance().collectLatest {route ->
                 activeAlerts.keys.toList().forEach {sendAlert(AlertCleared(seq.next(),it))}
                 if(route==null)return@collectLatest
-                val tracker=AlertTracker(PolylineCodec.decode(route.encodedPolyline))
+                val tracker=AlertTracker(PolylineCodec.decode(route.encodedPolyline)) {preferences.alertToleranceMeters}
                 coroutineScope {
                     var snapshot=emptyList<Incident>();var position:PositionUpdate?=null
                     fun update(){position?.let {tracker.update(snapshot,it,System.currentTimeMillis(),seq::next).forEach(::sendAlert)}}
@@ -101,6 +103,8 @@ class NavSessionCoordinator(private val scope:CoroutineScope,private val link:Gl
         return out.ifEmpty {listOf(points.last())}
     }
     private fun sendAlert(m:NavMessage) {
+        // Voice is phone-side, so warnings still play while the glasses are paused or disconnected.
+        if(m is Alert)announcer.consider(m)?.let {speaker?.speak(it)}
         val id=when(m){is Alert->{activeAlerts[m.id]=m;m.id};is AlertCleared->{activeAlerts.remove(m.id);m.id};else->return}
         sendStateful("alert:$id",m)
     }

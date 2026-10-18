@@ -75,6 +75,28 @@ class NavSessionCoordinatorTest {
         engine.stop(); runCurrent()
         assertEquals("p1", link.sent.filterIsInstance<AlertCleared>().single().id)
     }
+    @Test fun speaksEachNewReportOnceWhenInRangeEvenWithTheGlassesDisconnected() = runTest {
+        val engine = Engine()
+        val link = Link()
+        val spoken = mutableListOf<String>()
+        val speaker = object : AlertSpeaker { override fun speak(text: String) { spoken += text }; override fun shutdown() {} }
+        val provider = object : IncidentProvider {
+            override val name = "fake"
+            override fun incidentsAlong(routePolyline: String) = flowOf(listOf(
+                Incident("p1", AlertKind.POLICE, LatLng(0.0, 0.015), "Police reported", 0, "WzSabre")))
+        }
+        NavSessionCoordinator(backgroundScope, link, engine,
+            TrafficMonitor(RoutesApiClient(""), engine), provider, speaker = speaker).start()
+        runCurrent()
+        fun fix(lon: Double) = PositionUpdate(0, 0.0, lon, 90f, 10f, timestampMs = System.currentTimeMillis())
+        engine.position.emit(fix(0.0)); runCurrent()          // 1.67 km ahead: beyond the 1 km default
+        assertTrue(spoken.isEmpty())
+        link.state.value = LinkState.Paused("bluetooth"); runCurrent()
+        engine.position.emit(fix(0.007)); runCurrent()        // 890 m: in range, glasses paused
+        assertEquals(listOf("Police reported ahead in half a mile."), spoken)
+        engine.position.emit(fix(0.012)); runCurrent()        // still active: not repeated
+        assertEquals(1, spoken.size)
+    }
     @Test fun detourExpiryRejectsOldActionsAndAcceptsOnlyCurrentOffer() = runTest {
         val engine=Engine();val link=Link()
         val provider=object:IncidentProvider {

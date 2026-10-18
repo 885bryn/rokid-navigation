@@ -263,7 +263,10 @@ class HudRenderer(context: Context) {
                 banner(c)
                 if(s.mode==HudMode.Map) map(c,nanos)
                 lanes(c)
-                if(s.alerts.isNotEmpty()) alert(c,s.alerts[0]) else status(c)
+                status(c)
+                // Alerts never replace trip status: a chip in the map's top-right corner, below the lane box when shown.
+                val lanesShown=(s.maneuver?.current?.lanes?.isNotEmpty()==true) && (s.maneuver?.distanceToStepMeters ?: 9999)<150
+                if(s.alerts.isNotEmpty()) alertChip(c,452f,if(lanesShown)184f else 124f,28f,compact=false)
                 if(s.detour!=null) detour(c,s.detour!!)
             }
         }
@@ -315,12 +318,9 @@ class HudRenderer(context: Context) {
             if(s.navState==NavState.GPS_LOST || s.navState==NavState.REROUTING)
                 text(c,if(s.navState==NavState.GPS_LOST)"GPS lost" else "Rerouting",18f,534f,20f)
         }
-        val a=s.alerts.firstOrNull()
-        if(a!=null) {
-            icon(c,a.kind,18f,550f,24f)
-            text(c,alertKind,52f,570f,20f,b=true)
-            text(c,alertDistance,18f,602f,26f,b=true)
-        } else if(s.progress!=null) {
+        // Alerts sit in the map box's top-left corner and never displace the ETA lines.
+        if(s.alerts.isNotEmpty()) alertChip(c,null,422f,22f,compact=true)
+        if(s.progress!=null) {
             text(c,eta,18f,570f,24f,b=true)
             text(c,"ETA",24f+paint(24f,b=true).measureText(eta),570f,15f,153)
             text(c,statusTime,18f,602f,20f,217)
@@ -497,11 +497,30 @@ class HudRenderer(context: Context) {
             else -> {c.drawLine(12f,3f,2f,21f,p);c.drawLine(2f,21f,22f,21f,p);c.drawLine(22f,21f,12f,3f,p);c.drawLine(12f,9f,12f,14f,p);c.drawPoint(12f,18f,p)}
         };c.restore()
     }
-    private fun alert(c:Canvas,a:Alert) {
-        box(c,8f,334f,472f,392f,12f)
-        icon(c,a.kind,22f,346f,30f)
-        text(c,alertKind,68f,359f,24f,b=true);text(c,alertAge,68f,379f,15f,alpha=180)
-        right(c,alertDistance,456f,375f,34f,b=true)
+    /**
+     * Passive alert chip: icon, kind and distance, plus "+N" when more are queued. Filled for the first
+     * [ALERT_FRESH_MS] after an alert first appears so a glance catches it, then an outlined, dimmer chip
+     * until the phone clears it. [right] anchors the expanded chip; null = compact, anchored at the map's left.
+     */
+    private fun alertChip(c:Canvas,right:Float?,top:Float,height:Float,compact:Boolean) {
+        val a=s.alerts.firstOrNull() ?: return
+        val fresh=(s.alertSeenAt[a.id]?.let {s.nowMs-it} ?: 0)<ALERT_FRESH_MS
+        val kindSize=if(compact)13f else 16f;val distSize=if(compact)14f else 18f;val iconSize=if(compact)15f else 18f
+        val more=if(s.alerts.size>1)" +${s.alerts.size-1}" else ""
+        val kindW=paint(kindSize,b=true).measureText(alertKind)
+        val distW=paint(distSize,b=true).measureText(alertDistance)
+        val moreW=if(more.isEmpty())0f else paint(kindSize).measureText(more)
+        val width=8+iconSize+6+kindW+8+distW+moreW+8
+        val left=right?.let {it-width} ?: 258f
+        box(c,left,top,left+width,top+height,8f,fill=true,black=!fresh)
+        if(!fresh)box(c,left,top,left+width,top+height,8f,alpha=191)
+        val ink=if(fresh)255 else 204
+        icon(c,a.kind,left+8,top+(height-iconSize)/2,iconSize,black=fresh)
+        val baseline=top+height/2+distSize*0.36f
+        var x=left+8+iconSize+6
+        text(c,alertKind,x,baseline,kindSize,ink,b=true,black=fresh);x+=kindW+8
+        text(c,alertDistance,x,baseline,distSize,ink,b=true,black=fresh);x+=distW
+        if(more.isNotEmpty())text(c,more,x,baseline,kindSize,if(fresh)255 else 153,black=fresh)
     }
     private fun detour(c:Canvas,d:DetourOffer) {
         box(c,14f,124f,334f,312f,14f,fill=true,black=true);box(c,14f,124f,334f,312f,14f)
@@ -550,6 +569,7 @@ class HudRenderer(context: Context) {
     companion object {
         const val GREEN = 0xFF3DFF8A.toInt()
         private const val MAX_LABELS = 10
+        const val ALERT_FRESH_MS = 6_000L
         private val SPACES = Regex("\\s+")
         private val NAME_ABBREVIATIONS = listOf("street" to "st","avenue" to "ave","boulevard" to "blvd","road" to "rd",
             "drive" to "dr","lane" to "ln","place" to "pl","court" to "ct","highway" to "hwy","parkway" to "pkwy",

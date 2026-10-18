@@ -26,9 +26,10 @@ The native 480×640 viewport now uses a bottom-corner composition, uniformly fit
 - Bottom-right: 212×186-unit heading-up street map, thin 6/3.5-unit hollow route (8/4 near a turn),
   smaller position chevron. The miniature omits street labels and the traffic ribbon; the expanded
   map provides both. OSM attribution stays below the miniature.
-- Alerts replace the bottom-left trip stats; detour controls replace its maneuver block.
+- Alerts are a small chip in the map's top-left corner (compact) or top-right (expanded); trip stats
+  always stay visible. Detour controls replace the maneuver block.
 - Tap toggles **compact ↔ expanded**. A pending detour retains tap/2× tap accept/keep priority.
-  Double tap dismisses an alert. Long press opens the existing menu; closing/timeout restores the
+  Alerts need no input (double tap still hides one early). Long press opens the existing menu; closing/timeout restores the
   previous compact or expanded mode. AI assistant input belongs to the system.
 - Expanded uses Claude's proportionate 480×398 composition. No automatic expansion or attention-
   seeking animation occurs. Idle/arrival messages also stay low in the compact layout.
@@ -57,8 +58,11 @@ corner placement still requires a waveguide fit check.
 **Minimal mode** (legacy renderer): banner + status strip only, map hidden. Good for highways.
 
 **Overlays**
-- **Alert** — replaces the status strip with a filled bar: `[icon] POLICE  0.4 mi`. Shown when within
-  ~2 km (cameras ~1 km), counts down, disappears once passed or on double-tap. One at a time, nearest first.
+- **Alert (passive, 2026-10-18)** — a chip `[icon] POLICE 0.4 mi` (+N when more are queued) in the
+  map corner. Filled for the first 6 s after it first appears, then outlined and dimmer. Never replaces
+  trip status, never closes the menu, never needs a tap: the phone clears it 100 m after passing the
+  pin (pins are approximate), on expiry, or when the report disappears; the glasses also drop any alert
+  the phone has not refreshed for 2 minutes (link loss). Optional voice warning is phone-side.
 - **Detour prompt** — card over the lower map: `Faster route · save 6 min · via I-280`,
   `tap = take · 2× tap = keep`, shrinking countdown bar (30 s). Expiry = keep current route.
 - **Rerouting / GPS lost** — small text in the banner, map keeps last state.
@@ -86,7 +90,7 @@ Root list, all 5 rows visible at 54 px each, highlighted row filled:
 4. **Display** — brightness (phone calls `setGlassBrightness`), units, default zoom.
 5. **End navigation** — confirm page (tap = end, double tap = cancel).
 
-Auto-close after 10 s without input. The menu never hides a new alert: alerts pop the menu closed.
+Auto-close after 10 s without input. Alerts do not interrupt the menu; their chip shows after it closes.
 
 ## Visual spec (from the mockups; px at 480×398, scale by viewWidth / 480)
 
@@ -142,8 +146,9 @@ dividers @30%, recommended lanes 100% / others @30%).
 **Minimal mode:** banner + lane row + status strip; the middle stays black. Exit numbers go in an
 outlined tag (`EXIT 24B`, 18/700). The status strip shows "No delays" @60% when there's no delay.
 
-**Alert bar:** replaces the status strip, inset 8 px, 58 px tall, radius 12, filled. Icon 34 px
-black stroke, kind 26/700 caps, age 15/600 ("Reported 6 min ago"), distance 38/700 on the right.
+**Alert chip:** expanded 28 px tall at the map's top-right (below the lane box when lanes show), icon
+18 px, kind 16/700 caps, distance 18/700; compact 22 px at the map box's top-left, icon 15, text 13/14.
+Radius 8. Fresh (first 6 s): filled green, black ink. Then black fill, 2 px outline @75%, ink @80%.
 The incident is also marked on the route: black disc r16 with a 3 px ring and the kind glyph.
 
 **Detour card:** 320 px wide, top-left of the map region, 2 px border, radius 14, black fill.

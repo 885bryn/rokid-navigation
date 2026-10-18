@@ -29,6 +29,8 @@ data class HudState(
 
     /** Active alerts sorted nearest-first; the HUD shows only the first. */
     val alerts: List<Alert> = emptyList(),
+    /** When each alert id first appeared (clock ms): the chip is highlighted briefly, then goes quiet. */
+    val alertSeenAt: Map<String, Long> = emptyMap(),
     val detour: DetourOffer? = null,
 
     val mode: HudMode = HudMode.Compact,

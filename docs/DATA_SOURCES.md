@@ -45,8 +45,18 @@ Only speed/average-speed cameras are mapped to `SPEED_CAMERA`; dummy, red-light-
 cameras are excluded. Unknown JSON fields are ignored. Camera downloads contain no route or position.
 
 The coordinator combines each provider's latest complete snapshot, projects incidents onto the route,
-and sends an alert within 2 km ahead and 60 m of the route. Distances update with position; passed,
-removed, expired, or opposite-direction reports clear. Clears are retained for reconnection, and
+and sends an alert within 2 km ahead and within the **report accuracy** setting of the route line
+(Tight 60 m / Normal 150 m default / Loose 300 m; user pins are often off the road). Reports with a
+heading must face our direction within 60°, which keeps the wider window off the opposite carriageway.
+Distances update with position and unchanged alerts are re-sent every 30 s; an alert holds at 0 until
+100 m past its pin, then clears, as do removed, expired, or opposite-direction reports.
+
+**Voice warnings** (phone, `AlertAnnouncer` + `AndroidAlertSpeaker`): optional, on by default. Each
+report is spoken once ("Police reported ahead in half a mile.") when it first comes within the warning
+distance (0.5 / 1 / 2 km or mi, default 1). Same-kind reports within 250 m of one spoken in the last
+15 min stay silent (several users reporting one trap). Speed cameras have their own switch. Uses
+Android text-to-speech on the navigation-guidance audio stream with ducking focus, so it plays where
+Google's turn voice plays, and keeps working while the glasses are paused or disconnected. Clears are retained for reconnection, and
 ending/changing a route cancels polling. The nearest active alert is displayed by the HUD.
 Nearest-segment projection cannot disambiguate every overlapping road or loop; validate on hardware.
 TomTom for other incident categories remains a separate M7 follow-up.

@@ -110,6 +110,12 @@ HUD delivery, native orientation, and tap return events have been checked on har
 - [x] Police/camera/jam/closure glyphs and generic hazard fallback in both map sizes.
 - [x] User selected https://wzsabre.rocks/ for police and speed cameras on 2026-10-17; replaces OSM camera plan.
 - **Accept:** mock provider police alert counts down and clears in demo + real drive.
+- 2026-10-18: alerts made passive and voice added (see DATA_SOURCES.md "Voice warnings", HUD_DESIGN.md
+  "Alert chip"): report-accuracy setting (60/150/300 m), 100 m past-pin margin, 30 s refresh with 2 min
+  HUD stale drop, no menu takeover, chip instead of status bar, once-per-report TTS with duplicate
+  suppression and camera switch. Unit-tested and rendered from the demo trip on the phone.
+- [ ] On a real drive: WzSabre exchange returns reports, voice plays through the glasses, chip and
+  marker positions look right, no false alerts from parallel roads at "Normal" accuracy.
 
 ## M8 — Menu & settings
 - [x] Menu pages, auto-close, alert pre-emption, restore previous compact/expanded mode.

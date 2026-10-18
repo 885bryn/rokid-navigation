@@ -14,6 +14,9 @@ Frames should stay under 8 KB (`MAX_FRAME_BYTES`, to be measured on hardware in 
 
 Units: meters, seconds, epoch-ms, degrees (0 = north, clockwise). Formatting happens on glasses.
 
+Active alerts are re-sent at least every 30 s even when unchanged; the HUD drops an alert it has not
+heard about for 2 min. `alert_clear` is still the normal way an alert ends.
+
 `alert.reportedAtMs` is optional (default `0`, unknown), epoch milliseconds, for the mockup's report-age
 label. Old senders remain valid; camera database entries use `0` and never invent a report age.
 WzSabre uses the `alert` / `alert_clear` wire messages. `source`

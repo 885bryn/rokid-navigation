@@ -59,7 +59,7 @@ class MainActivity:AppCompatActivity() {
             hud.draw(Canvas(bitmap))
             java.io.File(filesDir,"hud-preview.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG,100,it) }
             bitmap.recycle()
-        },8000)
+        },intent.getIntExtra("captureDelayMs",8000).toLong())
     }
     override fun onKeyDown(keyCode:Int,event:KeyEvent?):Boolean {
         android.util.Log.d("RokidNavKeys","keyCode=$keyCode")

@@ -60,6 +60,7 @@ class RokidNavApp : Application() {
             ),
             settings=settings,
             roads = com.rokidnav.phone.map.RoadContextProvider(java.io.File(cacheDir, "streets")),
+            speaker = com.rokidnav.phone.alerts.AndroidAlertSpeaker(this),
         )
         coordinator.start()
     }

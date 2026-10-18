@@ -1,5 +1,6 @@
 package com.rokidnav.phone.ui
 
+import com.rokidnav.phone.settings.UserSettings
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
@@ -123,6 +124,19 @@ fun SettingsScreen(app:RokidNavApp) {
         Slider(brightness,{brightness=it},valueRange=5f..100f,onValueChangeFinished={app.settings.update {it.copy(brightness=brightness.toInt())}})
         Row {Switch(settings.police,{value->app.settings.update {it.copy(police=value)}});Text("WzSabre police reports")}
         Row {Switch(settings.cameras,{value->app.settings.update {it.copy(cameras=value)}});Text("WzSabre speed cameras")}
+        Text("Alerts on the glasses clear themselves once passed; no tapping needed.",color=Color.LightGray)
+        Row {Switch(settings.alertVoice,{value->app.settings.update {it.copy(alertVoice=value)}});Text("Voice warning for each new report")}
+        if(settings.alertVoice) {
+            Row {Switch(settings.alertVoiceCameras,{value->app.settings.update {it.copy(alertVoiceCameras=value)}});Text("Also speak speed cameras")}
+            OutlinedButton(onClick={app.settings.update {s->
+                val list=UserSettings.VOICE_DISTANCES;s.copy(alertVoiceMeters=list[(list.indexOf(s.alertVoiceMeters)+1)%list.size])}}) {
+                Text("Warn when ${phoneDistance(settings.alertVoiceMeters,settings.units)} ahead")
+            }
+        }
+        OutlinedButton(onClick={app.settings.update {s->
+            val list=UserSettings.TOLERANCES;s.copy(alertToleranceMeters=list[(list.indexOf(s.alertToleranceMeters)+1)%list.size])}}) {
+            Text("Report accuracy: ${UserSettings.toleranceLabel(settings.alertToleranceMeters)} (within ${phoneDistance(settings.alertToleranceMeters,settings.units)} of route)")
+        }
         val installed=remember {runCatching {app.packageManager.getPackageInfo("app.sabre.wzsabre",0);true}.getOrDefault(false)}
         Text(if(installed)"WzSabre is installed. Enable its plugin integration for police reports." else "Install WzSabre and enable plugin integration for police reports.",color=Color.LightGray)
         Text(if(settings.police)policeStatus else "Police reports disabled",color=Color.LightGray)

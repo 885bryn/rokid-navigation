@@ -16,6 +16,7 @@ class HudStore(private val clock:()->Long=System::currentTimeMillis,private val 
     private var contextId=""
     private val contextParts=HashMap<Int,List<ContextRoad>>()
     private val dismissed=HashSet<String>()
+    private val alertUpdatedAt=HashMap<String,Long>()
     private var menuTouched=0L
     private var arrivedAt=0L
     private var returnMode:HudMode=HudMode.Compact
@@ -25,10 +26,10 @@ class HudStore(private val clock:()->Long=System::currentTimeMillis,private val 
         lastSeq=m.seq
         when(m) {
             is SessionStart->{
-                assembler=RouteAssembler();routeId=null;routePendingAt=0;dismissed.clear();contextId="";contextParts.clear()
+                assembler=RouteAssembler();routeId=null;routePendingAt=0;dismissed.clear();alertUpdatedAt.clear();contextId="";contextParts.clear()
                 mutable.update {it.copy(units=m.units,clock24h=m.clock24h,destinationName=m.destinationName,
                     route=emptyList(),routeTotalMeters=0,traffic=emptyList(),contextRoads=emptyList(),
-                    position=null,previousPosition=null,maneuver=null,progress=null,alerts=emptyList(),detour=null,navState=NavState.ROUTING)}
+                    position=null,previousPosition=null,maneuver=null,progress=null,alerts=emptyList(),alertSeenAt=emptyMap(),detour=null,navState=NavState.ROUTING)}
             }
             is RouteChunk->{routePendingAt=clock();assembler.accept(m)?.let { line->
                 routePendingAt=0
@@ -41,16 +42,25 @@ class HudStore(private val clock:()->Long=System::currentTimeMillis,private val 
             is TripProgress->mutable.update {it.copy(progress=m)}
             is TrafficSegments->if(m.routeId==routeId)mutable.update {it.copy(traffic=m.segments)}
             is RoadContext->if(m.routeId==routeId)acceptRoads(m)
-            is Alert->if(m.id !in dismissed)mutable.update {s->s.copy(
-                alerts=(s.alerts.filterNot {it.id==m.id}+m).sortedBy {it.distanceAheadMeters},
-                mode=if(s.mode is HudMode.Menu && s.alerts.none {it.id==m.id})returnMode else s.mode)}
-            is AlertCleared->{dismissed.remove(m.id);mutable.update {s->s.copy(alerts=s.alerts.filterNot {it.id==m.id})}}
+            // Alerts are passive: they never take over the menu or need a tap; the phone clears them once
+            // passed, and tick() drops any the phone stops updating.
+            is Alert->if(m.id !in dismissed){
+                alertUpdatedAt[m.id]=clock()
+                mutable.update {s->s.copy(
+                    alerts=(s.alerts.filterNot {it.id==m.id}+m).sortedBy {it.distanceAheadMeters},
+                    alertSeenAt=if(m.id in s.alertSeenAt)s.alertSeenAt else s.alertSeenAt+(m.id to clock()))}
+            }
+            is AlertCleared->{dismissed.remove(m.id);alertUpdatedAt.remove(m.id);mutable.update {s->s.copy(
+                alerts=s.alerts.filterNot {it.id==m.id},alertSeenAt=s.alertSeenAt-m.id)}}
             is DetourOffer->mutable.update {it.copy(detour=m)}
             is DetourResolved->mutable.update {if(it.detour?.offerId==m.offerId)it.copy(detour=null) else it}
             is NavStateUpdate->{
                 if(m.state==NavState.ARRIVED)arrivedAt=clock()
                 if(m.state==NavState.IDLE || m.state==NavState.ENDED)dismissed.clear()
-                mutable.update {it.copy(navState=m.state,alerts=if(m.state in listOf(NavState.IDLE,NavState.ENDED,NavState.ARRIVED))emptyList() else it.alerts)}
+                val tripOver=m.state in listOf(NavState.IDLE,NavState.ENDED,NavState.ARRIVED)
+                if(tripOver)alertUpdatedAt.clear()
+                mutable.update {it.copy(navState=m.state,alerts=if(tripOver)emptyList() else it.alerts,
+                    alertSeenAt=if(tripOver)emptyMap() else it.alertSeenAt)}
             }
             is SettingsUpdate->mutable.update {it.copy(voiceMuted=m.voiceMuted,units=m.units,mapZoom=m.mapZoomLevel.coerceIn(0,2),brightnessPercent=m.brightnessPercent.coerceIn(0,100))}
             else->Unit
@@ -113,9 +123,15 @@ class HudStore(private val clock:()->Long=System::currentTimeMillis,private val 
     }
     fun tick(now:Long=clock()) {
         if(routePendingAt>0 && now-routePendingAt>=5000){routePendingAt=0;requestResync()}
+        // The phone refreshes active alerts with every position fix; a silent one is stale (link drop).
+        val stale=alertUpdatedAt.filterValues {now-it>=ALERT_STALE_MS}.keys
+        stale.forEach(alertUpdatedAt::remove)
         mutable.update {s->s.copy(nowMs=now,detour=s.detour?.takeIf {it.expiresAtMs>now},
+            alerts=if(stale.isEmpty())s.alerts else s.alerts.filterNot {it.id in stale},
+            alertSeenAt=if(stale.isEmpty())s.alertSeenAt else s.alertSeenAt-stale,
             mode=if(s.mode is HudMode.Menu && now-menuTouched>=10_000)returnMode else s.mode,
             navState=if(s.navState==NavState.ARRIVED && now-arrivedAt>=10_000)NavState.IDLE else s.navState)}
     }
     suspend fun tickLoop(){while(true){tick();delay(1000)}}
+    companion object { const val ALERT_STALE_MS=120_000L }
 }

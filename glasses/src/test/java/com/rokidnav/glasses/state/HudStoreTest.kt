@@ -61,7 +61,7 @@ class HudStoreTest {
         assertEquals(emptyList<com.rokidnav.protocol.Alert>(), store.state.value.alerts)
     }
 
-    @Test fun dismissedAlertStaysDismissedDuringCountdownAndNewAlertPreemptsMenu() {
+    @Test fun dismissedAlertStaysDismissedAndNewAlertsNeverInterruptTheMenu() {
         val alert=com.rokidnav.protocol.Alert(1,"p1",com.rokidnav.protocol.AlertKind.POLICE,1000,0.0,0.0)
         store.onMessage(alert)
         store.onKey(GlassesKey.DOUBLE_TAP)
@@ -69,7 +69,26 @@ class HudStoreTest {
         assertEquals(0,store.state.value.alerts.size)
         store.onKey(GlassesKey.LONG_PRESS)
         store.onMessage(alert.copy(seq=3,id="p2"))
-        assertEquals(HudMode.Compact,store.state.value.mode)
+        assertEquals(HudMode.Menu(MenuPage.ROOT),store.state.value.mode)
+        assertEquals(1,store.state.value.alerts.size)
+    }
+
+    @Test fun alertsNeedNoInteractionTheyClearWhenPassedOrWhenThePhoneGoesQuiet() {
+        var now=1_000L
+        val hud=HudStore(clock={now}){}
+        val alert=com.rokidnav.protocol.Alert(1,"p1",com.rokidnav.protocol.AlertKind.POLICE,1000,0.0,0.0)
+        hud.onMessage(alert)
+        assertEquals(1_000L,hud.state.value.alertSeenAt["p1"])
+        now+=60_000;hud.onMessage(alert.copy(seq=2,distanceAheadMeters=400))     // refreshed: first-seen time kept
+        assertEquals(1_000L,hud.state.value.alertSeenAt["p1"])
+        now+=HudStore.ALERT_STALE_MS-1;hud.tick()
+        assertEquals(1,hud.state.value.alerts.size)
+        now+=1;hud.tick()                                                          // no update for 2 min: stale
+        assertEquals(0,hud.state.value.alerts.size)
+        assertNull(hud.state.value.alertSeenAt["p1"])
+        hud.onMessage(alert.copy(seq=3,id="p2"))
+        hud.onMessage(com.rokidnav.protocol.AlertCleared(4,"p2"))                  // passed: phone clears it
+        assertEquals(0,hud.state.value.alerts.size)
     }
 
     @Test fun endTripRequiresConfirmAndMenuTimeoutIsDeterministic() {
