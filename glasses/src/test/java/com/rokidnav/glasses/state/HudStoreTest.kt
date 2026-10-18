@@ -61,16 +61,34 @@ class HudStoreTest {
         assertEquals(emptyList<com.rokidnav.protocol.Alert>(), store.state.value.alerts)
     }
 
-    @Test fun dismissedAlertStaysDismissedAndNewAlertsNeverInterruptTheMenu() {
+    @Test fun newAlertsNeverInterruptTheMenu() {
         val alert=com.rokidnav.protocol.Alert(1,"p1",com.rokidnav.protocol.AlertKind.POLICE,1000,0.0,0.0)
-        store.onMessage(alert)
-        store.onKey(GlassesKey.DOUBLE_TAP)
-        store.onMessage(alert.copy(seq=2,distanceAheadMeters=500))
-        assertEquals(0,store.state.value.alerts.size)
         store.onKey(GlassesKey.LONG_PRESS)
-        store.onMessage(alert.copy(seq=3,id="p2"))
+        store.onMessage(alert)
         assertEquals(HudMode.Menu(MenuPage.ROOT),store.state.value.mode)
         assertEquals(1,store.state.value.alerts.size)
+    }
+
+    @Test fun doubleTapAndBackGoToTheSystemUnlessTheHudNeedsThem() {
+        // Plain driving view, even with an alert showing: hand it to the system (exit to Rokid home).
+        store.onMessage(com.rokidnav.protocol.Alert(1,"p1",com.rokidnav.protocol.AlertKind.POLICE,1000,0.0,0.0))
+        assertEquals(false,store.onKey(GlassesKey.DOUBLE_TAP))
+        assertEquals(false,store.onKey(GlassesKey.BACK))
+        assertEquals(1,store.state.value.alerts.size)                      // alerts are not dismissed by it
+        // Menu: back out of it.
+        store.onKey(GlassesKey.LONG_PRESS)
+        assertEquals(true,store.onKey(GlassesKey.DOUBLE_TAP))
+        assertEquals(HudMode.Compact,store.state.value.mode)
+        // Detour offer: double-tap keeps the current route.
+        store.onMessage(DetourOffer(2,"d1",300,0,"via A",expiresAtMs=Long.MAX_VALUE))
+        assertEquals(true,store.onKey(GlassesKey.DOUBLE_TAP))
+        assertEquals(ActionType.DISMISS_DETOUR,sent.last().action)
+        // Arrival screen: double-tap closes it.
+        store.onMessage(com.rokidnav.protocol.NavStateUpdate(3,com.rokidnav.protocol.NavState.ARRIVED))
+        assertEquals(true,store.onKey(GlassesKey.DOUBLE_TAP))
+        assertEquals(com.rokidnav.protocol.NavState.IDLE,store.state.value.navState)
+        // Other keys are always the HUD's.
+        assertEquals(true,store.onKey(GlassesKey.TAP))
     }
 
     @Test fun alertsNeedNoInteractionTheyClearWhenPassedOrWhenThePhoneGoesQuiet() {

@@ -77,11 +77,16 @@ class HudStore(private val clock:()->Long=System::currentTimeMillis,private val 
     private fun showRoads(roads:List<ContextRoad>)=mutable.update {
         it.copy(contextRoads=roads.map {road->HudRoad(PolylineCodec.decode(road.encodedPolyline),road.name,road.major)})
     }
-    fun onKey(key:GlassesKey) {
+    /**
+     * Applies a key. Returns false when the HUD has no use for it, so the caller hands it to the system:
+     * double-tap / Back then exits to the Rokid home screen. Double-tap is only kept where it has a job:
+     * back out of the menu, keep the current route on a detour offer, close the arrival screen.
+     */
+    fun onKey(key:GlassesKey):Boolean {
         menuTouched=clock()
         val s=state.value
         val menu=s.mode as? HudMode.Menu
-        if(menu!=null){menuKey(menu,key);return}
+        if(menu!=null){menuKey(menu,key);return true}
         val d=s.detour
         when {
             d!=null && (key==GlassesKey.TAP || key==GlassesKey.DOUBLE_TAP)->{
@@ -92,8 +97,10 @@ class HudStore(private val clock:()->Long=System::currentTimeMillis,private val 
             key==GlassesKey.TAP->mode(if(s.mode==HudMode.Compact)HudMode.Map else HudMode.Compact)
             key==GlassesKey.SWIPE_FORWARD->{mutable.update {it.copy(mapZoom=(it.mapZoom-1).coerceAtLeast(0))};sendAction(GlassesAction(0,ActionType.ZOOM_IN))}
             key==GlassesKey.SWIPE_BACK->{mutable.update {it.copy(mapZoom=(it.mapZoom+1).coerceAtMost(2))};sendAction(GlassesAction(0,ActionType.ZOOM_OUT))}
-            key==GlassesKey.DOUBLE_TAP->{s.alerts.firstOrNull()?.let {dismissed.add(it.id)};mutable.update {it.copy(alerts=it.alerts.drop(1),navState=if(it.navState==NavState.ARRIVED)NavState.IDLE else it.navState)}}
+            (key==GlassesKey.DOUBLE_TAP || key==GlassesKey.BACK) && s.navState==NavState.ARRIVED->mutable.update {it.copy(navState=NavState.IDLE)}
+            key==GlassesKey.DOUBLE_TAP || key==GlassesKey.BACK->return false
         }
+        return true
     }
     private fun mode(value:HudMode){mutable.update {it.copy(mode=value)}}
     private fun menuKey(menu:HudMode.Menu,key:GlassesKey) {

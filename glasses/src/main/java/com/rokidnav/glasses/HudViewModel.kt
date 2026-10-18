@@ -28,6 +28,7 @@ class HudViewModel(application:Application) : AndroidViewModel(application) {
     }
     private fun hello(){link.send(GlassesHello(seq.next(),BuildConfig.VERSION_NAME,width,height))}
     fun onDisplayReady(width:Int,height:Int){this.width=width;this.height=height;if(::link.isInitialized)hello()}
-    fun onKey(key:GlassesKey){if(::link.isInitialized)link.send(InputEvent(seq.next(),key.name));store.onKey(key)}
+    /** Returns whether the HUD used the key (see [HudStore.onKey]). */
+    fun onKey(key:GlassesKey):Boolean{if(::link.isInitialized)link.send(InputEvent(seq.next(),key.name));return store.onKey(key)}
     override fun onCleared(){if(::link.isInitialized)link.close()}
 }

@@ -4,6 +4,7 @@ import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.*
 import android.widget.FrameLayout
 import androidx.activity.addCallback
@@ -19,7 +20,9 @@ import kotlinx.coroutines.launch
 class MainActivity:AppCompatActivity() {
     private lateinit var vm:HudViewModel
     private lateinit var hud:HudView
-    private val keyReceiver=KeyReceiver { vm.onKey(it) }
+    private val keyReceiver=KeyReceiver { handleKey(it) }
+    private var backGestureAt=0L
+    private var backGestureConsumed=true
     override fun onCreate(savedInstanceState:Bundle?) {
         super.onCreate(savedInstanceState)
         // Let the glasses compositor choose its native orientation. Forced landscape rotates the HUD.
@@ -38,11 +41,11 @@ class MainActivity:AppCompatActivity() {
         container.addView(hud,FrameLayout.LayoutParams(if(previewWidth>0)previewWidth else -1,if(previewHeight>0)previewHeight else -1,Gravity.CENTER))
         setContentView(container)
         ContextCompat.registerReceiver(this,keyReceiver,IntentFilter().apply {KeyType.entries.forEach { addAction(it.action) }},ContextCompat.RECEIVER_EXPORTED)
-        onBackPressedDispatcher.addCallback(this){vm.onKey(GlassesKey.BACK)}
+        onBackPressedDispatcher.addCallback(this){handleKey(GlassesKey.BACK)}
         val gestures=GestureDetector(this,object:GestureDetector.SimpleOnGestureListener(){
             override fun onDown(e:MotionEvent)=true
             override fun onSingleTapConfirmed(e:MotionEvent):Boolean {vm.onKey(GlassesKey.TAP);return true}
-            override fun onDoubleTap(e:MotionEvent):Boolean {vm.onKey(GlassesKey.DOUBLE_TAP);return true}
+            override fun onDoubleTap(e:MotionEvent):Boolean {handleKey(GlassesKey.DOUBLE_TAP);return true}
             override fun onLongPress(e:MotionEvent){vm.onKey(GlassesKey.LONG_PRESS)}
             override fun onFling(e1:MotionEvent?,e2:MotionEvent,velocityX:Float,velocityY:Float):Boolean {
                 val start=e1 ?: return false
@@ -66,5 +69,22 @@ class MainActivity:AppCompatActivity() {
         val key=GlassesKey.fromKeyCode(keyCode) ?: return super.onKeyDown(keyCode,event)
         vm.onKey(key);return true
     }
+    /**
+     * Every input path lands here. Double-tap and Back are one "back" gesture: Rokid can report a single
+     * double-click both as a broadcast and as a Back key, so a second report within 700 ms repeats the
+     * first decision instead of acting twice (e.g. closing the menu and then exiting). Returns true when
+     * the HUD used the key; a back gesture it doesn't need returns to the Rokid home screen.
+     */
+    private fun handleKey(key:GlassesKey):Boolean {
+        if(key!=GlassesKey.DOUBLE_TAP && key!=GlassesKey.BACK){vm.onKey(key);return true}
+        val now=SystemClock.uptimeMillis()
+        if(now-backGestureAt<700)return backGestureConsumed
+        backGestureAt=now
+        backGestureConsumed=vm.onKey(key)
+        if(!backGestureConsumed)exitToHome()
+        return backGestureConsumed
+    }
+    /** Back to the Rokid home screen. The task stays alive, so an active trip resumes where it was. */
+    private fun exitToHome(){if(!moveTaskToBack(true))finish()}
     override fun onDestroy(){unregisterReceiver(keyReceiver);super.onDestroy()}
 }

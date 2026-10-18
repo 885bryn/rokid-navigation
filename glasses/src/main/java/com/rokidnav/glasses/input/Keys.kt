@@ -48,12 +48,12 @@ enum class GlassesKey {
     }
 }
 
-class KeyReceiver(private val onKey: (GlassesKey) -> Unit) : BroadcastReceiver() {
+/** [onKey] returns whether the HUD used the key; unused keys stay with the system (e.g. double-click = home). */
+class KeyReceiver(private val onKey: (GlassesKey) -> Boolean) : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         val type = KeyType.fromAction(intent?.action) ?: return
         val key = GlassesKey.fromKeyType(type) ?: return
-        onKey(key)
-        // Only swallow keys we handle, and only for ordered broadcasts (abortBroadcast throws otherwise).
-        if (isOrderedBroadcast) abortBroadcast()
+        // Only swallow keys we used, and only for ordered broadcasts (abortBroadcast throws otherwise).
+        if (onKey(key) && isOrderedBroadcast) abortBroadcast()
     }
 }

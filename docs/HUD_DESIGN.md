@@ -29,7 +29,8 @@ The native 480×640 viewport now uses a bottom-corner composition, uniformly fit
 - Alerts are a small chip in the map's top-left corner (compact) or top-right (expanded); trip stats
   always stay visible. Detour controls replace the maneuver block.
 - Tap toggles **compact ↔ expanded**. A pending detour retains tap/2× tap accept/keep priority.
-  Alerts need no input (double tap still hides one early). Long press opens the existing menu; closing/timeout restores the
+  Alerts need no input. Double tap / Back exit to the Rokid home screen unless the menu, a detour offer
+  or the arrival screen needs them. Long press opens the existing menu; closing/timeout restores the
   previous compact or expanded mode. AI assistant input belongs to the system.
 - Expanded uses Claude's proportionate 480×398 composition. No automatic expansion or attention-
   seeking animation occurs. Idle/arrival messages also stay low in the compact layout.
@@ -75,7 +76,7 @@ Rokid temple touchpad. Broadcast names from the CXR docs; single-finger swipe de
 | Gesture | Map / Minimal | Detour prompt showing | Menu |
 |---|---|---|---|
 | Tap | toggle Compact ↔ Expanded | **accept detour** | select |
-| Double tap | dismiss current alert | **keep current route** | back / close |
+| Double tap | **exit to Rokid home** (task kept, trip resumes on return) | **keep current route** | back / close |
 | Long press | open menu | open menu | close |
 | Swipe forward | zoom in | — | next item |
 | Swipe back | zoom out | — | previous item |
