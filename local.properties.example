@@ -1,0 +1,6 @@
+# Copy to local.properties (git-ignored). Android Studio also writes sdk.dir here.
+sdk.dir=C\:\\Users\\YOU\\AppData\\Local\\Android\\Sdk
+
+# Google Cloud API key with: Navigation SDK, Places API (New), Routes API enabled.
+# Restrict it to the phone app's package name + SHA-1 in Google Cloud Console.
+MAPS_API_KEY=replace-me

@@ -1,0 +1,202 @@
+package com.rokidnav.protocol
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+/**
+ * Every message between phone and glasses. Distances are meters, times are seconds, timestamps are
+ * epoch millis. Formatting (mi/km, 12/24h) happens on the glasses using [SessionStart.units].
+ *
+ * Rules: add fields with defaults only; never reorder/rename @SerialName values; document every
+ * change in docs/PROTOCOL.md. Breaking changes bump [ProtocolVersion].
+ */
+@Serializable
+sealed interface NavMessage {
+    val seq: Long
+}
+
+// ---------------------------------------------------------------- phone -> glasses
+
+@Serializable @SerialName("session_start")
+data class SessionStart(
+    override val seq: Long,
+    val units: Units = Units.IMPERIAL,
+    val clock24h: Boolean = false,
+    val destinationName: String = "",
+) : NavMessage
+
+/** Route polyline, sent once per route (and again on reroute). Large routes are split by [RouteChunker]. */
+@Serializable @SerialName("route_chunk")
+data class RouteChunk(
+    override val seq: Long,
+    val routeId: String,
+    val chunkIndex: Int,
+    val chunkCount: Int,
+    /** Slice of a Google encoded polyline string. Concatenate all chunks in order, then decode. */
+    val encodedPolylinePart: String,
+    val totalMeters: Int,
+) : NavMessage
+
+/** Optional surrounding streets for the glasses map (see docs/DATA_SOURCES.md, "map context"). */
+@Serializable @SerialName("road_context")
+data class RoadContext(
+    override val seq: Long,
+    val routeId: String,
+    val roads: List<ContextRoad>,
+) : NavMessage
+
+@Serializable
+data class ContextRoad(val encodedPolyline: String, val name: String = "", val major: Boolean = false)
+
+/** ~1 Hz. Glasses interpolate between updates for smooth motion. */
+@Serializable @SerialName("pos")
+data class PositionUpdate(
+    override val seq: Long,
+    val lat: Double,
+    val lng: Double,
+    val bearingDeg: Float,
+    val speedMps: Float,
+    /** Distance travelled along the current route polyline; lets glasses snap the chevron to the line. */
+    val metersAlongRoute: Int = -1,
+    val timestampMs: Long,
+) : NavMessage
+
+@Serializable @SerialName("maneuver")
+data class ManeuverUpdate(
+    override val seq: Long,
+    val current: Step,
+    val distanceToStepMeters: Int,
+    val timeToStepSeconds: Int,
+    /** The step after [current], shown as "then ..." when close together. */
+    val next: Step? = null,
+) : NavMessage
+
+@Serializable
+data class Step(
+    val maneuver: Maneuver,
+    val roadName: String = "",
+    val instruction: String = "",
+    val exitNumber: String = "",
+    val roundaboutExit: Int = 0,
+    val lanes: List<Lane> = emptyList(),
+)
+
+@Serializable
+data class Lane(val directions: List<Maneuver>, val recommended: Boolean)
+
+@Serializable @SerialName("progress")
+data class TripProgress(
+    override val seq: Long,
+    val etaEpochMs: Long,
+    val remainingMeters: Int,
+    val remainingSeconds: Int,
+    /** Extra time vs free-flow, from traffic. 0 when unknown. */
+    val trafficDelaySeconds: Int = 0,
+) : NavMessage
+
+/** Congestion along the current route, by distance from route start. */
+@Serializable @SerialName("traffic")
+data class TrafficSegments(
+    override val seq: Long,
+    val routeId: String,
+    val segments: List<TrafficSegment>,
+) : NavMessage
+
+@Serializable
+data class TrafficSegment(val startMeters: Int, val endMeters: Int, val level: TrafficLevel)
+
+@Serializable @SerialName("alert")
+data class Alert(
+    override val seq: Long,
+    val id: String,
+    val kind: AlertKind,
+    val distanceAheadMeters: Int,
+    val lat: Double,
+    val lng: Double,
+    val text: String = "",
+    val source: String = "",
+) : NavMessage
+
+@Serializable @SerialName("alert_clear")
+data class AlertCleared(override val seq: Long, val id: String) : NavMessage
+
+@Serializable @SerialName("detour_offer")
+data class DetourOffer(
+    override val seq: Long,
+    val offerId: String,
+    val savesSeconds: Int,
+    val extraMeters: Int,
+    /** Short label like "via I-280". */
+    val via: String,
+    val reason: String = "",
+    val expiresAtMs: Long,
+    val encodedPolyline: String = "",
+) : NavMessage
+
+@Serializable @SerialName("detour_resolved")
+data class DetourResolved(override val seq: Long, val offerId: String, val accepted: Boolean) : NavMessage
+
+@Serializable @SerialName("nav_state")
+data class NavStateUpdate(override val seq: Long, val state: NavState) : NavMessage
+
+/** Phone-side settings pushed to glasses (e.g. after a menu change is applied). */
+@Serializable @SerialName("settings")
+data class SettingsUpdate(
+    override val seq: Long,
+    val voiceMuted: Boolean,
+    val units: Units,
+    val mapZoomLevel: Int,
+) : NavMessage
+
+// ---------------------------------------------------------------- glasses -> phone
+
+@Serializable @SerialName("hello")
+data class GlassesHello(
+    override val seq: Long,
+    val appVersion: String,
+    val displayWidthPx: Int,
+    val displayHeightPx: Int,
+) : NavMessage
+
+/** Raw input, mostly for logging/calibration. Business logic should use [GlassesAction]. */
+@Serializable @SerialName("input")
+data class InputEvent(override val seq: Long, val key: String) : NavMessage
+
+@Serializable @SerialName("action")
+data class GlassesAction(
+    override val seq: Long,
+    val action: ActionType,
+    /** e.g. offerId for ACCEPT_DETOUR. */
+    val targetId: String = "",
+) : NavMessage
+
+/** Glasses ask for a full resync (after reconnect, app restart, or a missed route chunk). */
+@Serializable @SerialName("resync")
+data class ResyncRequest(override val seq: Long, val reason: String = "") : NavMessage
+
+// ---------------------------------------------------------------- shared enums
+
+@Serializable enum class Units { IMPERIAL, METRIC }
+
+@Serializable enum class TrafficLevel { NORMAL, SLOW, JAM }
+
+@Serializable enum class AlertKind {
+    POLICE, SPEED_CAMERA, ACCIDENT, HAZARD, ROAD_CLOSED, CONSTRUCTION, TRAFFIC_JAM, WEATHER, OTHER
+}
+
+@Serializable enum class NavState { IDLE, ROUTING, ACTIVE, REROUTING, GPS_LOST, ARRIVED, ENDED }
+
+@Serializable enum class ActionType {
+    ACCEPT_DETOUR, DISMISS_DETOUR, END_NAVIGATION, TOGGLE_VOICE, ZOOM_IN, ZOOM_OUT,
+    SHOW_ALTERNATIVES, TOGGLE_UNITS,
+}
+
+/** Mirrors the Google Navigation SDK maneuver set closely enough to map 1:1 (see NavInfoMapper). */
+@Serializable enum class Maneuver {
+    UNKNOWN, DEPART, DESTINATION, DESTINATION_LEFT, DESTINATION_RIGHT,
+    STRAIGHT, TURN_LEFT, TURN_RIGHT, TURN_SLIGHT_LEFT, TURN_SLIGHT_RIGHT,
+    TURN_SHARP_LEFT, TURN_SHARP_RIGHT, U_TURN_LEFT, U_TURN_RIGHT,
+    MERGE_LEFT, MERGE_RIGHT, MERGE_UNSPECIFIED,
+    FORK_LEFT, FORK_RIGHT, ON_RAMP_LEFT, ON_RAMP_RIGHT, OFF_RAMP_LEFT, OFF_RAMP_RIGHT,
+    ROUNDABOUT_CLOCKWISE, ROUNDABOUT_COUNTERCLOCKWISE, FERRY, NAME_CHANGE,
+}
