@@ -170,6 +170,14 @@ Dual monochrome green micro-LED waveguides, ~480×398 per eye (one source says 6
   (`ExternalAppClient.appUninstall`, reached by field type since v1.1 has no public API) and reconnects
   so the SDK installs the bundled HUD. Verified: 0.2.0 → 0.2.0+16c82db8 replaced in ~18 s with no
   user action; reconnecting to a current HUD skips the reinstall (hello in 0.1 s). See PROTOCOL.md.
+- HUD leaving the foreground ends the session: the SDK's `onGlassAppResume(false)` terminates with
+  `TerminatingReason.GLASSES_APP_EXIT` (seen in `CxrSessionImpl` bytecode; reproduced when double-click
+  exited to Rokid home mid-trip and the user came back to a frozen HUD). The glasses cannot restart a
+  session and the phone gets no signal when the HUD returns, so auto-reconnect would pop the HUD back up
+  after a deliberate exit. Instead the link reports `Closed(GLASSES_APP_EXIT)`, the phone shows
+  **Show on glasses** (nav screen and the ongoing notification), which reconnects, reopens the HUD and
+  resyncs; the HUD replaces guidance with "Phone not sending · Rokid Nav → Show on glasses" after 12 s
+  without phone messages mid-trip.
 - Google remains the source for planned search/routes/navigation/phone map. OSM is currently the
   street-geometry source for the custom HUD. A Google renderer on the glasses is an alternative to
   investigate once connected; Maps SDK needs Google Play services, whose availability on these

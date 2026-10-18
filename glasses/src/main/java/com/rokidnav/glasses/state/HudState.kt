@@ -13,6 +13,9 @@ import com.rokidnav.protocol.Units
 /** Immutable snapshot the HudView draws. Everything the screen shows must come from here. */
 data class HudState(
     val linkConnected: Boolean = false,
+    /** Mid-trip and nothing from the phone for [HudStore.PHONE_SILENT_MS]: the phone's session ended
+     *  (e.g. the HUD was backgrounded), so guidance on screen would be frozen. */
+    val phoneSilent: Boolean = false,
     val navState: NavState = NavState.IDLE,
     val units: Units = Units.METRIC,
     val clock24h: Boolean = false,

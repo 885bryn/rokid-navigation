@@ -50,6 +50,11 @@ sealed interface LinkState {
     /** Temporarily unavailable (Rokid AI assistant took over, or Bluetooth dropped). Token still valid. */
     data class Paused(val reason: String) : LinkState
     /** Session ended. [needsReauth] = token invalid (CHAIN_TORN / LINK_LOST). */
-    data class Closed(val reason: String, val needsReauth: Boolean) : LinkState
+    data class Closed(val reason: String, val needsReauth: Boolean) : LinkState {
+        /** The HUD left the foreground on the glasses (e.g. double-click to Rokid home), so the SDK ended
+         *  the session. Reopen it from the phone with [GlassesLink.connect] ("Show on glasses"). */
+        val hudClosedOnGlasses get() = reason == HUD_CLOSED
+        companion object { const val HUD_CLOSED = "GLASSES_APP_EXIT" }
+    }
     data class Failed(val message: String,val canRetry:Boolean=false) : LinkState
 }

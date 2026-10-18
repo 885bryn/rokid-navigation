@@ -253,6 +253,11 @@ class HudRenderer(context: Context) {
             text(c,"Reconnect in Hi Rokid",18f,376f,20f,153)
             return
         }
+        if(s.phoneSilent) {
+            text(c,"Phone not sending",18f,340f,24f)
+            text(c,"Rokid Nav → Show on glasses",18f,376f,20f,153)
+            return
+        }
         when {
             s.navState==NavState.ARRIVED -> arrived(c)
             s.mode is HudMode.Menu -> menu(c,s.mode as HudMode.Menu)
@@ -286,6 +291,11 @@ class HudRenderer(context: Context) {
         if(!s.linkConnected) {
             text(c,"Phone disconnected",18f,560f,22f)
             text(c,"Reconnect in Hi Rokid",18f,600f,18f,153)
+            return
+        }
+        if(s.phoneSilent) {
+            text(c,"Phone not sending",18f,560f,22f)
+            text(c,"Rokid Nav → Show on glasses",18f,600f,18f,153)
             return
         }
         map(c,nanos,compact=true)

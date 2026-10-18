@@ -17,11 +17,14 @@ class HudStore(private val clock:()->Long=System::currentTimeMillis,private val 
     private val contextParts=HashMap<Int,List<ContextRoad>>()
     private val dismissed=HashSet<String>()
     private val alertUpdatedAt=HashMap<String,Long>()
+    private var lastMessageAt=0L
     private var menuTouched=0L
     private var arrivedAt=0L
     private var returnMode:HudMode=HudMode.Compact
     fun onConnection(connected:Boolean){mutable.update {it.copy(linkConnected=connected)}}
     fun onMessage(m:NavMessage) {
+        lastMessageAt=clock()
+        if(state.value.phoneSilent)mutable.update {it.copy(phoneSilent=false)}
         if(m !is SessionStart && m.seq<=lastSeq)return
         lastSeq=m.seq
         when(m) {
@@ -133,12 +136,18 @@ class HudStore(private val clock:()->Long=System::currentTimeMillis,private val 
         // The phone refreshes active alerts with every position fix; a silent one is stale (link drop).
         val stale=alertUpdatedAt.filterValues {now-it>=ALERT_STALE_MS}.keys
         stale.forEach(alertUpdatedAt::remove)
+        val silent=lastMessageAt>0 && now-lastMessageAt>=PHONE_SILENT_MS
         mutable.update {s->s.copy(nowMs=now,detour=s.detour?.takeIf {it.expiresAtMs>now},
+            phoneSilent=silent && s.navState in listOf(NavState.ACTIVE,NavState.REROUTING,NavState.GPS_LOST),
             alerts=if(stale.isEmpty())s.alerts else s.alerts.filterNot {it.id in stale},
             alertSeenAt=if(stale.isEmpty())s.alertSeenAt else s.alertSeenAt-stale,
             mode=if(s.mode is HudMode.Menu && now-menuTouched>=10_000)returnMode else s.mode,
             navState=if(s.navState==NavState.ARRIVED && now-arrivedAt>=10_000)NavState.IDLE else s.navState)}
     }
     suspend fun tickLoop(){while(true){tick();delay(1000)}}
-    companion object { const val ALERT_STALE_MS=120_000L }
+    companion object {
+        const val ALERT_STALE_MS=120_000L
+        /** The phone sends position at least every 5 s while guiding, even when stopped. */
+        const val PHONE_SILENT_MS=12_000L
+    }
 }

@@ -61,6 +61,21 @@ class HudStoreTest {
         assertEquals(emptyList<com.rokidnav.protocol.Alert>(), store.state.value.alerts)
     }
 
+    @Test fun frozenGuidanceIsReplacedWhenThePhoneStopsSending() {
+        var now=1_000L
+        val hud=HudStore(clock={now}){}
+        hud.onMessage(com.rokidnav.protocol.NavStateUpdate(1,com.rokidnav.protocol.NavState.IDLE))
+        now+=HudStore.PHONE_SILENT_MS+1;hud.tick()
+        assertEquals(false,hud.state.value.phoneSilent)                  // idle: nothing to freeze
+        hud.onMessage(com.rokidnav.protocol.NavStateUpdate(2,com.rokidnav.protocol.NavState.ACTIVE))
+        now+=HudStore.PHONE_SILENT_MS-1;hud.tick()
+        assertEquals(false,hud.state.value.phoneSilent)
+        now+=1;hud.tick()                                                 // 12 s of silence mid-trip
+        assertEquals(true,hud.state.value.phoneSilent)
+        hud.onMessage(com.rokidnav.protocol.SessionStart(1))              // phone reconnected and resyncs
+        assertEquals(false,hud.state.value.phoneSilent)
+    }
+
     @Test fun newAlertsNeverInterruptTheMenu() {
         val alert=com.rokidnav.protocol.Alert(1,"p1",com.rokidnav.protocol.AlertKind.POLICE,1000,0.0,0.0)
         store.onKey(GlassesKey.LONG_PRESS)

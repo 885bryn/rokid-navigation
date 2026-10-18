@@ -76,7 +76,14 @@ fun NavigationScreen(activity:ComponentActivity,app:RokidNavApp) {
             Text(app.navEngine.destination.collectAsState().value?.name ?: destination?.name.orEmpty())
             maneuver?.let {Text("${phoneDistance(it.distanceToStepMeters,preferences.units)} · ${it.current.roadName}",style=MaterialTheme.typography.headlineSmall)}
             progress?.let {Text("${(it.remainingSeconds+59)/60} min left · ${phoneDistance(it.remainingMeters,preferences.units)}")}
-            if(link!=LinkState.Ready)Text("Glasses link unavailable. Keep Hi Rokid running; phone guidance continues.",color=MaterialTheme.colorScheme.error)
+            if(link!=LinkState.Ready) {
+                val closed=link as? LinkState.Closed
+                Text(if(closed?.hudClosedOnGlasses==true)"The HUD was closed on the glasses. Phone guidance continues."
+                    else "Glasses link unavailable. Keep Hi Rokid running; phone guidance continues.",color=MaterialTheme.colorScheme.error)
+                // Only the phone can restart the session; reconnecting reopens the HUD and resyncs the trip.
+                if((closed!=null && !closed.needsReauth) || (link as? LinkState.Failed)?.canRetry==true)
+                    Button(onClick={app.glassesLink.connect()}){Text("Show on glasses")}
+            }
             detour?.let {offer ->
                 HorizontalDivider();Text("Faster route: save ${(offer.savesSeconds+59)/60} min via ${offer.via}")
                 Row {Button(onClick={app.coordinator.respondToDetour(true)}){Text("Take route")};TextButton(onClick={app.coordinator.respondToDetour(false)}){Text("Keep route")}}

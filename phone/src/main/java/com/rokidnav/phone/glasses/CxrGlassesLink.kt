@@ -76,18 +76,23 @@ class CxrGlassesLink(private val context:Context):GlassesLink {
                     glassesApkPath=apk.absolutePath,aiInterceptMode=AiInterceptMode.ALLOW_WITH_PAUSE))
                 session=created
                 var connectionFailure: LinkState.Failed? = null
+                var terminating: TerminatingReason? = null
                 created.addLifecycleCallback(object:ISessionLifecycleCbk {
                     private fun update(value:LinkState){onMain {if(attempt==generation)mutableState.value=value}}
                     override fun onSessionStarted(){Log.i("RokidNavLink","session_started");update(LinkState.Ready);onMain {requestHello(attempt)}}
                     override fun onSessionPaused(reason:PausedReason){update(LinkState.Paused(reason.name))}
                     override fun onSessionResumed(){update(LinkState.Ready)}
-                    override fun onSessionTerminating(reason:TerminatingReason,remainingMs:Long){update(LinkState.Paused("Closing"))}
+                    override fun onSessionTerminating(reason:TerminatingReason,remainingMs:Long){
+                        Log.i("RokidNavLink","session_terminating reason=${reason.name}")
+                        onMain {terminating=reason};update(LinkState.Paused("Closing"))
+                    }
                     override fun onSessionClosed(reason:CloseReason){onMain {
                         Log.i("RokidNavLink","session_closed reason=${reason.name}")
                         if(attempt==generation){val reauth=reason==CloseReason.CHAIN_TORN || reason==CloseReason.LINK_LOST
                             if(reauth)token=null
                             session=null;mutableState.value=if(reason==CloseReason.CONNECT_FAILED && connectionFailure!=null)
-                                connectionFailure!! else LinkState.Closed(reason.name,reauth)}
+                                connectionFailure!! else if(!reauth && terminating==TerminatingReason.GLASSES_APP_EXIT)
+                                LinkState.Closed(LinkState.Closed.HUD_CLOSED,false) else LinkState.Closed(reason.name,reauth)}
                     }}
                     override fun onConnectResult(success:Boolean,error:SessionErrorCode?){onMain {
                         Log.i("RokidNavLink","connect_result success=$success error=${error?.name ?: "none"}")
