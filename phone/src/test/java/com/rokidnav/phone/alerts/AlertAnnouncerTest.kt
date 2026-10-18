@@ -9,7 +9,7 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 class AlertAnnouncerTest {
-    private var settings = UserSettings()
+    private var settings = UserSettings(units = Units.IMPERIAL)
     private var now = 0L
     private val announcer = AlertAnnouncer({ settings }, { now })
     private fun alert(id: String, meters: Int, kind: AlertKind = AlertKind.POLICE, lng: Double = 0.01) =
@@ -39,6 +39,11 @@ class AlertAnnouncerTest {
     @Test fun warningDistanceIsConfigurable() {
         settings = settings.copy(alertVoiceMeters = 2000)
         assertEquals("Police reported ahead in 1.1 miles.", announcer.consider(alert("p1", 1800)))
+    }
+
+    @Test fun metricIsTheDefault() {
+        val metric = AlertAnnouncer({ UserSettings() }, { 0L })
+        assertEquals("Police reported ahead in 900 metres.", metric.consider(alert("p1", 890)))
     }
 
     @Test fun phrasesReadNaturally() {

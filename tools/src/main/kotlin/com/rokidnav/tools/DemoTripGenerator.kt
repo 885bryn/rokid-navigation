@@ -35,7 +35,7 @@ fun main(args: Array<String>) {
             put("message", Json.parseToJsonElement(ProtocolCodec.encode(message).second))
         }.toString()
     }
-    emit(SessionStart(++seq, Units.IMPERIAL, false, "Marina overlook"))
+    emit(SessionStart(++seq, Units.METRIC, false, "Marina overlook"))
     RouteChunker.split("demo-marina", encoded, total.roundToInt()) { ++seq }.forEach { emit(it) }
     // Synthetic streets for the synthetic recording. Live trips use actual OpenStreetMap geometry.
     emit(RoadContext(++seq,"demo-marina",listOf(

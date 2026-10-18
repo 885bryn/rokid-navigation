@@ -93,7 +93,7 @@ class NavSessionCoordinatorTest {
         assertTrue(spoken.isEmpty())
         link.state.value = LinkState.Paused("bluetooth"); runCurrent()
         engine.position.emit(fix(0.007)); runCurrent()        // 890 m: in range, glasses paused
-        assertEquals(listOf("Police reported ahead in half a mile."), spoken)
+        assertEquals(listOf("Police reported ahead in 900 metres."), spoken)
         engine.position.emit(fix(0.012)); runCurrent()        // still active: not repeated
         assertEquals(1, spoken.size)
     }

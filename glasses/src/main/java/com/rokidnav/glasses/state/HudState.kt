@@ -14,7 +14,7 @@ import com.rokidnav.protocol.Units
 data class HudState(
     val linkConnected: Boolean = false,
     val navState: NavState = NavState.IDLE,
-    val units: Units = Units.IMPERIAL,
+    val units: Units = Units.METRIC,
     val clock24h: Boolean = false,
     val destinationName: String = "",
 

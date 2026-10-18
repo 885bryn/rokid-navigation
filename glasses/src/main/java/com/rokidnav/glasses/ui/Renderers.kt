@@ -104,7 +104,7 @@ class HudRenderer(context: Context) {
             }
             hasRoads=next.contextRoads.isNotEmpty()
             roadNames=next.contextRoads.map { road ->
-                if(road.name.isNotBlank() && usedNames.add(road.name))ellipsize(road.name,15f,130f) else ""
+                if(road.name.isNotBlank() && usedNames.add(road.name))ellipsize(road.name,LABEL_MAJOR,150f) else ""
             }.toTypedArray()
             roadMajor=BooleanArray(next.contextRoads.size) {next.contextRoads[it].major}
             roadEast=FloatArray(next.contextRoads.size)
@@ -161,8 +161,8 @@ class HudRenderer(context: Context) {
                 if(name.isNotEmpty() && name==cueName && best<cueBest){cueBest=best;cueRoad=index}
             }
             // The chosen piece carries the label even if an earlier piece of the same street took the name.
-            if(turnRoad>=0)roadNames[turnRoad]=ellipsize(next.contextRoads[turnRoad].name,17f,150f)
-            if(cueRoad>=0)roadNames[cueRoad]=ellipsize(next.contextRoads[cueRoad].name,15f,130f)
+            if(turnRoad>=0)roadNames[turnRoad]=ellipsize(next.contextRoads[turnRoad].name,LABEL_TURN,170f)
+            if(cueRoad>=0)roadNames[cueRoad]=ellipsize(next.contextRoads[cueRoad].name,LABEL_MAJOR,150f)
             labelOrder=next.contextRoads.indices.filter { roadNames[it].isNotEmpty() }
                 .sortedBy { when { it==turnRoad->0; it==cueRoad->1; roadMajor[it]->2; else->3 } }.toIntArray()
         }
@@ -408,7 +408,7 @@ class HudRenderer(context: Context) {
         }
         c.restore()
         if(compact) {
-            labels(c,px,py,heading,ppm,cx,anchor,258f,462f,426f,600f,3,0.75f)
+            labels(c,px,py,heading,ppm,cx,anchor,258f,462f,426f,600f,3,0.85f)
             c.save();c.translate(cx,anchor);c.scale(.65f,.65f);c.drawPath(chevron,paint());c.restore()
             return
         }
@@ -447,7 +447,7 @@ class HudRenderer(context: Context) {
         while(k<labelOrder.size && placed<max) {
             val i=labelOrder[k];k++
             val turn=i==turnRoad;val after=i==cueRoad
-            val size=(if(turn)17f else if(after || roadMajor[i])15f else 14f)*scale
+            val size=(if(turn)LABEL_TURN else if(after || roadMajor[i])LABEL_MAJOR else LABEL_MINOR)*scale
             val alpha=if(turn)255 else if(after)166 else if(roadMajor[i])204 else 153
             val w=paint(size,b=turn).measureText(roadNames[i])
             val dx=roadEast[i]-px;val dy=roadNorth[i]-py
@@ -569,6 +569,11 @@ class HudRenderer(context: Context) {
     companion object {
         const val GREEN = 0xFF3DFF8A.toInt()
         private const val MAX_LABELS = 10
+        // Street-name sizes (expanded; compact draws them at 0.85×). Raised ~20% on 2026-10-18: the
+        // waveguide resolution made 14–17 px names hard to read.
+        private const val LABEL_TURN = 20f
+        private const val LABEL_MAJOR = 18f
+        private const val LABEL_MINOR = 17f
         const val ALERT_FRESH_MS = 6_000L
         private val SPACES = Regex("\\s+")
         private val NAME_ABBREVIATIONS = listOf("street" to "st","avenue" to "ave","boulevard" to "blvd","road" to "rd",

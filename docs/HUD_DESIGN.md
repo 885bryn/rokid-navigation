@@ -133,7 +133,8 @@ shapes. Small glyphs 2.6 px in a 24 box.
 tube: free flow = hollow, SLOW = dashed fill (7 on / 6 off, 6 px), JAM = solid fill. This reads at a
 glance without color and keeps lit pixels low. Zoom 0 widens the tube to 20/9.
 Chevron: filled arrow 32×36 at (50%, ~85% of the map region). Context streets 3 px @22%.
-Next maneuver point: black dot with 3 px ring (zoom 0 only). Road label 15–16/600 @70% beside the
+Next maneuver point: black dot with 3 px ring (zoom 0 only). Street labels (2026-10-18, enlarged for the waveguide): turn street 20 px bold, major/"after" 18, other
+17; compact corner at 0.85×. Road label beside the
 turn.
 
 **Traffic ribbon:** right edge of the map, 8×196 px rounded outline @80% = the whole remaining route

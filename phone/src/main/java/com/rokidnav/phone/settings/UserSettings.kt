@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.*
  * @property alertToleranceMeters how far from the route line a report may be placed and still count:
  *   user reports are often pinned off the road or on the wrong carriageway.
  */
-data class UserSettings(val units:Units=Units.IMPERIAL,val voiceMuted:Boolean=false,
+data class UserSettings(val units:Units=Units.METRIC,val voiceMuted:Boolean=false,
     val zoom:Int=1,val brightness:Int=35,val police:Boolean=true,val cameras:Boolean=true,
     val alertVoice:Boolean=true,val alertVoiceCameras:Boolean=true,val alertVoiceMeters:Int=1000,
     val alertToleranceMeters:Int=150) {
@@ -24,9 +24,12 @@ data class UserSettings(val units:Units=Units.IMPERIAL,val voiceMuted:Boolean=fa
 
 /** App-private local preferences, written only when a setting changes. */
 class SettingsRepository(context:Context) {
-    private val prefs=context.getSharedPreferences("navigation_settings",Context.MODE_PRIVATE)
+    private val prefs=context.getSharedPreferences("navigation_settings",Context.MODE_PRIVATE).also {prefs->
+        // One-time switch to metric (user request, 2026-10-18); choosing imperial later in Settings sticks.
+        if(!prefs.getBoolean("metricMigrated",false))prefs.edit().putString("units",Units.METRIC.name).putBoolean("metricMigrated",true).apply()
+    }
     private val mutable=MutableStateFlow(normalize(UserSettings(
-        runCatching {Units.valueOf(prefs.getString("units","IMPERIAL")!!)}.getOrDefault(Units.IMPERIAL),
+        runCatching {Units.valueOf(prefs.getString("units","METRIC")!!)}.getOrDefault(Units.METRIC),
         prefs.getBoolean("muted",false),prefs.getInt("zoom",1),prefs.getInt("brightness",35),
         prefs.getBoolean("police",true),prefs.getBoolean("cameras",true),
         prefs.getBoolean("alertVoice",true),prefs.getBoolean("alertVoiceCameras",true),

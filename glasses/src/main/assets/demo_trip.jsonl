@@ -1,4 +1,4 @@
-{"delayMs":0,"message":{"t":"session_start","seq":1,"destinationName":"Marina overlook"}}
+{"delayMs":0,"message":{"t":"session_start","seq":1,"units":"METRIC","destinationName":"Marina overlook"}}
 {"delayMs":0,"message":{"t":"route_chunk","seq":2,"routeId":"demo-marina","chunkIndex":0,"chunkCount":1,"encodedPolylinePart":"oeveFvhgjVwQ?wQ??_X?_XwQ?wQ??_X?_X","totalMeters":2740}}
 {"delayMs":0,"message":{"t":"road_context","seq":3,"routeId":"demo-marina","roads":[{"encodedPolyline":"gxveFfnhjV?_|B","name":"Oak Avenue"},{"encodedPolyline":"_kweFfnhjV?_|B","name":"Bay Street","major":true},{"encodedPolyline":"wrueFvofjVooB?","name":"Scott Street"},{"encodedPolyline":"wrueFvvejVooB?","name":"Buchanan Street"}]}}
 {"delayMs":0,"message":{"t":"nav_state","seq":4,"state":"ACTIVE"}}

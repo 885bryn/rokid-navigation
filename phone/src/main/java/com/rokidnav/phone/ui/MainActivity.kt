@@ -79,7 +79,7 @@ class MainActivity:ComponentActivity() {
         val now=System.currentTimeMillis()
         app.coordinator.sendTestSnapshot { next -> buildList {
             val points=listOf(LatLng(37.802,-122.431),LatLng(37.808,-122.431),LatLng(37.808,-122.423))
-            add(SessionStart(next(),Units.IMPERIAL,false,"Marina overlook"))
+            add(SessionStart(next(),app.settings.state.value.units,false,"Marina overlook"))
             addAll(RouteChunker.split("test-$now",PolylineCodec.encode(points),1400,next))
             add(NavStateUpdate(next(),NavState.ACTIVE))
             add(PositionUpdate(next(),37.803,-122.431,0f,0f,111,now))
