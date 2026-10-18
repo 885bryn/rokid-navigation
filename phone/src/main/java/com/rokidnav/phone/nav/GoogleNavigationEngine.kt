@@ -64,7 +64,9 @@ class GoogleNavigationEngine(private val context:Context):NavigationEngine {
                 override fun onNavigatorReady(value:Navigator) {
                     if(!continuation.isActive)return
                     navigator=value
-                    value.addArrivalListener { if(it.isFinalDestination){navigator?.stopGuidance();_navState.value=NavState.ARRIVED;stopForeground()} }
+                    value.addArrivalListener { if(it.isFinalDestination){navigator?.stopGuidance();_navState.value=NavState.ARRIVED;stopForeground()
+                        // Release after this callback returns, not from inside the navigator's own listener.
+                        android.os.Handler(android.os.Looper.getMainLooper()).post(::release)} }
                     value.addRouteChangedListener { publishRoute();publishProgress() }
                     value.addReroutingListener {_navState.value=NavState.REROUTING}
                     value.addRemainingTimeOrDistanceChangedListener(1,1){publishProgress()}
@@ -127,6 +129,20 @@ class GoogleNavigationEngine(private val context:Context):NavigationEngine {
     override fun stop() {
         routeGeneration++;navigator?.stopGuidance();navigator?.clearDestinations();navigator?.simulator?.unsetUserLocation()
         _navState.value=NavState.ENDED;_activeRoute.value=null;_destination.value=null;routePoints=emptyList();stopForeground()
+        release()
+    }
+    /**
+     * Ends the Google navigator entirely. The SDK keeps its own foreground service and "navigation"
+     * notification alive while a navigator exists (our road-snapped location listener keeps it tracking),
+     * so stopping guidance alone left that notification up. The next trip gets a fresh navigator from
+     * initialize(), which the UI calls before every start().
+     */
+    private fun release() {
+        val nav=navigator ?: return
+        navigator=null
+        runCatching {NavigationApi.getRoadSnappedLocationProvider(application)?.removeLocationListener(locationListener)}
+        runCatching {nav.unregisterServiceForNavUpdates()}
+        runCatching {nav.cleanup()}
     }
     internal fun onManeuver(update:ManeuverUpdate){if(_navState.value!=NavState.ENDED)_maneuver.tryEmit(update)}
     internal fun onNavStateFromFeed(state:NavState) {
