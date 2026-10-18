@@ -20,7 +20,7 @@ HUD delivery, native orientation, and tap return events have been checked on har
       `CXRServiceBridge` / `Caps` package names, and `StatusListener` signature. Pin the version.
 - [x] Confirm package names/imports for `CxrSessionManager`, `SessionConfig`, `SessionType`,
       `AiInterceptMode`, `ISessionLifecycleCbk`, `ICustomCmdSessionCallback`, `RokidAppStatus` in the client-l AAR.
-- [ ] `local.properties` with `MAPS_API_KEY` (user provides).
+- [x] `local.properties` with `MAPS_API_KEY` (one Android-restricted key for Maps SDK, Navigation SDK, Places (New), Routes; 2026-10-18).
 - **Accept:** `./gradlew assembleDebug` builds both APKs; protocol tests pass.
 - Findings: legacy official sample downloaded, but it contains phone source only. Stable bridge
   1.7.3 pinned and signatures inspected directly; locating the matching glasses sample remains open.
@@ -82,7 +82,7 @@ HUD delivery, native orientation, and tap return events have been checked on har
 - [x] `RoutesApiClient.computeRoutes`: traffic-aware tokens, alternatives, bounded cancellable REST, parser tests.
 - [ ] Replace example/synthetic test data with an API-recorded fixture once keys are configured.
 - [x] Route picker: Google MapView with alternatives, durations, distance, traffic delay and warnings.
-- **Accept:** pick destination → see 1–3 routes with traffic delay → Go.
+- **Accepted 2026-10-18** (Nothing A059P): destination search, route choice and Go work with the live key.
 
 ## M5 — Guidance to glasses
 - [x] `GoogleNavigationEngine`: navigator init (terms dialog), `setDestinations` with route token,
@@ -90,7 +90,9 @@ HUD delivery, native orientation, and tap return events have been checked on har
 - [x] `NavUpdatesService` + `NavInfoMapper` (all published maneuvers, lanes) + SDK-builder mapper tests.
 - [x] `NavForegroundService` while guiding, notification with End action.
 - [x] Debug "simulate drive" toggle, Google simulator wiring.
-- **Accept:** simulated drive on the phone shows matching turns/distances/ETA on the glasses; screen-off keeps working.
+- **Accepted 2026-10-18** (simulated drive): glasses show the same turn as the phone, distance counts down, ETA matches,
+  route line and OSM streets render in the corner map; phone sent ~3 frames/s with zero failures.
+  Still open: screen-off guidance and a real (non-simulated) drive.
 
 ## M6 — Traffic & detours
 - [x] `TrafficMonitor`: 150-second active-trip poll, heading, stopped/final-2-km suppression, forced refresh;

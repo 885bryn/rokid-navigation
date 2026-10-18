@@ -39,11 +39,10 @@ The matching APKs are:
 - `phone/build/outputs/apk/debug/phone-debug.apk`
 - `glasses/build/outputs/apk/debug/glasses-debug.apk`
 
-Version 0.2.0 bundles the same glasses APK in the phone. Install/update the phone, then update the
-HUD using Hi Rokid → Toolbox → Glasses app management. The phone's **Glasses → Save glasses installer**
-exports the bundled APK through Android's file picker. This fallback is necessary because the first
-CXR automatic installation failed on this device; subsequent remote launch of an installed HUD works.
-The debug connection screen shows the glasses app version to identify an outdated install.
+The phone bundles the matching glasses APK. Install/update only the phone: **Connect glasses** installs
+the HUD when it is missing and replaces it when its version differs from the bundled one (verified
+2026-10-18, see ARCHITECTURE.md). **Glasses → Save glasses installer** remains a manual fallback for
+Hi Rokid → Toolbox → Glasses app management if Hi Rokid ever reports an install failure.
 
 ## Validate with the phone
 
