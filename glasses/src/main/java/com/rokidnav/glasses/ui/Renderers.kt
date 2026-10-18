@@ -262,7 +262,8 @@ class HudRenderer(context: Context) {
             s.navState==NavState.ARRIVED -> arrived(c)
             s.mode is HudMode.Menu -> menu(c,s.mode as HudMode.Menu)
             s.navState==NavState.IDLE || s.navState==NavState.ENDED -> {
-                center(c,"Rokid Nav",240f,184f,44f,b=true); center(c,"Choose a destination on your phone",240f,226f,24f,180)
+                center(c,"Rokid Nav",240f,184f,44f,b=true); center(c,"Start a trip in Rokid Nav on your phone",240f,226f,24f,180)
+                center(c,"Trip running? Tap Show on glasses",240f,258f,20f,140)
             }
             else -> {
                 banner(c)
@@ -280,7 +281,8 @@ class HudRenderer(context: Context) {
     fun drawCompact(c:Canvas,nanos:Long) {
         if(s.navState==NavState.IDLE || s.navState==NavState.ENDED) {
             text(c,"Rokid Nav",18f,574f,24f)
-            text(c,"Choose a route on your phone",18f,605f,18f,153)
+            text(c,"Start a trip on your phone, or",18f,600f,18f,153)
+            text(c,"tap Show on glasses in Rokid Nav",18f,624f,18f,153)
             return
         }
         if(s.navState==NavState.ARRIVED) {

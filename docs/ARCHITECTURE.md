@@ -123,7 +123,8 @@ Dual monochrome green micro-LED waveguides, ~480×398 per eye (one source says 6
 - Bridge 1.7.3 has no public unsubscribe/destructor API. One application-lifetime `CxrPhoneLink`
   subscribes once; ViewModel collectors are cancelled normally. Its native lifetime is not broadened
   to disconnect the user's entire Rokid Bluetooth chain on an Activity close.
-- Launcher intents select demo; remote explicit launches select real mode, with an explicit `demo`
+- (Superseded 2026-10-18: every launch uses the real link; demo needs the explicit `demo` extra, because
+  reopening from the Rokid home screen played the demo trip mid-drive.) Launcher intents selected demo; remote explicit launches select real mode, with an explicit `demo`
   extra for previews. This intent distinction needs confirmation on the real glasses launcher.
 - `:tools:run` generates the demo recording from a synthetic Routes-shaped fixture. HudStore owns
   messages/keys/timeouts. Renderers cache fonts, glyphs, paths, geometry, and labels outside drawing;

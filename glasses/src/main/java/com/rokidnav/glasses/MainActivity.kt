@@ -32,7 +32,9 @@ class MainActivity:AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window,false)
         WindowCompat.getInsetsController(window,window.decorView).hide(WindowInsetsCompat.Type.systemBars())
         vm=ViewModelProvider(this)[HudViewModel::class.java]
-        vm.initialize(intent.getBooleanExtra("demo",intent.hasCategory(android.content.Intent.CATEGORY_LAUNCHER)))
+        // Demo only when asked for explicitly (phone "Preview on this phone", captures). Opening from the
+        // Rokid home screen used to start the demo trip, which looked like a different navigation.
+        vm.initialize(intent.getBooleanExtra("demo",false))
         if(BuildConfig.DEBUG && intent.getBooleanExtra("demo",false) && intent.getBooleanExtra("previewExpanded",false))vm.onKey(GlassesKey.TAP)
         hud=HudView(this)
         val container=FrameLayout(this).apply { setBackgroundColor(android.graphics.Color.BLACK) }
