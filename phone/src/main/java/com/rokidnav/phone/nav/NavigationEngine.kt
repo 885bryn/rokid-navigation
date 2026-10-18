@@ -19,6 +19,7 @@ interface NavigationEngine {
     val progress: Flow<TripProgress>
 
     /** Fires whenever the active route changes (start, reroute, detour accepted). */
+    val destination: StateFlow<Destination?>
     val activeRoute: StateFlow<ActiveRoute?>
 
     /** Must be called from an Activity: Navigation SDK shows its terms dialog on first run. */
@@ -50,6 +51,7 @@ data class RouteOption(
     val staticDurationSeconds: Int,
     val description: String,
     val speedIntervals: List<SpeedInterval>,
+    val warnings: List<String> = emptyList(),
 )
 
 /** From Routes API travelAdvisory.speedReadingIntervals (polyline point indices). */

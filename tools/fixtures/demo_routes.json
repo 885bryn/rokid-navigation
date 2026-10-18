@@ -1,0 +1,46 @@
+{
+  "fixtureNote": "Synthetic demo, Routes API response shape. Not a recorded Google route.",
+  "routes": [
+    {
+      "duration": "120s",
+      "distanceMeters": 2740,
+      "polyline": {
+        "encodedPolyline": "oeveFvhgjVwQ?wQ??_X?_XwQ?wQ??_X?_X"
+      },
+      "legs": [
+        {
+          "steps": [
+            {
+              "distanceMeters": 667.17,
+              "roadName": "Bay Street",
+              "navigationInstruction": {
+                "maneuver": "TURN_RIGHT"
+              }
+            },
+            {
+              "distanceMeters": 702.814,
+              "roadName": "Marina Boulevard",
+              "navigationInstruction": {
+                "maneuver": "TURN_LEFT"
+              }
+            },
+            {
+              "distanceMeters": 667.17,
+              "roadName": "Buchanan Street",
+              "navigationInstruction": {
+                "maneuver": "TURN_RIGHT"
+              }
+            },
+            {
+              "distanceMeters": 702.757,
+              "roadName": "Marina overlook",
+              "navigationInstruction": {
+                "maneuver": "DESTINATION"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

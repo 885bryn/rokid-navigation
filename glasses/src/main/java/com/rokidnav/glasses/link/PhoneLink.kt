@@ -1,71 +1,50 @@
 package com.rokidnav.glasses.link
 
-import android.util.Log
+import android.content.Context
 import com.rokid.cxr.Caps
-import com.rokidnav.protocol.Channels
-import com.rokidnav.protocol.NavMessage
-import com.rokidnav.protocol.ProtocolCodec
+import com.rokid.cxr.CXRServiceBridge
+import com.rokidnav.protocol.*
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.*
 
 interface PhoneLink {
-    val connected: StateFlow<Boolean>
-    val incoming: Flow<NavMessage>
-    fun send(message: NavMessage)
+    val connected:StateFlow<Boolean>
+    val incoming:Flow<NavMessage>
+    fun send(message:NavMessage)
     fun close()
 }
 
-/**
- * CXR-S bridge, per the CXR docs ("Custom Commands" -> "Glasses side: CXRServiceBridge").
- * TODO(M3): add the CXRServiceBridge import once the cxr-service-bridge version is pinned (M0), then
- * uncomment. StatusListener's signature may differ by CXR-S version; match the real AAR.
- */
-class CxrPhoneLink : PhoneLink {
-    private val _connected = MutableStateFlow(false)
-    override val connected: StateFlow<Boolean> = _connected
-
-    private val _incoming = MutableSharedFlow<NavMessage>(
-        extraBufferCapacity = 128,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST,
-    )
-    override val incoming = _incoming.asSharedFlow()
-
-    // private val bridge = CXRServiceBridge()
-
+/** One application-lifetime bridge: this SDK exposes neither unsubscribe nor a bridge destructor. */
+class CxrPhoneLink private constructor(context:Context):PhoneLink {
+    private val mutableConnected=MutableStateFlow(false)
+    override val connected=mutableConnected.asStateFlow()
+    private val messages=MutableSharedFlow<NavMessage>(extraBufferCapacity=128,onBufferOverflow=BufferOverflow.DROP_OLDEST)
+    override val incoming=messages.asSharedFlow()
+    private val bridge=CXRServiceBridge(context.applicationContext)
     init {
-        // bridge.setStatusListener(object : CXRServiceBridge.StatusListener {
-        //     override fun onConnected(p0: String?, p1: String?, p2: Int) { _connected.value = true }
-        //     override fun onDisconnected() { _connected.value = false }
-        //     override fun onConnecting(p0: String?, p1: String?, p2: Int) {}
-        //     override fun onARTCStatus(p0: Float, p1: Boolean) {}
-        //     override fun onRokidAccountChanged(p0: String?) {}
-        //     override fun onAudioNoise(p0: Float) {}
-        // })
-        // bridge.subscribe(Channels.PHONE_TO_GLASSES, object : CXRServiceBridge.MsgCallback {
-        //     override fun onReceive(name: String?, args: Caps?, bytes: ByteArray?) = onFrame(name, args)
-        // })
+        bridge.subscribe(Channels.PHONE_TO_GLASSES,object:CXRServiceBridge.MsgCallback {
+            override fun onReceive(name:String?,args:Caps?,bytes:ByteArray?){
+                if(name!=Channels.PHONE_TO_GLASSES || args==null)return
+                val message=runCatching {if(args.size()!=2)null else ProtocolCodec.decode(args.at(0).string,args.at(1).string)}.getOrNull() ?: return
+                messages.tryEmit(message)
+            }
+        })
+        bridge.setStatusListener(object:CXRServiceBridge.StatusListener {
+            override fun onConnected(a:String?,b:String?,type:Int){mutableConnected.value=true}
+            override fun onDisconnected(){mutableConnected.value=false}
+            override fun onConnecting(a:String?,b:String?,type:Int){}
+            override fun onARTCStatus(value:Float,enabled:Boolean){}
+            override fun onRokidAccountChanged(account:String?){}
+            override fun onAudioNoise(value:Float){}
+        })
     }
-
-    private fun onFrame(name: String?, args: Caps?) {
-        if (name != Channels.PHONE_TO_GLASSES || args == null || args.size() < 2) return
-        val msg = ProtocolCodec.decode(args.at(0).asString(), args.at(1).asString())
-        if (msg == null) Log.w("CxrPhoneLink", "dropped unparseable frame") else _incoming.tryEmit(msg)
+    override fun send(message:NavMessage) {
+        if(!connected.value)return
+        runCatching {val (magic,body)=ProtocolCodec.encode(message);bridge.sendMessage(Channels.GLASSES_TO_PHONE,Caps().apply {write(magic);write(body)})}
     }
-
-    override fun send(message: NavMessage) {
-        val (magic, body) = ProtocolCodec.encode(message)
-        val caps = Caps().apply {
-            write(magic)
-            write(body)
-        }
-        // bridge.sendMessage(Channels.GLASSES_TO_PHONE, caps)
-    }
-
-    override fun close() {
-        // TODO(M3): unsubscribe if the bridge exposes it
+    override fun close()=Unit // Owned by the application; collectors end with their ViewModel.
+    companion object {
+        @Volatile private var instance:CxrPhoneLink?=null
+        fun get(context:Context):CxrPhoneLink=instance ?: synchronized(this){instance ?: CxrPhoneLink(context).also {instance=it}}
     }
 }

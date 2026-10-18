@@ -1,6 +1,11 @@
-# Copy to local.properties (git-ignored). Android Studio also writes sdk.dir here.
+# Copy to local.properties (git-ignored); never paste keys into chat or commit them.
 sdk.dir=C\:\\Users\\YOU\\AppData\\Local\\Android\\Sdk
 
-# Google Cloud API key with: Navigation SDK, Places API (New), Routes API enabled.
-# Restrict it to the phone app's package name + SHA-1 in Google Cloud Console.
+# Android SDK key: Maps SDK for Android, Navigation SDK and Places API (New).
+# Application restriction: Android app com.rokidnav.phone + the local signing SHA-1.
 MAPS_API_KEY=replace-me
+
+# Separate key for Routes REST. The app sends its Android package and signing certificate headers.
+# Enable Routes API and verify Android restrictions reject incorrect identifiers before live use.
+# Optional fallback to MAPS_API_KEY exists for local setup, but separate keys are recommended.
+ROUTES_API_KEY=replace-me

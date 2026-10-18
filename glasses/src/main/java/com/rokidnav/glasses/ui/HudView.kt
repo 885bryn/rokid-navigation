@@ -3,73 +3,27 @@ package com.rokidnav.glasses.ui
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.RectF
 import android.view.View
-import com.rokidnav.glasses.state.HudMode
 import com.rokidnav.glasses.state.HudState
+import com.rokidnav.protocol.NavState
 
-/**
- * One full-screen custom View, drawn with Canvas. No XML layouts, no Compose: the display is a tiny
- * monochrome-green waveguide where black = transparent, and we want total control of every lit pixel.
- *
- * Layout regions are fractions of the real view size (never hard-code 480x398). See
- * docs/HUD_DESIGN.md for the spec and the mock-up.
- */
+/** Fits the reference design without stretching; no per-frame Rect/Paint/Path/string allocation. */
 class HudView(context: Context) : View(context) {
     private var state = HudState()
-
-    private val banner = ManeuverBannerRenderer()
-    private val map = RouteMapRenderer()
-    private val status = StatusStripRenderer()
-    private val alert = AlertRenderer()
-    private val detour = DetourPromptRenderer()
-    private val menu = MenuRenderer()
-
-    init {
-        setBackgroundColor(Color.BLACK)
-    }
-
-    fun render(newState: HudState) {
-        state = newState
-        invalidate()
-    }
-
-    override fun onDraw(canvas: Canvas) {
-        val w = width.toFloat()
-        val h = height.toFloat()
-        val bannerRect = RectF(0f, 0f, w, h * 0.30f)
-        val mapRect = RectF(0f, h * 0.30f, w, h * 0.85f)
-        val statusRect = RectF(0f, h * 0.85f, w, h)
-
-        when (val mode = state.mode) {
-            is HudMode.Menu -> menu.draw(canvas, RectF(0f, 0f, w, h), state, mode)
-            HudMode.Minimal -> {
-                banner.draw(canvas, bannerRect, state)
-                status.draw(canvas, statusRect, state)
-            }
-            HudMode.Map -> {
-                banner.draw(canvas, bannerRect, state)
-                map.draw(canvas, mapRect, state)
-                status.draw(canvas, statusRect, state)
-            }
-        }
-        if (state.mode !is HudMode.Menu) {
-            state.alerts.firstOrNull()?.let { alert.draw(canvas, statusRect, state, it) }
-            state.detour?.let { detour.draw(canvas, mapRect, state, it) }
-        }
-    }
-}
-
-/** Shared paint palette: one hue, brightness via alpha. */
-object HudPaints {
-    const val GREEN = 0xFF00FF66.toInt() // VERIFY: display is green-only; any non-black color renders as green
-    fun stroke(widthPx: Float, alpha: Int = 255) = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = GREEN; this.alpha = alpha; style = Paint.Style.STROKE; strokeWidth = widthPx
-        strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND
-    }
-    fun fill(alpha: Int = 255) = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = GREEN; this.alpha = alpha }
-    fun text(sizePx: Float, alpha: Int = 255, bold: Boolean = false) = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = GREEN; this.alpha = alpha; textSize = sizePx; isFakeBoldText = bold
+    private val renderer=HudRenderer(context)
+    init { setBackgroundColor(Color.BLACK) }
+    fun render(newState:HudState){state=newState;renderer.prepare(newState);invalidate()}
+    override fun onDraw(canvas:Canvas){
+        super.onDraw(canvas)
+        // The native glasses Activity is portrait. Independent X/Y scales made text 61% taller.
+        val compact=state.mode==com.rokidnav.glasses.state.HudMode.Compact
+        val designHeight=if(compact)640f else 398f
+        val scale=minOf(width/480f,height/designHeight)*.92f
+        canvas.save()
+        canvas.translate((width-480f*scale)/2f,(height-designHeight*scale)/2f)
+        canvas.scale(scale,scale)
+        if(compact)renderer.drawCompact(canvas,System.nanoTime()) else renderer.draw(canvas,System.nanoTime())
+        canvas.restore()
+        if(isAttachedToWindow && state.navState==NavState.ACTIVE && (state.position?.speedMps ?: 0f)>=.5f)postInvalidateDelayed(33)
     }
 }

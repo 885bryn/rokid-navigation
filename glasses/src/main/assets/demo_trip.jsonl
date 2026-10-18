@@ -1,0 +1,406 @@
+{"delayMs":0,"message":{"t":"session_start","seq":1,"destinationName":"Marina overlook"}}
+{"delayMs":0,"message":{"t":"route_chunk","seq":2,"routeId":"demo-marina","chunkIndex":0,"chunkCount":1,"encodedPolylinePart":"oeveFvhgjVwQ?wQ??_X?_XwQ?wQ??_X?_X","totalMeters":2740}}
+{"delayMs":0,"message":{"t":"road_context","seq":3,"routeId":"demo-marina","roads":[{"encodedPolyline":"gxveFfnhjV?_|B","name":"Oak Avenue"},{"encodedPolyline":"_kweFfnhjV?_|B","name":"Bay Street","major":true},{"encodedPolyline":"wrueFvofjVooB?","name":"Scott Street"},{"encodedPolyline":"wrueFvvejVooB?","name":"Buchanan Street"}]}}
+{"delayMs":0,"message":{"t":"nav_state","seq":4,"state":"ACTIVE"}}
+{"delayMs":0,"message":{"t":"traffic","seq":5,"routeId":"demo-marina","segments":[{"startMeters":821,"endMeters":1232,"level":"SLOW"},{"startMeters":1780,"endMeters":2137,"level":"JAM"}]}}
+{"delayMs":0,"message":{"t":"pos","seq":6,"lat":37.802,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":0,"timestampMs":0}}
+{"delayMs":0,"message":{"t":"maneuver","seq":7,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":667,"timeToStepSeconds":29,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":8,"etaEpochMs":1080000,"remainingMeters":2740,"remainingSeconds":1080,"trafficDelaySeconds":240}}
+{"delayMs":1000,"message":{"t":"pos","seq":9,"lat":37.80220533831026,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":23,"timestampMs":1000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":10,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":644,"timeToStepSeconds":28,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":11,"etaEpochMs":1072000,"remainingMeters":2717,"remainingSeconds":1071,"trafficDelaySeconds":240}}
+{"delayMs":1000,"message":{"t":"pos","seq":12,"lat":37.802410676620525,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":46,"timestampMs":2000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":13,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":622,"timeToStepSeconds":27,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":14,"etaEpochMs":1064000,"remainingMeters":2694,"remainingSeconds":1062,"trafficDelaySeconds":240}}
+{"delayMs":1000,"message":{"t":"pos","seq":15,"lat":37.802616014930784,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":68,"timestampMs":3000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":16,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":599,"timeToStepSeconds":26,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":17,"etaEpochMs":1056000,"remainingMeters":2671,"remainingSeconds":1053,"trafficDelaySeconds":240}}
+{"delayMs":1000,"message":{"t":"pos","seq":18,"lat":37.80282135324105,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":91,"timestampMs":4000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":19,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":576,"timeToStepSeconds":25,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":20,"etaEpochMs":1048000,"remainingMeters":2649,"remainingSeconds":1044,"trafficDelaySeconds":240}}
+{"delayMs":1000,"message":{"t":"pos","seq":21,"lat":37.80302669155131,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":114,"timestampMs":5000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":22,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":553,"timeToStepSeconds":24,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":23,"etaEpochMs":1040000,"remainingMeters":2626,"remainingSeconds":1035,"trafficDelaySeconds":240}}
+{"delayMs":1000,"message":{"t":"pos","seq":24,"lat":37.80323202986157,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":137,"timestampMs":6000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":25,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":530,"timeToStepSeconds":23,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":26,"etaEpochMs":1032000,"remainingMeters":2603,"remainingSeconds":1026,"trafficDelaySeconds":240}}
+{"delayMs":1000,"message":{"t":"pos","seq":27,"lat":37.803437368171835,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":160,"timestampMs":7000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":28,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":507,"timeToStepSeconds":22,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":29,"etaEpochMs":1024000,"remainingMeters":2580,"remainingSeconds":1017,"trafficDelaySeconds":240}}
+{"delayMs":1000,"message":{"t":"pos","seq":30,"lat":37.803642706482094,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":183,"timestampMs":8000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":31,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":485,"timeToStepSeconds":21,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":32,"etaEpochMs":1016000,"remainingMeters":2557,"remainingSeconds":1008,"trafficDelaySeconds":240}}
+{"delayMs":1000,"message":{"t":"pos","seq":33,"lat":37.80384804479235,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":205,"timestampMs":9000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":34,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":462,"timeToStepSeconds":20,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":35,"etaEpochMs":1008000,"remainingMeters":2534,"remainingSeconds":999,"trafficDelaySeconds":240}}
+{"delayMs":1000,"message":{"t":"pos","seq":36,"lat":37.80405338310262,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":228,"timestampMs":10000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":37,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":439,"timeToStepSeconds":19,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":38,"etaEpochMs":1000000,"remainingMeters":2512,"remainingSeconds":990,"trafficDelaySeconds":240}}
+{"delayMs":1000,"message":{"t":"pos","seq":39,"lat":37.80425872141288,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":251,"timestampMs":11000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":40,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":416,"timeToStepSeconds":18,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":41,"etaEpochMs":992000,"remainingMeters":2489,"remainingSeconds":981,"trafficDelaySeconds":240}}
+{"delayMs":1000,"message":{"t":"pos","seq":42,"lat":37.804464059723145,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":274,"timestampMs":12000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":43,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":393,"timeToStepSeconds":17,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":44,"etaEpochMs":984000,"remainingMeters":2466,"remainingSeconds":972,"trafficDelaySeconds":240}}
+{"delayMs":1000,"message":{"t":"pos","seq":45,"lat":37.804669398033404,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":297,"timestampMs":13000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":46,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":370,"timeToStepSeconds":16,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":47,"etaEpochMs":976000,"remainingMeters":2443,"remainingSeconds":963,"trafficDelaySeconds":240}}
+{"delayMs":1000,"message":{"t":"pos","seq":48,"lat":37.80487473634366,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":320,"timestampMs":14000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":49,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":348,"timeToStepSeconds":15,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":50,"etaEpochMs":968000,"remainingMeters":2420,"remainingSeconds":954,"trafficDelaySeconds":240}}
+{"delayMs":1000,"message":{"t":"pos","seq":51,"lat":37.80508007465393,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":342,"timestampMs":15000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":52,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":325,"timeToStepSeconds":14,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":53,"etaEpochMs":960000,"remainingMeters":2397,"remainingSeconds":945,"trafficDelaySeconds":240}}
+{"delayMs":1000,"message":{"t":"pos","seq":54,"lat":37.80528541296419,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":365,"timestampMs":16000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":55,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":302,"timeToStepSeconds":13,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":56,"etaEpochMs":952000,"remainingMeters":2375,"remainingSeconds":936,"trafficDelaySeconds":240}}
+{"delayMs":1000,"message":{"t":"pos","seq":57,"lat":37.80549075127445,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":388,"timestampMs":17000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":58,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":279,"timeToStepSeconds":12,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":59,"etaEpochMs":944000,"remainingMeters":2352,"remainingSeconds":927,"trafficDelaySeconds":240}}
+{"delayMs":1000,"message":{"t":"pos","seq":60,"lat":37.805696089584714,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":411,"timestampMs":18000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":61,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":256,"timeToStepSeconds":11,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":62,"etaEpochMs":936000,"remainingMeters":2329,"remainingSeconds":918,"trafficDelaySeconds":240}}
+{"delayMs":1000,"message":{"t":"pos","seq":63,"lat":37.80590142789497,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":434,"timestampMs":19000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":64,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":233,"timeToStepSeconds":10,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":65,"etaEpochMs":928000,"remainingMeters":2306,"remainingSeconds":909,"trafficDelaySeconds":240}}
+{"delayMs":1000,"message":{"t":"pos","seq":66,"lat":37.80610676620524,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":457,"timestampMs":20000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":67,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":211,"timeToStepSeconds":9,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":68,"etaEpochMs":920000,"remainingMeters":2283,"remainingSeconds":900,"trafficDelaySeconds":240}}
+{"delayMs":1000,"message":{"t":"pos","seq":69,"lat":37.8063121045155,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":479,"timestampMs":21000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":70,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":188,"timeToStepSeconds":8,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":71,"etaEpochMs":912000,"remainingMeters":2260,"remainingSeconds":891,"trafficDelaySeconds":240}}
+{"delayMs":1000,"message":{"t":"pos","seq":72,"lat":37.80651744282576,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":502,"timestampMs":22000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":73,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":165,"timeToStepSeconds":7,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":74,"etaEpochMs":904000,"remainingMeters":2238,"remainingSeconds":882,"trafficDelaySeconds":240}}
+{"delayMs":1000,"message":{"t":"pos","seq":75,"lat":37.806722781136024,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":525,"timestampMs":23000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":76,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":142,"timeToStepSeconds":6,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":77,"etaEpochMs":896000,"remainingMeters":2215,"remainingSeconds":873,"trafficDelaySeconds":240}}
+{"delayMs":1000,"message":{"t":"pos","seq":78,"lat":37.80692811944628,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":548,"timestampMs":24000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":79,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":119,"timeToStepSeconds":5,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":80,"etaEpochMs":888000,"remainingMeters":2192,"remainingSeconds":864,"trafficDelaySeconds":240}}
+{"delayMs":0,"message":{"t":"alert","seq":81,"id":"demo:police","kind":"POLICE","distanceAheadMeters":767,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":82,"lat":37.80713345775654,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":571,"timestampMs":25000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":83,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":96,"timeToStepSeconds":4,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":84,"etaEpochMs":880000,"remainingMeters":2169,"remainingSeconds":855,"trafficDelaySeconds":240}}
+{"delayMs":0,"message":{"t":"alert","seq":85,"id":"demo:police","kind":"POLICE","distanceAheadMeters":744,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":86,"lat":37.80733879606681,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":594,"timestampMs":26000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":87,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":74,"timeToStepSeconds":3,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":88,"etaEpochMs":872000,"remainingMeters":2146,"remainingSeconds":846,"trafficDelaySeconds":240}}
+{"delayMs":0,"message":{"t":"alert","seq":89,"id":"demo:police","kind":"POLICE","distanceAheadMeters":722,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":90,"lat":37.80754413437707,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":616,"timestampMs":27000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":91,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":51,"timeToStepSeconds":2,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":92,"etaEpochMs":864000,"remainingMeters":2123,"remainingSeconds":837,"trafficDelaySeconds":240}}
+{"delayMs":0,"message":{"t":"alert","seq":93,"id":"demo:police","kind":"POLICE","distanceAheadMeters":699,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":94,"lat":37.807749472687334,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":639,"timestampMs":28000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":95,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":28,"timeToStepSeconds":1,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":96,"etaEpochMs":856000,"remainingMeters":2101,"remainingSeconds":828,"trafficDelaySeconds":240}}
+{"delayMs":0,"message":{"t":"alert","seq":97,"id":"demo:police","kind":"POLICE","distanceAheadMeters":676,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":98,"lat":37.80795481099759,"lng":-122.431,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":662,"timestampMs":29000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":99,"current":{"maneuver":"TURN_RIGHT","roadName":"Bay Street"},"distanceToStepMeters":5,"timeToStepSeconds":0,"next":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"}}}
+{"delayMs":0,"message":{"t":"progress","seq":100,"etaEpochMs":848000,"remainingMeters":2078,"remainingSeconds":819,"trafficDelaySeconds":240}}
+{"delayMs":0,"message":{"t":"alert","seq":101,"id":"demo:police","kind":"POLICE","distanceAheadMeters":653,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":102,"lat":37.808,"lng":-122.43079729717104,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":685,"timestampMs":30000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":103,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":685,"timeToStepSeconds":30,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":104,"etaEpochMs":840000,"remainingMeters":2055,"remainingSeconds":810,"trafficDelaySeconds":240}}
+{"delayMs":0,"message":{"t":"alert","seq":105,"id":"demo:police","kind":"POLICE","distanceAheadMeters":630,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":106,"lat":37.808,"lng":-122.43053739809972,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":708,"timestampMs":31000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":107,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":662,"timeToStepSeconds":29,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":108,"etaEpochMs":832000,"remainingMeters":2032,"remainingSeconds":801,"trafficDelaySeconds":240}}
+{"delayMs":0,"message":{"t":"alert","seq":109,"id":"demo:police","kind":"POLICE","distanceAheadMeters":607,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":110,"lat":37.808,"lng":-122.4302774990284,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":731,"timestampMs":32000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":111,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":639,"timeToStepSeconds":28,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":112,"etaEpochMs":824000,"remainingMeters":2009,"remainingSeconds":792,"trafficDelaySeconds":240}}
+{"delayMs":0,"message":{"t":"alert","seq":113,"id":"demo:police","kind":"POLICE","distanceAheadMeters":585,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":114,"lat":37.808,"lng":-122.43001759995708,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":753,"timestampMs":33000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":115,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":617,"timeToStepSeconds":27,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":116,"etaEpochMs":816000,"remainingMeters":1986,"remainingSeconds":783,"trafficDelaySeconds":240}}
+{"delayMs":0,"message":{"t":"alert","seq":117,"id":"demo:police","kind":"POLICE","distanceAheadMeters":562,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":118,"lat":37.808,"lng":-122.42975770088577,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":776,"timestampMs":34000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":119,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":594,"timeToStepSeconds":26,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":120,"etaEpochMs":808000,"remainingMeters":1964,"remainingSeconds":774,"trafficDelaySeconds":240}}
+{"delayMs":0,"message":{"t":"alert","seq":121,"id":"demo:police","kind":"POLICE","distanceAheadMeters":539,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":122,"lat":37.808,"lng":-122.42949780181445,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":799,"timestampMs":35000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":123,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":571,"timeToStepSeconds":25,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":124,"etaEpochMs":800000,"remainingMeters":1941,"remainingSeconds":765,"trafficDelaySeconds":240}}
+{"delayMs":0,"message":{"t":"alert","seq":125,"id":"demo:police","kind":"POLICE","distanceAheadMeters":516,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":126,"lat":37.808,"lng":-122.42923790274313,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":822,"timestampMs":36000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":127,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":548,"timeToStepSeconds":24,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":128,"etaEpochMs":792000,"remainingMeters":1918,"remainingSeconds":756,"trafficDelaySeconds":240}}
+{"delayMs":0,"message":{"t":"alert","seq":129,"id":"demo:police","kind":"POLICE","distanceAheadMeters":493,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":130,"lat":37.808,"lng":-122.42897800367182,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":845,"timestampMs":37000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":131,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":525,"timeToStepSeconds":23,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":132,"etaEpochMs":784000,"remainingMeters":1895,"remainingSeconds":747,"trafficDelaySeconds":240}}
+{"delayMs":0,"message":{"t":"alert","seq":133,"id":"demo:police","kind":"POLICE","distanceAheadMeters":470,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":134,"lat":37.808,"lng":-122.42871810460049,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":868,"timestampMs":38000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":135,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":502,"timeToStepSeconds":22,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":136,"etaEpochMs":776000,"remainingMeters":1872,"remainingSeconds":738,"trafficDelaySeconds":240}}
+{"delayMs":0,"message":{"t":"alert","seq":137,"id":"demo:police","kind":"POLICE","distanceAheadMeters":448,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":138,"lat":37.808,"lng":-122.42845820552918,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":890,"timestampMs":39000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":139,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":480,"timeToStepSeconds":21,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":140,"etaEpochMs":768000,"remainingMeters":1849,"remainingSeconds":729,"trafficDelaySeconds":240}}
+{"delayMs":0,"message":{"t":"alert","seq":141,"id":"demo:police","kind":"POLICE","distanceAheadMeters":425,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":142,"lat":37.808,"lng":-122.42819830645786,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":913,"timestampMs":40000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":143,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":457,"timeToStepSeconds":20,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":144,"etaEpochMs":760000,"remainingMeters":1827,"remainingSeconds":720,"trafficDelaySeconds":240}}
+{"delayMs":0,"message":{"t":"alert","seq":145,"id":"demo:police","kind":"POLICE","distanceAheadMeters":402,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":146,"lat":37.808,"lng":-122.42793840738653,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":936,"timestampMs":41000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":147,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":434,"timeToStepSeconds":19,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":148,"etaEpochMs":752000,"remainingMeters":1804,"remainingSeconds":711,"trafficDelaySeconds":237}}
+{"delayMs":0,"message":{"t":"alert","seq":149,"id":"demo:police","kind":"POLICE","distanceAheadMeters":379,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":150,"lat":37.808,"lng":-122.42767850831522,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":959,"timestampMs":42000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":151,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":411,"timeToStepSeconds":18,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":152,"etaEpochMs":744000,"remainingMeters":1781,"remainingSeconds":702,"trafficDelaySeconds":234}}
+{"delayMs":0,"message":{"t":"alert","seq":153,"id":"demo:police","kind":"POLICE","distanceAheadMeters":356,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":154,"lat":37.808,"lng":-122.4274186092439,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":982,"timestampMs":43000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":155,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":388,"timeToStepSeconds":17,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":156,"etaEpochMs":736000,"remainingMeters":1758,"remainingSeconds":693,"trafficDelaySeconds":231}}
+{"delayMs":0,"message":{"t":"alert","seq":157,"id":"demo:police","kind":"POLICE","distanceAheadMeters":333,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":158,"lat":37.808,"lng":-122.42715871017259,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":1005,"timestampMs":44000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":159,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":365,"timeToStepSeconds":16,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":160,"etaEpochMs":728000,"remainingMeters":1735,"remainingSeconds":684,"trafficDelaySeconds":228}}
+{"delayMs":0,"message":{"t":"alert","seq":161,"id":"demo:police","kind":"POLICE","distanceAheadMeters":311,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":162,"lat":37.808,"lng":-122.42689881110127,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":1027,"timestampMs":45000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":163,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":343,"timeToStepSeconds":15,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":164,"etaEpochMs":720000,"remainingMeters":1712,"remainingSeconds":675,"trafficDelaySeconds":225}}
+{"delayMs":0,"message":{"t":"alert","seq":165,"id":"demo:police","kind":"POLICE","distanceAheadMeters":288,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":166,"lat":37.808,"lng":-122.42663891202994,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":1050,"timestampMs":46000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":167,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":320,"timeToStepSeconds":14,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":168,"etaEpochMs":712000,"remainingMeters":1690,"remainingSeconds":666,"trafficDelaySeconds":222}}
+{"delayMs":0,"message":{"t":"alert","seq":169,"id":"demo:police","kind":"POLICE","distanceAheadMeters":265,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":170,"lat":37.808,"lng":-122.42637901295863,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":1073,"timestampMs":47000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":171,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":297,"timeToStepSeconds":13,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":172,"etaEpochMs":704000,"remainingMeters":1667,"remainingSeconds":657,"trafficDelaySeconds":219}}
+{"delayMs":0,"message":{"t":"alert","seq":173,"id":"demo:police","kind":"POLICE","distanceAheadMeters":242,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":174,"lat":37.808,"lng":-122.42611911388731,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":1096,"timestampMs":48000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":175,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":274,"timeToStepSeconds":12,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":176,"etaEpochMs":696000,"remainingMeters":1644,"remainingSeconds":648,"trafficDelaySeconds":216}}
+{"delayMs":0,"message":{"t":"alert","seq":177,"id":"demo:police","kind":"POLICE","distanceAheadMeters":219,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":178,"lat":37.808,"lng":-122.425859214816,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":1119,"timestampMs":49000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":179,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":251,"timeToStepSeconds":11,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":180,"etaEpochMs":688000,"remainingMeters":1621,"remainingSeconds":639,"trafficDelaySeconds":213}}
+{"delayMs":0,"message":{"t":"alert","seq":181,"id":"demo:police","kind":"POLICE","distanceAheadMeters":196,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":182,"lat":37.808,"lng":-122.42559931574468,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":1142,"timestampMs":50000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":183,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":228,"timeToStepSeconds":10,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":184,"etaEpochMs":680000,"remainingMeters":1598,"remainingSeconds":630,"trafficDelaySeconds":210}}
+{"delayMs":0,"message":{"t":"alert","seq":185,"id":"demo:police","kind":"POLICE","distanceAheadMeters":174,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":186,"lat":37.808,"lng":-122.42533941667335,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":1164,"timestampMs":51000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":187,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":206,"timeToStepSeconds":9,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":188,"etaEpochMs":672000,"remainingMeters":1575,"remainingSeconds":621,"trafficDelaySeconds":207}}
+{"delayMs":0,"message":{"t":"alert","seq":189,"id":"demo:police","kind":"POLICE","distanceAheadMeters":151,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":190,"lat":37.808,"lng":-122.42507951760204,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":1187,"timestampMs":52000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":191,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":183,"timeToStepSeconds":8,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":192,"etaEpochMs":664000,"remainingMeters":1553,"remainingSeconds":612,"trafficDelaySeconds":204}}
+{"delayMs":0,"message":{"t":"alert","seq":193,"id":"demo:police","kind":"POLICE","distanceAheadMeters":128,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":194,"lat":37.808,"lng":-122.42481961853072,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":1210,"timestampMs":53000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":195,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":160,"timeToStepSeconds":7,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":196,"etaEpochMs":656000,"remainingMeters":1530,"remainingSeconds":603,"trafficDelaySeconds":201}}
+{"delayMs":0,"message":{"t":"alert","seq":197,"id":"demo:police","kind":"POLICE","distanceAheadMeters":105,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":198,"lat":37.808,"lng":-122.42455971945941,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":1233,"timestampMs":54000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":199,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":137,"timeToStepSeconds":6,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":200,"etaEpochMs":648000,"remainingMeters":1507,"remainingSeconds":594,"trafficDelaySeconds":198}}
+{"delayMs":0,"message":{"t":"alert","seq":201,"id":"demo:police","kind":"POLICE","distanceAheadMeters":82,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":202,"lat":37.808,"lng":-122.42429982038809,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":1256,"timestampMs":55000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":203,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":114,"timeToStepSeconds":5,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":204,"etaEpochMs":640000,"remainingMeters":1484,"remainingSeconds":585,"trafficDelaySeconds":195}}
+{"delayMs":0,"message":{"t":"alert","seq":205,"id":"demo:police","kind":"POLICE","distanceAheadMeters":59,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":206,"lat":37.808,"lng":-122.42403992131676,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":1279,"timestampMs":56000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":207,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":91,"timeToStepSeconds":4,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":208,"etaEpochMs":632000,"remainingMeters":1461,"remainingSeconds":576,"trafficDelaySeconds":192}}
+{"delayMs":0,"message":{"t":"alert","seq":209,"id":"demo:police","kind":"POLICE","distanceAheadMeters":37,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":210,"lat":37.808,"lng":-122.42378002224545,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":1301,"timestampMs":57000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":211,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":69,"timeToStepSeconds":3,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":212,"etaEpochMs":624000,"remainingMeters":1438,"remainingSeconds":567,"trafficDelaySeconds":189}}
+{"delayMs":0,"message":{"t":"alert","seq":213,"id":"demo:police","kind":"POLICE","distanceAheadMeters":14,"lat":37.808,"lng":-122.42362408280266,"text":"Police reported","source":"Demo","reportedAtMs":1}}
+{"delayMs":1000,"message":{"t":"pos","seq":214,"lat":37.808,"lng":-122.42352012317413,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":1324,"timestampMs":58000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":215,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":46,"timeToStepSeconds":2,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":216,"etaEpochMs":616000,"remainingMeters":1416,"remainingSeconds":558,"trafficDelaySeconds":186}}
+{"delayMs":0,"message":{"t":"alert_clear","seq":217,"id":"demo:police"}}
+{"delayMs":1000,"message":{"t":"pos","seq":218,"lat":37.808,"lng":-122.42326022410282,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":1347,"timestampMs":59000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":219,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":23,"timeToStepSeconds":1,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":220,"etaEpochMs":608000,"remainingMeters":1393,"remainingSeconds":549,"trafficDelaySeconds":183}}
+{"delayMs":1000,"message":{"t":"pos","seq":221,"lat":37.808,"lng":-122.4230003250315,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":1370,"timestampMs":60000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":222,"current":{"maneuver":"TURN_LEFT","roadName":"Marina Boulevard"},"distanceToStepMeters":0,"timeToStepSeconds":0,"next":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"}}}
+{"delayMs":0,"message":{"t":"progress","seq":223,"etaEpochMs":600000,"remainingMeters":1370,"remainingSeconds":540,"trafficDelaySeconds":180}}
+{"delayMs":1000,"message":{"t":"pos","seq":224,"lat":37.80820508151282,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1393,"timestampMs":61000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":225,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":644,"timeToStepSeconds":28,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":226,"etaEpochMs":592000,"remainingMeters":1347,"remainingSeconds":531,"trafficDelaySeconds":177}}
+{"delayMs":1000,"message":{"t":"pos","seq":227,"lat":37.808410419823076,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1416,"timestampMs":62000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":228,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":622,"timeToStepSeconds":27,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":229,"etaEpochMs":584000,"remainingMeters":1324,"remainingSeconds":522,"trafficDelaySeconds":174}}
+{"delayMs":1000,"message":{"t":"pos","seq":230,"lat":37.80861575813334,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1438,"timestampMs":63000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":231,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":599,"timeToStepSeconds":26,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":232,"etaEpochMs":576000,"remainingMeters":1301,"remainingSeconds":513,"trafficDelaySeconds":171}}
+{"delayMs":1000,"message":{"t":"pos","seq":233,"lat":37.8088210964436,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1461,"timestampMs":64000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":234,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":576,"timeToStepSeconds":25,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":235,"etaEpochMs":568000,"remainingMeters":1279,"remainingSeconds":504,"trafficDelaySeconds":168}}
+{"delayMs":1000,"message":{"t":"pos","seq":236,"lat":37.80902643475386,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1484,"timestampMs":65000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":237,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":553,"timeToStepSeconds":24,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":238,"etaEpochMs":560000,"remainingMeters":1256,"remainingSeconds":495,"trafficDelaySeconds":165}}
+{"delayMs":1000,"message":{"t":"pos","seq":239,"lat":37.80923177306413,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1507,"timestampMs":66000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":240,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":530,"timeToStepSeconds":23,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":241,"etaEpochMs":552000,"remainingMeters":1233,"remainingSeconds":486,"trafficDelaySeconds":162}}
+{"delayMs":1000,"message":{"t":"pos","seq":242,"lat":37.809437111374386,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1530,"timestampMs":67000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":243,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":507,"timeToStepSeconds":22,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":244,"etaEpochMs":544000,"remainingMeters":1210,"remainingSeconds":477,"trafficDelaySeconds":159}}
+{"delayMs":1000,"message":{"t":"pos","seq":245,"lat":37.80964244968465,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1553,"timestampMs":68000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":246,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":485,"timeToStepSeconds":21,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":247,"etaEpochMs":536000,"remainingMeters":1187,"remainingSeconds":468,"trafficDelaySeconds":156}}
+{"delayMs":1000,"message":{"t":"pos","seq":248,"lat":37.80984778799491,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1575,"timestampMs":69000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":249,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":462,"timeToStepSeconds":20,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":250,"etaEpochMs":528000,"remainingMeters":1164,"remainingSeconds":459,"trafficDelaySeconds":153}}
+{"delayMs":1000,"message":{"t":"pos","seq":251,"lat":37.81005312630517,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1598,"timestampMs":70000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":252,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":439,"timeToStepSeconds":19,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":253,"etaEpochMs":520000,"remainingMeters":1142,"remainingSeconds":450,"trafficDelaySeconds":150}}
+{"delayMs":1000,"message":{"t":"pos","seq":254,"lat":37.81025846461544,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1621,"timestampMs":71000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":255,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":416,"timeToStepSeconds":18,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":256,"etaEpochMs":512000,"remainingMeters":1119,"remainingSeconds":441,"trafficDelaySeconds":147}}
+{"delayMs":1000,"message":{"t":"pos","seq":257,"lat":37.810463802925696,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1644,"timestampMs":72000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":258,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":393,"timeToStepSeconds":17,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":259,"etaEpochMs":504000,"remainingMeters":1096,"remainingSeconds":432,"trafficDelaySeconds":144}}
+{"delayMs":0,"message":{"t":"detour_offer","seq":260,"offerId":"demo:detour","savesSeconds":360,"extraMeters":200,"via":"via Bay Street","expiresAtMs":102000}}
+{"delayMs":1000,"message":{"t":"pos","seq":261,"lat":37.810669141235955,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1667,"timestampMs":73000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":262,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":370,"timeToStepSeconds":16,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":263,"etaEpochMs":496000,"remainingMeters":1073,"remainingSeconds":423,"trafficDelaySeconds":141}}
+{"delayMs":1000,"message":{"t":"pos","seq":264,"lat":37.81087447954622,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1690,"timestampMs":74000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":265,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":348,"timeToStepSeconds":15,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":266,"etaEpochMs":488000,"remainingMeters":1050,"remainingSeconds":414,"trafficDelaySeconds":138}}
+{"delayMs":1000,"message":{"t":"pos","seq":267,"lat":37.81107981785648,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1712,"timestampMs":75000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":268,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":325,"timeToStepSeconds":14,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":269,"etaEpochMs":480000,"remainingMeters":1027,"remainingSeconds":405,"trafficDelaySeconds":135}}
+{"delayMs":1000,"message":{"t":"pos","seq":270,"lat":37.81128515616675,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1735,"timestampMs":76000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":271,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":302,"timeToStepSeconds":13,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":272,"etaEpochMs":472000,"remainingMeters":1005,"remainingSeconds":396,"trafficDelaySeconds":132}}
+{"delayMs":1000,"message":{"t":"pos","seq":273,"lat":37.811490494477006,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1758,"timestampMs":77000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":274,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":279,"timeToStepSeconds":12,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":275,"etaEpochMs":464000,"remainingMeters":982,"remainingSeconds":387,"trafficDelaySeconds":129}}
+{"delayMs":1000,"message":{"t":"pos","seq":276,"lat":37.811695832787265,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1781,"timestampMs":78000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":277,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":256,"timeToStepSeconds":11,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":278,"etaEpochMs":456000,"remainingMeters":959,"remainingSeconds":378,"trafficDelaySeconds":126}}
+{"delayMs":1000,"message":{"t":"pos","seq":279,"lat":37.81190117109753,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1804,"timestampMs":79000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":280,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":233,"timeToStepSeconds":10,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":281,"etaEpochMs":448000,"remainingMeters":936,"remainingSeconds":369,"trafficDelaySeconds":123}}
+{"delayMs":1000,"message":{"t":"pos","seq":282,"lat":37.81210650940779,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1827,"timestampMs":80000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":283,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":211,"timeToStepSeconds":9,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":284,"etaEpochMs":440000,"remainingMeters":913,"remainingSeconds":360,"trafficDelaySeconds":120}}
+{"delayMs":1000,"message":{"t":"pos","seq":285,"lat":37.81231184771805,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1849,"timestampMs":81000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":286,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":188,"timeToStepSeconds":8,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":287,"etaEpochMs":432000,"remainingMeters":890,"remainingSeconds":351,"trafficDelaySeconds":117}}
+{"delayMs":1000,"message":{"t":"pos","seq":288,"lat":37.812517186028316,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1872,"timestampMs":82000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":289,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":165,"timeToStepSeconds":7,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":290,"etaEpochMs":424000,"remainingMeters":868,"remainingSeconds":342,"trafficDelaySeconds":114}}
+{"delayMs":1000,"message":{"t":"pos","seq":291,"lat":37.812722524338575,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1895,"timestampMs":83000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":292,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":142,"timeToStepSeconds":6,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":293,"etaEpochMs":416000,"remainingMeters":845,"remainingSeconds":333,"trafficDelaySeconds":111}}
+{"delayMs":1000,"message":{"t":"pos","seq":294,"lat":37.81292786264884,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1918,"timestampMs":84000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":295,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":119,"timeToStepSeconds":5,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":296,"etaEpochMs":408000,"remainingMeters":822,"remainingSeconds":324,"trafficDelaySeconds":108}}
+{"delayMs":1000,"message":{"t":"pos","seq":297,"lat":37.8131332009591,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1941,"timestampMs":85000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":298,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":96,"timeToStepSeconds":4,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":299,"etaEpochMs":400000,"remainingMeters":799,"remainingSeconds":315,"trafficDelaySeconds":105}}
+{"delayMs":1000,"message":{"t":"pos","seq":300,"lat":37.81333853926936,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1964,"timestampMs":86000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":301,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":74,"timeToStepSeconds":3,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":302,"etaEpochMs":392000,"remainingMeters":776,"remainingSeconds":306,"trafficDelaySeconds":102}}
+{"delayMs":1000,"message":{"t":"pos","seq":303,"lat":37.813543877579626,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":1986,"timestampMs":87000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":304,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":51,"timeToStepSeconds":2,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":305,"etaEpochMs":384000,"remainingMeters":753,"remainingSeconds":297,"trafficDelaySeconds":99}}
+{"delayMs":1000,"message":{"t":"pos","seq":306,"lat":37.813749215889885,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":2009,"timestampMs":88000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":307,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":28,"timeToStepSeconds":1,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":308,"etaEpochMs":376000,"remainingMeters":731,"remainingSeconds":288,"trafficDelaySeconds":96}}
+{"delayMs":1000,"message":{"t":"pos","seq":309,"lat":37.813954554200144,"lng":-122.423,"bearingDeg":0.0,"speedMps":22.832579,"metersAlongRoute":2032,"timestampMs":89000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":310,"current":{"maneuver":"TURN_RIGHT","roadName":"Buchanan Street"},"distanceToStepMeters":5,"timeToStepSeconds":0,"next":{"maneuver":"DESTINATION","roadName":"Marina overlook"}}}
+{"delayMs":0,"message":{"t":"progress","seq":311,"etaEpochMs":368000,"remainingMeters":708,"remainingSeconds":279,"trafficDelaySeconds":93}}
+{"delayMs":1000,"message":{"t":"pos","seq":312,"lat":37.814,"lng":-122.42279760575641,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2055,"timestampMs":90000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":313,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":685,"timeToStepSeconds":30}}
+{"delayMs":0,"message":{"t":"progress","seq":314,"etaEpochMs":360000,"remainingMeters":685,"remainingSeconds":270,"trafficDelaySeconds":90}}
+{"delayMs":1000,"message":{"t":"pos","seq":315,"lat":37.814,"lng":-122.42253768556454,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2078,"timestampMs":91000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":316,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":662,"timeToStepSeconds":29}}
+{"delayMs":0,"message":{"t":"progress","seq":317,"etaEpochMs":352000,"remainingMeters":662,"remainingSeconds":261,"trafficDelaySeconds":87}}
+{"delayMs":1000,"message":{"t":"pos","seq":318,"lat":37.814,"lng":-122.42227776537266,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2101,"timestampMs":92000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":319,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":639,"timeToStepSeconds":28}}
+{"delayMs":0,"message":{"t":"progress","seq":320,"etaEpochMs":344000,"remainingMeters":639,"remainingSeconds":252,"trafficDelaySeconds":84}}
+{"delayMs":1000,"message":{"t":"pos","seq":321,"lat":37.814,"lng":-122.42201784518078,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2123,"timestampMs":93000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":322,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":616,"timeToStepSeconds":27}}
+{"delayMs":0,"message":{"t":"progress","seq":323,"etaEpochMs":336000,"remainingMeters":616,"remainingSeconds":243,"trafficDelaySeconds":81}}
+{"delayMs":1000,"message":{"t":"pos","seq":324,"lat":37.814,"lng":-122.4217579249889,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2146,"timestampMs":94000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":325,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":594,"timeToStepSeconds":26}}
+{"delayMs":0,"message":{"t":"progress","seq":326,"etaEpochMs":328000,"remainingMeters":594,"remainingSeconds":234,"trafficDelaySeconds":78}}
+{"delayMs":1000,"message":{"t":"pos","seq":327,"lat":37.814,"lng":-122.42149800479702,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2169,"timestampMs":95000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":328,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":571,"timeToStepSeconds":25}}
+{"delayMs":0,"message":{"t":"progress","seq":329,"etaEpochMs":320000,"remainingMeters":571,"remainingSeconds":225,"trafficDelaySeconds":75}}
+{"delayMs":1000,"message":{"t":"pos","seq":330,"lat":37.814,"lng":-122.42123808460514,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2192,"timestampMs":96000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":331,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":548,"timeToStepSeconds":24}}
+{"delayMs":0,"message":{"t":"progress","seq":332,"etaEpochMs":312000,"remainingMeters":548,"remainingSeconds":216,"trafficDelaySeconds":72}}
+{"delayMs":1000,"message":{"t":"pos","seq":333,"lat":37.814,"lng":-122.42097816441326,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2215,"timestampMs":97000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":334,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":525,"timeToStepSeconds":23}}
+{"delayMs":0,"message":{"t":"progress","seq":335,"etaEpochMs":304000,"remainingMeters":525,"remainingSeconds":207,"trafficDelaySeconds":69}}
+{"delayMs":1000,"message":{"t":"pos","seq":336,"lat":37.814,"lng":-122.42071824422136,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2238,"timestampMs":98000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":337,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":502,"timeToStepSeconds":22}}
+{"delayMs":0,"message":{"t":"progress","seq":338,"etaEpochMs":296000,"remainingMeters":502,"remainingSeconds":198,"trafficDelaySeconds":66}}
+{"delayMs":1000,"message":{"t":"pos","seq":339,"lat":37.814,"lng":-122.42045832402948,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2260,"timestampMs":99000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":340,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":479,"timeToStepSeconds":21}}
+{"delayMs":0,"message":{"t":"progress","seq":341,"etaEpochMs":288000,"remainingMeters":479,"remainingSeconds":189,"trafficDelaySeconds":63}}
+{"delayMs":1000,"message":{"t":"pos","seq":342,"lat":37.814,"lng":-122.4201984038376,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2283,"timestampMs":100000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":343,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":457,"timeToStepSeconds":20}}
+{"delayMs":0,"message":{"t":"progress","seq":344,"etaEpochMs":280000,"remainingMeters":457,"remainingSeconds":180,"trafficDelaySeconds":60}}
+{"delayMs":1000,"message":{"t":"pos","seq":345,"lat":37.814,"lng":-122.41993848364572,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2306,"timestampMs":101000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":346,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":434,"timeToStepSeconds":19}}
+{"delayMs":0,"message":{"t":"progress","seq":347,"etaEpochMs":272000,"remainingMeters":434,"remainingSeconds":171,"trafficDelaySeconds":57}}
+{"delayMs":1000,"message":{"t":"pos","seq":348,"lat":37.814,"lng":-122.41967856345384,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2329,"timestampMs":102000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":349,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":411,"timeToStepSeconds":18}}
+{"delayMs":0,"message":{"t":"progress","seq":350,"etaEpochMs":264000,"remainingMeters":411,"remainingSeconds":162,"trafficDelaySeconds":54}}
+{"delayMs":1000,"message":{"t":"pos","seq":351,"lat":37.814,"lng":-122.41941864326196,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2352,"timestampMs":103000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":352,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":388,"timeToStepSeconds":17}}
+{"delayMs":0,"message":{"t":"progress","seq":353,"etaEpochMs":256000,"remainingMeters":388,"remainingSeconds":153,"trafficDelaySeconds":51}}
+{"delayMs":1000,"message":{"t":"pos","seq":354,"lat":37.814,"lng":-122.41915872307008,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2375,"timestampMs":104000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":355,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":365,"timeToStepSeconds":16}}
+{"delayMs":0,"message":{"t":"progress","seq":356,"etaEpochMs":248000,"remainingMeters":365,"remainingSeconds":144,"trafficDelaySeconds":48}}
+{"delayMs":1000,"message":{"t":"pos","seq":357,"lat":37.814,"lng":-122.4188988028782,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2397,"timestampMs":105000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":358,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":342,"timeToStepSeconds":15}}
+{"delayMs":0,"message":{"t":"progress","seq":359,"etaEpochMs":240000,"remainingMeters":342,"remainingSeconds":135,"trafficDelaySeconds":45}}
+{"delayMs":1000,"message":{"t":"pos","seq":360,"lat":37.814,"lng":-122.41863888268632,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2420,"timestampMs":106000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":361,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":320,"timeToStepSeconds":14}}
+{"delayMs":0,"message":{"t":"progress","seq":362,"etaEpochMs":232000,"remainingMeters":320,"remainingSeconds":126,"trafficDelaySeconds":42}}
+{"delayMs":1000,"message":{"t":"pos","seq":363,"lat":37.814,"lng":-122.41837896249444,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2443,"timestampMs":107000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":364,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":297,"timeToStepSeconds":13}}
+{"delayMs":0,"message":{"t":"progress","seq":365,"etaEpochMs":224000,"remainingMeters":297,"remainingSeconds":117,"trafficDelaySeconds":39}}
+{"delayMs":1000,"message":{"t":"pos","seq":366,"lat":37.814,"lng":-122.41811904230256,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2466,"timestampMs":108000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":367,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":274,"timeToStepSeconds":12}}
+{"delayMs":0,"message":{"t":"progress","seq":368,"etaEpochMs":216000,"remainingMeters":274,"remainingSeconds":108,"trafficDelaySeconds":36}}
+{"delayMs":1000,"message":{"t":"pos","seq":369,"lat":37.814,"lng":-122.41785912211068,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2489,"timestampMs":109000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":370,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":251,"timeToStepSeconds":11}}
+{"delayMs":0,"message":{"t":"progress","seq":371,"etaEpochMs":208000,"remainingMeters":251,"remainingSeconds":99,"trafficDelaySeconds":33}}
+{"delayMs":1000,"message":{"t":"pos","seq":372,"lat":37.814,"lng":-122.4175992019188,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2512,"timestampMs":110000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":373,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":228,"timeToStepSeconds":10}}
+{"delayMs":0,"message":{"t":"progress","seq":374,"etaEpochMs":200000,"remainingMeters":228,"remainingSeconds":90,"trafficDelaySeconds":30}}
+{"delayMs":1000,"message":{"t":"pos","seq":375,"lat":37.814,"lng":-122.41733928172692,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2534,"timestampMs":111000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":376,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":205,"timeToStepSeconds":9}}
+{"delayMs":0,"message":{"t":"progress","seq":377,"etaEpochMs":192000,"remainingMeters":205,"remainingSeconds":81,"trafficDelaySeconds":27}}
+{"delayMs":1000,"message":{"t":"pos","seq":378,"lat":37.814,"lng":-122.41707936153504,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2557,"timestampMs":112000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":379,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":183,"timeToStepSeconds":8}}
+{"delayMs":0,"message":{"t":"progress","seq":380,"etaEpochMs":184000,"remainingMeters":183,"remainingSeconds":72,"trafficDelaySeconds":24}}
+{"delayMs":1000,"message":{"t":"pos","seq":381,"lat":37.814,"lng":-122.41681944134316,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2580,"timestampMs":113000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":382,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":160,"timeToStepSeconds":7}}
+{"delayMs":0,"message":{"t":"progress","seq":383,"etaEpochMs":176000,"remainingMeters":160,"remainingSeconds":63,"trafficDelaySeconds":21}}
+{"delayMs":1000,"message":{"t":"pos","seq":384,"lat":37.814,"lng":-122.41655952115129,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2603,"timestampMs":114000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":385,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":137,"timeToStepSeconds":6}}
+{"delayMs":0,"message":{"t":"progress","seq":386,"etaEpochMs":168000,"remainingMeters":137,"remainingSeconds":54,"trafficDelaySeconds":18}}
+{"delayMs":1000,"message":{"t":"pos","seq":387,"lat":37.814,"lng":-122.4162996009594,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2626,"timestampMs":115000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":388,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":114,"timeToStepSeconds":5}}
+{"delayMs":0,"message":{"t":"progress","seq":389,"etaEpochMs":160000,"remainingMeters":114,"remainingSeconds":45,"trafficDelaySeconds":15}}
+{"delayMs":1000,"message":{"t":"pos","seq":390,"lat":37.814,"lng":-122.41603968076753,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2649,"timestampMs":116000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":391,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":91,"timeToStepSeconds":4}}
+{"delayMs":0,"message":{"t":"progress","seq":392,"etaEpochMs":152000,"remainingMeters":91,"remainingSeconds":36,"trafficDelaySeconds":12}}
+{"delayMs":1000,"message":{"t":"pos","seq":393,"lat":37.814,"lng":-122.41577976057565,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2671,"timestampMs":117000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":394,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":68,"timeToStepSeconds":3}}
+{"delayMs":0,"message":{"t":"progress","seq":395,"etaEpochMs":144000,"remainingMeters":68,"remainingSeconds":27,"trafficDelaySeconds":9}}
+{"delayMs":1000,"message":{"t":"pos","seq":396,"lat":37.814,"lng":-122.41551984038377,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2694,"timestampMs":118000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":397,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":46,"timeToStepSeconds":2}}
+{"delayMs":0,"message":{"t":"progress","seq":398,"etaEpochMs":136000,"remainingMeters":46,"remainingSeconds":18,"trafficDelaySeconds":6}}
+{"delayMs":1000,"message":{"t":"pos","seq":399,"lat":37.814,"lng":-122.41525992019189,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2717,"timestampMs":119000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":400,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":23,"timeToStepSeconds":1}}
+{"delayMs":0,"message":{"t":"progress","seq":401,"etaEpochMs":128000,"remainingMeters":23,"remainingSeconds":9,"trafficDelaySeconds":3}}
+{"delayMs":1000,"message":{"t":"pos","seq":402,"lat":37.814,"lng":-122.415,"bearingDeg":89.99877,"speedMps":22.832579,"metersAlongRoute":2740,"timestampMs":120000}}
+{"delayMs":0,"message":{"t":"maneuver","seq":403,"current":{"maneuver":"DESTINATION","roadName":"Marina overlook"},"distanceToStepMeters":0,"timeToStepSeconds":0}}
+{"delayMs":0,"message":{"t":"progress","seq":404,"etaEpochMs":120000,"remainingMeters":0,"remainingSeconds":0}}
+{"delayMs":0,"message":{"t":"nav_state","seq":405,"state":"ARRIVED"}}
+{"delayMs":10000,"message":{"t":"nav_state","seq":406,"state":"IDLE"}}

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>HUD arrived</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 480px; height: 398px; background: #000; color: {{g}}; font-family: 'Barlow Semi Condensed', sans-serif; position: relative; overflow: hidden; box-sizing: border-box; padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center">
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Arrived"><circle cx="48" cy="48" r="42"></circle><path d="M29 50 L42 63 L68 35"></path></svg>
+<span style="font-size: 44px; font-weight: 700; line-height: 1">You've arrived</span>
+<span style="font-size: 26px; font-weight: 600; opacity: 0.85">Home · on your right</span>
+<span style="font-size: 18px; font-weight: 600; opacity: 0.55; margin-top: 10px">12:41 · 22 min trip</span>
+<span style="font-size: 15px; font-weight: 600; opacity: 0.45">Closes in 10 s · 2× TAP to close now</span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"g":{"editor":"color","default":"#3DFF8A","options":["#3DFF8A","#7CFFB0","#00E676"]},"$preview":{"width":480,"height":398}}'>
+class Component extends DCLogic {
+renderVals() {
+return { g: this.props.g ?? '#3DFF8A' };
+}
+}
+</script>
+</body>
+</html>

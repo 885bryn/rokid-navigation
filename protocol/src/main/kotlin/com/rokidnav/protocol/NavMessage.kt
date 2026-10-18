@@ -25,6 +25,14 @@ data class SessionStart(
     val destinationName: String = "",
 ) : NavMessage
 
+/**
+ * Asks the glasses to answer with [GlassesHello]. Sent by the phone link when a session starts: a HUD
+ * that was already running is only brought to the front, so it would not say hello by itself. Handled
+ * outside the HUD's sequence ordering, so [seq] is 0.
+ */
+@Serializable @SerialName("hello_request")
+data class HelloRequest(override val seq: Long = 0) : NavMessage
+
 /** Route polyline, sent once per route (and again on reroute). Large routes are split by [RouteChunker]. */
 @Serializable @SerialName("route_chunk")
 data class RouteChunk(
@@ -115,6 +123,7 @@ data class Alert(
     val lng: Double,
     val text: String = "",
     val source: String = "",
+    val reportedAtMs: Long = 0,
 ) : NavMessage
 
 @Serializable @SerialName("alert_clear")
@@ -146,6 +155,7 @@ data class SettingsUpdate(
     val voiceMuted: Boolean,
     val units: Units,
     val mapZoomLevel: Int,
+    val brightnessPercent: Int = 35,
 ) : NavMessage
 
 // ---------------------------------------------------------------- glasses -> phone
@@ -188,7 +198,7 @@ data class ResyncRequest(override val seq: Long, val reason: String = "") : NavM
 
 @Serializable enum class ActionType {
     ACCEPT_DETOUR, DISMISS_DETOUR, END_NAVIGATION, TOGGLE_VOICE, ZOOM_IN, ZOOM_OUT,
-    SHOW_ALTERNATIVES, TOGGLE_UNITS,
+    SHOW_ALTERNATIVES, TOGGLE_UNITS, CYCLE_BRIGHTNESS, CYCLE_ZOOM,
 }
 
 /** Mirrors the Google Navigation SDK maneuver set closely enough to map 1:1 (see NavInfoMapper). */

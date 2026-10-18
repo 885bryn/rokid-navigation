@@ -1,42 +1,33 @@
 package com.rokidnav.glasses
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.rokidnav.glasses.input.GlassesKey
-import com.rokidnav.glasses.link.CxrPhoneLink
-import com.rokidnav.glasses.link.DemoPhoneLink
-import com.rokidnav.glasses.link.PhoneLink
+import com.rokidnav.glasses.link.*
 import com.rokidnav.glasses.state.HudStore
-import com.rokidnav.protocol.GlassesHello
-import com.rokidnav.protocol.InputEvent
-import com.rokidnav.protocol.SeqCounter
+import com.rokidnav.protocol.*
 import kotlinx.coroutines.launch
 
-class HudViewModel : ViewModel() {
-    private val seq = SeqCounter()
-
-    // TODO(M2): choose DemoPhoneLink when not launched by CXR (e.g. intent extra / no bridge connect
-    //  within 3 s / BuildConfig flag). Hard-coded to demo until M3 so HUD work can start immediately.
-    private val link: PhoneLink = DemoPhoneLink(viewModelScope).also { it.start() }
-    @Suppress("unused") private fun realLink(): PhoneLink = CxrPhoneLink()
-
-    val store = HudStore(sendAction = { link.send(it.copy(seq = seq.next())) })
-
-    init {
-        viewModelScope.launch { link.incoming.collect(store::onMessage) }
-        viewModelScope.launch { store.tickLoop() }
+class HudViewModel(application:Application) : AndroidViewModel(application) {
+    private val seq=SeqCounter()
+    private lateinit var link:PhoneLink
+    private var width=0
+    private var height=0
+    val store=HudStore(requestResync={if(::link.isInitialized)link.send(ResyncRequest(seq.next(),"route chunk timeout"))}) { if(::link.isInitialized)link.send(it.copy(seq=seq.next())) }
+    init { viewModelScope.launch { store.tickLoop() } }
+    fun initialize(demo:Boolean) {
+        if(::link.isInitialized)return
+        // Confirmed on hardware: CXR remote launch selects this bridge and returns GlassesHello.
+        link=if(demo) DemoPhoneLink(viewModelScope) {
+            getApplication<Application>().assets.open("demo_trip.jsonl").bufferedReader().use { DemoRecording.parse(it.lineSequence()) }
+        } else CxrPhoneLink.get(getApplication<Application>())
+        viewModelScope.launch { link.incoming.collect { if(it is HelloRequest){if(width>0)hello()} else store.onMessage(it) } }
+        viewModelScope.launch { link.connected.collect { connected -> store.onConnection(connected);if(connected && width>0)hello() } }
+        (link as? DemoPhoneLink)?.start()
     }
-
-    fun onDisplayReady(width: Int, height: Int) {
-        link.send(GlassesHello(seq.next(), BuildConfig.VERSION_NAME, width, height))
-    }
-
-    fun onKey(key: GlassesKey) {
-        link.send(InputEvent(seq.next(), key.name))
-        store.onKey(key)
-    }
-
-    override fun onCleared() {
-        link.close()
-    }
+    private fun hello(){link.send(GlassesHello(seq.next(),BuildConfig.VERSION_NAME,width,height))}
+    fun onDisplayReady(width:Int,height:Int){this.width=width;this.height=height;if(::link.isInitialized)hello()}
+    fun onKey(key:GlassesKey){if(::link.isInitialized)link.send(InputEvent(seq.next(),key.name));store.onKey(key)}
+    override fun onCleared(){if(::link.isInitialized)link.close()}
 }

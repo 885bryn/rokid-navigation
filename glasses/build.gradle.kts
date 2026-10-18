@@ -11,14 +11,15 @@ android {
     defaultConfig {
         // Must equal phone BuildConfig.GLASSES_PACKAGE (CXR-L glassesPackageName).
         applicationId = "com.rokidnav.glasses"
-        minSdk = 28 // VERIFY against the glasses OS (YodaOS-Sprite) Android level
+        minSdk = 28 // Connected glasses installed and ran this APK successfully.
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1.0"
-        ndk { abiFilters += listOf("arm64-v8a") } // VERIFY glasses ABI
+        versionCode = 2
+        versionName = rootProject.extra["hudVersionName"] as String // reported to the phone in GlassesHello
+        ndk { abiFilters += listOf("arm64-v8a") } // Native bridge handshake verified on the connected glasses.
     }
 
     buildFeatures { buildConfig = true }
+    sourceSets.getByName("test").resources.srcDir("src/main/assets")
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

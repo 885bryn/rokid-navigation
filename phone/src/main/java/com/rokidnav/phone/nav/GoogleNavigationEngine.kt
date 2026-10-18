@@ -1,100 +1,137 @@
 package com.rokidnav.phone.nav
 
 import android.app.Activity
+import android.app.Application
 import android.content.Context
-import com.rokidnav.protocol.ManeuverUpdate
+import android.location.Location
+import android.os.SystemClock
+import androidx.core.content.ContextCompat
+import com.google.android.libraries.navigation.*
+import com.rokidnav.protocol.*
 import com.rokidnav.protocol.NavState
-import com.rokidnav.protocol.PositionUpdate
-import com.rokidnav.protocol.TripProgress
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 
-/**
- * Google Navigation SDK for Android. Responsibilities:
- *  - NavigationApi.getNavigator(activity, listener) -> Navigator
- *  - navigator.setDestinations(waypoints, CustomRoutesOptions(routeToken)) so guidance follows the
- *    exact route the user picked in our UI (from Routes API)
- *  - navigator.startGuidance(); listeners for arrival, route change, remaining time/distance
- *  - registerServiceForNavUpdates(...) -> [NavUpdatesService] -> [NavInfoMapper] -> maneuver flow
- *  - RoadSnappedLocationProvider -> position flow (~1 Hz, road-snapped, with bearing)
- *  - navigator.simulator for no-drive testing
- *
- * The phone screen shows the SDK's own NavigationView during a trip; that's fine and also useful
- * as the "source of truth" when debugging the glasses.
- *
- * VERIFY every SDK call against the Navigation SDK version in libs.versions.toml.
- */
-class GoogleNavigationEngine(private val context: Context) : NavigationEngine {
-
-    private val _navState = MutableStateFlow(NavState.IDLE)
-    override val navState: StateFlow<NavState> = _navState.asStateFlow()
-
-    private val _position = latest<PositionUpdate>()
-    override val position = _position.asSharedFlow()
-
-    private val _maneuver = latest<ManeuverUpdate>()
-    override val maneuver = _maneuver.asSharedFlow()
-
-    private val _progress = latest<TripProgress>()
-    override val progress = _progress.asSharedFlow()
-
-    private val _activeRoute = MutableStateFlow<ActiveRoute?>(null)
-    override val activeRoute: StateFlow<ActiveRoute?> = _activeRoute.asStateFlow()
-
-    // private var navigator: Navigator? = null
-
-    override suspend fun initialize(activity: Activity): Boolean {
-        // TODO(M5): NavigationApi.getNavigator(activity, object : NavigatorListener { ... })
-        //  - onNavigatorReady: store navigator, register listeners, registerServiceForNavUpdates(
-        //        context.packageName, NavUpdatesService::class.java.name, /*numNextStepsToPreview*/ 1)
-        //  - onError(TERMS_NOT_ACCEPTED / NOT_AUTHORIZED / ...): return false with a readable reason
-        return false
+/** Google SDK boundary; all route/location listeners live for the application's navigator. */
+class GoogleNavigationEngine(private val context:Context):NavigationEngine {
+    private val application=context.applicationContext as Application
+    private val _navState=MutableStateFlow(NavState.IDLE)
+    override val navState=_navState.asStateFlow()
+    private fun <T> latest()=MutableSharedFlow<T>(replay=1,onBufferOverflow=BufferOverflow.DROP_OLDEST)
+    private val _position=latest<PositionUpdate>();override val position=_position.asSharedFlow()
+    private val _maneuver=latest<ManeuverUpdate>();override val maneuver=_maneuver.asSharedFlow()
+    private val _progress=latest<TripProgress>();override val progress=_progress.asSharedFlow()
+    private val _activeRoute=MutableStateFlow<ActiveRoute?>(null);override val activeRoute=_activeRoute.asStateFlow()
+    private val _destination=MutableStateFlow<Destination?>(null);override val destination=_destination.asStateFlow()
+    private val _error=MutableStateFlow<String?>(null);val error=_error.asStateFlow()
+    private var navigator:Navigator?=null
+    private var lastFixMs=0L
+    private var routePoints=emptyList<LatLng>()
+    private var muted=false
+    private var routeGeneration=0
+    private val locationListener=object:RoadSnappedLocationProvider.GpsAvailabilityEnhancedLocationListener {
+        override fun onRawLocationUpdate(location:Location)=Unit
+        override fun onGpsAvailabilityUpdate(available:Boolean) {
+            if(_navState.value==NavState.ACTIVE && !available)_navState.value=NavState.GPS_LOST
+            else if(_navState.value==NavState.GPS_LOST && available)_navState.value=NavState.ACTIVE
+        }
+        override fun onLocationChanged(location:Location) {
+            if(_navState.value !in listOf(NavState.ACTIVE,NavState.REROUTING,NavState.GPS_LOST))return
+            val now=SystemClock.elapsedRealtime()
+            if(now-lastFixMs<if(location.speed<.5f)5000 else 1000)return
+            lastFixMs=now
+            val point=LatLng(location.latitude,location.longitude)
+            _position.tryEmit(PositionUpdate(0,point.lat,point.lng,location.bearing,location.speed,
+                Geo.metersAlongPolyline(routePoints,point).toInt(),System.currentTimeMillis()))
+        }
     }
-
-    override suspend fun start(destination: Destination, option: RouteOption?): Boolean {
-        _navState.value = NavState.ROUTING
-        // TODO(M5): Waypoint.builder().setPlaceIdString(destination.placeId) (fall back to lat/lng)
-        //  navigator.setDestinations(listOf(wp), CustomRoutesOptions.builder()
-        //      .setRouteToken(option.routeToken).setTravelMode(DRIVING).build())
-        //  on RouteStatus.OK: startGuidance(), publish activeRoute (polyline from option or
-        //  navigator.currentRouteSegment), navState = ACTIVE
-        return false
+    override suspend fun initialize(activity:Activity):Boolean {
+        if(navigator!=null)return true
+        _error.value=null
+        return suspendCancellableCoroutine { continuation ->
+            NavigationApi.getNavigator(activity,object:NavigationApi.NavigatorListener {
+                override fun onError(code:Int) {
+                    _error.value=when(code) {
+                        NavigationApi.ErrorCode.TERMS_NOT_ACCEPTED->"Accept Google's navigation terms to start guidance."
+                        NavigationApi.ErrorCode.LOCATION_PERMISSION_MISSING->"Allow precise location to start guidance."
+                        NavigationApi.ErrorCode.NOT_AUTHORIZED->"Enable Navigation SDK and check the Android API key and signing certificate."
+                        else->"Google navigation could not start. Check network access."
+                    }
+                    if(continuation.isActive)continuation.resume(false)
+                }
+                override fun onNavigatorReady(value:Navigator) {
+                    if(!continuation.isActive)return
+                    navigator=value
+                    value.addArrivalListener { if(it.isFinalDestination){navigator?.stopGuidance();_navState.value=NavState.ARRIVED;stopForeground()} }
+                    value.addRouteChangedListener { publishRoute();publishProgress() }
+                    value.addReroutingListener {_navState.value=NavState.REROUTING}
+                    value.addRemainingTimeOrDistanceChangedListener(1,1){publishProgress()}
+                    NavigationApi.getRoadSnappedLocationProvider(application).addLocationListener(locationListener)
+                    if(!value.registerServiceForNavUpdates(context.packageName,NavUpdatesService::class.java.name,1)) {
+                        _error.value="Google turn instructions could not be registered."
+                        NavigationApi.getRoadSnappedLocationProvider(application).removeLocationListener(locationListener)
+                        value.cleanup();navigator=null;continuation.resume(false);return
+                    }
+                    setVoiceMuted(muted)
+                    continuation.resume(true)
+                }
+            })
+        }
     }
-
-    override suspend fun switchRoute(option: RouteOption): Boolean {
-        // TODO(M6): same as start() with the new token; keep the destination. Publish new activeRoute.
-        return false
+    override suspend fun start(destination:Destination,option:RouteOption?):Boolean {
+        val nav=navigator ?: return false
+        if(option!=null && option.routeToken.isBlank()){_error.value="The selected route has no Google route token. Recalculate the route.";return false}
+        _error.value=null;_navState.value=NavState.ROUTING
+        val attempt=++routeGeneration
+        try {
+            val wp=Waypoint.builder().setTitle(destination.name).apply {
+                if(!destination.placeId.isNullOrBlank())setPlaceIdString(destination.placeId)
+                else setLatLng(destination.location.lat,destination.location.lng)
+            }.build()
+            val future=if(!option?.routeToken.isNullOrBlank())nav.setDestinations(listOf(wp),
+                CustomRoutesOptions.builder().setRouteToken(option!!.routeToken).setTravelMode(CustomRoutesOptions.TravelMode.DRIVING).build())
+                else nav.setDestination(wp)
+            val status=suspendCancellableCoroutine<Navigator.RouteStatus> { c ->
+                future.setOnResultListener { if(c.isActive)c.resume(it) }
+                c.invokeOnCancellation {future.cancel(true)}
+            }
+            if(attempt!=routeGeneration)return false
+            if(status!=Navigator.RouteStatus.OK){_error.value="Google could not calculate guidance ($status).";_navState.value=if(nav.isGuidanceRunning)NavState.ACTIVE else NavState.IDLE;return false}
+            _destination.value=destination
+            publishRoute(option)
+            ContextCompat.startForegroundService(context,android.content.Intent(context,com.rokidnav.phone.session.NavForegroundService::class.java))
+            nav.startGuidance();_navState.value=NavState.ACTIVE;publishProgress()
+            return true
+        } catch(e:kotlinx.coroutines.CancellationException){throw e}
+        catch(_:Exception){_error.value="Could not start guidance. Check location access and Google API setup.";_navState.value=if(nav.isGuidanceRunning)NavState.ACTIVE else NavState.IDLE;return false}
     }
-
-    override fun setVoiceMuted(muted: Boolean) {
-        // TODO(M8): navigator.setAudioGuidance(if (muted) SILENT else VOICE_ALERTS_AND_GUIDANCE)
+    override suspend fun switchRoute(option:RouteOption):Boolean = _destination.value?.let {start(it,option)} ?: false
+    private fun publishRoute(option:RouteOption?=null) {
+        val nav=navigator ?: return
+        val points=nav.routeSegments.orEmpty().flatMap {segment->segment.latLngs.orEmpty().map {LatLng(it.latitude,it.longitude)}}
+        val encoded=if(points.size>1)PolylineCodec.encode(points) else option?.encodedPolyline ?: return
+        if(_activeRoute.value?.encodedPolyline==encoded)return
+        routePoints=PolylineCodec.decode(encoded)
+        val meters=routePoints.zipWithNext {a,b->Geo.distanceMeters(a,b)}.sum().toInt()
+        _activeRoute.value=ActiveRoute("g-${SystemClock.elapsedRealtimeNanos()}",encoded,if(meters>0)meters else option?.distanceMeters ?: 0)
     }
-
-    override fun simulate(enabled: Boolean) {
-        // TODO(M5): navigator.simulator.simulateLocationsAlongExistingRoute() / unsetUserLocation()
+    private fun publishProgress() {
+        val remaining=navigator?.currentTimeAndDistance ?: return
+        _progress.tryEmit(TripProgress(0,System.currentTimeMillis()+remaining.seconds*1000L,remaining.meters,remaining.seconds))
     }
-
+    override fun setVoiceMuted(muted:Boolean) {this.muted=muted;navigator?.setAudioGuidance(if(muted)Navigator.AudioGuidance.SILENT else Navigator.AudioGuidance.VOICE_ALERTS_AND_GUIDANCE)}
+    override fun simulate(enabled:Boolean) {navigator?.simulator?.let {if(enabled)it.simulateLocationsAlongExistingRoute() else it.unsetUserLocation()}}
+    private fun stopForeground(){context.stopService(android.content.Intent(context,com.rokidnav.phone.session.NavForegroundService::class.java))}
     override fun stop() {
-        // TODO(M5): navigator.stopGuidance(); navigator.clearDestinations()
-        _navState.value = NavState.ENDED
-        _activeRoute.value = null
+        routeGeneration++;navigator?.stopGuidance();navigator?.clearDestinations();navigator?.simulator?.unsetUserLocation()
+        _navState.value=NavState.ENDED;_activeRoute.value=null;_destination.value=null;routePoints=emptyList();stopForeground()
     }
-
-    /** Called by [NavUpdatesService] on the main thread. */
-    internal fun onManeuver(update: ManeuverUpdate) {
-        _maneuver.tryEmit(update)
+    internal fun onManeuver(update:ManeuverUpdate){if(_navState.value!=NavState.ENDED)_maneuver.tryEmit(update)}
+    internal fun onNavStateFromFeed(state:NavState) {
+        if(_navState.value in listOf(NavState.IDLE,NavState.ENDED,NavState.ARRIVED))return
+        if(state==NavState.ENDED)return // Arrival listener owns the arrived screen; STOPPED also occurs before guidance.
+        if(_navState.value!=NavState.GPS_LOST || state==NavState.REROUTING)_navState.value=state
     }
-
-    internal fun onNavStateFromFeed(state: NavState) {
-        if (_navState.value != NavState.ENDED) _navState.value = state
-    }
-
-    private fun <T> latest() = MutableSharedFlow<T>(
-        replay = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST,
-    )
 }

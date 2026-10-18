@@ -19,13 +19,16 @@ android {
         applicationId = "com.rokidnav.phone"
         minSdk = 28          // CXR-L requirement
         targetSdk = 34       // matches CXR-L sample
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
         manifestPlaceholders["MAPS_API_KEY"] = localProps.getProperty("MAPS_API_KEY", "")
         buildConfigField("String", "MAPS_API_KEY", "\"${localProps.getProperty("MAPS_API_KEY", "")}\"")
+        buildConfigField("String", "ROUTES_API_KEY", "\"${localProps.getProperty("ROUTES_API_KEY", localProps.getProperty("MAPS_API_KEY", ""))}\"")
         // Glasses APK bundled into phone assets so CXR-L can auto-install it (see GlassesApkInstaller).
         buildConfigField("String", "GLASSES_PACKAGE", "\"com.rokidnav.glasses\"")
         buildConfigField("String", "GLASSES_ACTIVITY", "\"com.rokidnav.glasses.MainActivity\"")
+        // Version of the bundled glasses APK; a different GlassesHello.appVersion means the HUD is outdated.
+        buildConfigField("String", "BUNDLED_HUD_VERSION", "\"${rootProject.extra["hudVersionName"]}\"")
     }
 
     buildFeatures {
@@ -53,11 +56,16 @@ dependencies {
 
     implementation(libs.rokid.cxr.client.l)
     implementation(libs.google.navigation)
-    implementation(libs.google.places)
+    implementation(libs.google.places) {
+        // Navigation SDK already includes the Maps classes used by Places.
+        exclude(group = "com.google.android.gms", module = "play-services-maps")
+    }
     implementation(libs.okhttp)
+    implementation(libs.xz)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.service)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
@@ -74,5 +82,13 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
 }
 
-// TODO(M3): add a task that builds :glasses:assembleDebug and copies the APK to
-// phone/src/main/assets/glasses.apk, so the phone always ships the matching glasses build.
+val glassesAssets = layout.buildDirectory.dir("generated/glassesAssets/debug")
+val bundleGlassesDebug by tasks.registering(Sync::class) {
+    dependsOn(":glasses:assembleDebug")
+    from(project(":glasses").layout.buildDirectory.file("outputs/apk/debug/glasses-debug.apk")) { rename { "glasses.apk" } }
+    into(glassesAssets)
+}
+android.sourceSets.getByName("debug").assets.srcDir(glassesAssets)
+tasks.matching {
+    it.name == "mergeDebugAssets" || (it.name.contains("Debug") && it.name.contains("lint",ignoreCase=true))
+}.configureEach { dependsOn(bundleGlassesDebug) }

@@ -13,6 +13,23 @@ class ProtocolCodecTest {
             Alert(4, "a1", AlertKind.POLICE, 600, 37.0, -122.0, "Police reported"),
             DetourOffer(5, "d1", 360, 800, "via I-280", expiresAtMs = 1L),
             GlassesAction(6, ActionType.ACCEPT_DETOUR, "d1"),
+            RouteChunk(7, "r1", 0, 1, "??", 100),
+            RoadContext(8, "r1", listOf(ContextRoad("??", "Main St", true))),
+            PositionUpdate(9, 37.0, -122.0, 90f, 12f, 300, 1000L),
+            TrafficSegments(10, "r1", listOf(TrafficSegment(0, 100, TrafficLevel.JAM))),
+            AlertCleared(11, "a1"),
+            DetourResolved(12, "d1", true),
+            NavStateUpdate(13, NavState.ACTIVE),
+            SettingsUpdate(14, true, Units.IMPERIAL, 2, 60),
+            GlassesAction(20,ActionType.CYCLE_BRIGHTNESS),
+            GlassesAction(21,ActionType.CYCLE_ZOOM),
+            GlassesHello(15, "0.1", 480, 398),
+            HelloRequest(),
+            InputEvent(16, "TAP"),
+            ResyncRequest(17, "reconnect"),
+            ManeuverUpdate(18, Step(Maneuver.ROUNDABOUT_CLOCKWISE, roundaboutExit = 3,
+                lanes = listOf(Lane(listOf(Maneuver.TURN_LEFT, Maneuver.STRAIGHT), true))), 30, 2),
+            Alert(19, "cam1", AlertKind.SPEED_CAMERA, 700, 37.0, -122.0, "Speed camera", "WzSabre", 1700000000000),
         )
         for (m in messages) {
             val (magic, body) = ProtocolCodec.encode(m)
@@ -28,5 +45,13 @@ class ProtocolCodecTest {
     @Test fun ignoresUnknownFieldsFromNewerSender() {
         val body = """{"t":"nav_state","seq":9,"state":"ACTIVE","futureField":42}"""
         assertEquals(NavStateUpdate(9, NavState.ACTIVE), ProtocolCodec.decode(ProtocolVersion.MAGIC, body))
+    }
+    @Test fun oldSettingsDefaultBrightness() {
+        val old="""{"t":"settings","seq":1,"voiceMuted":false,"units":"IMPERIAL","mapZoomLevel":1}"""
+        assertEquals(35,(ProtocolCodec.decode(ProtocolVersion.MAGIC,old) as SettingsUpdate).brightnessPercent)
+    }
+    @Test fun oldAlertsHaveUnknownReportTime() {
+        val old="""{"t":"alert","seq":1,"id":"p1","kind":"POLICE","distanceAheadMeters":100,"lat":0,"lng":0}"""
+        assertEquals(0L,(ProtocolCodec.decode(ProtocolVersion.MAGIC,old) as Alert).reportedAtMs)
     }
 }

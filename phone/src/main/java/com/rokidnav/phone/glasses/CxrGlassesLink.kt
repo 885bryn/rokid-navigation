@@ -2,137 +2,188 @@ package com.rokidnav.phone.glasses
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import com.rokid.cxr.Caps
+import com.rokid.cxr.link.callbacks.IGlassAppCbk
+import com.rokid.cxr.session.*
+import com.rokid.sprite.aiapp.externalapp.example.ExternalAppClient
 import com.rokidnav.phone.BuildConfig
-import com.rokidnav.protocol.Channels
-import com.rokidnav.protocol.NavMessage
-import com.rokidnav.protocol.ProtocolCodec
+import com.rokidnav.protocol.*
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.*
 
-/**
- * CXR-L implementation. API names come from the CXR-L 1.1.2 docs ("Quick Start", "Glasses Custom App",
- * "Custom Commands"). Imports for SDK types are left for M3 because their packages aren't documented;
- * resolve them against the real AAR / CxrlSample. Lines marked VERIFY are unconfirmed.
- *
- * Flow: checkEnvironment -> authorize(activity) -> token -> connect() -> CUSTOM_APP session ->
- * SDK installs/launches glasses APK -> onSessionStarted -> Ready.
- */
-class CxrGlassesLink(private val context: Context) : GlassesLink {
-
-    private val _state = MutableStateFlow<LinkState>(LinkState.Idle)
-    override val state: StateFlow<LinkState> = _state.asStateFlow()
-
-    private val _incoming = MutableSharedFlow<NavMessage>(
-        extraBufferCapacity = 64,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST,
-    )
-    override val incoming = _incoming.asSharedFlow()
-
-    // Never log this. Persist only if M9 decides to (EncryptedSharedPreferences).
-    private var token: String? = null
-
-    // private val manager = CxrSessionManager.getInstance(context.applicationContext)
-    // private var session: CxrSession? = null
-
-    override fun checkEnvironment(): EnvironmentStatus {
-        // TODO(M3):
-        // when (val s = manager.checkRokidAppCompatibility(context)) {
-        //     is RokidAppStatus.NotInstalled -> EnvironmentStatus.RokidAppMissing(s.downloadUrl)
-        //     is RokidAppStatus.VersionTooLow -> EnvironmentStatus.RokidAppTooOld(s.downloadUrl)
-        //     is RokidAppStatus.Compatible -> EnvironmentStatus.Ok
-        // }
-        // Do NOT call manager.isGlassesBtConnected() here: it is always false before a session exists.
-        return EnvironmentStatus.Ok
+/** SDK boundary. Tokens stay in memory and are never included in logs or UI state. */
+class CxrGlassesLink(private val context:Context):GlassesLink {
+    private val mutableState=MutableStateFlow<LinkState>(LinkState.Idle)
+    override val state=mutableState.asStateFlow()
+    private val messages=MutableSharedFlow<NavMessage>(extraBufferCapacity=64,onBufferOverflow=BufferOverflow.DROP_OLDEST)
+    override val incoming=messages.asSharedFlow()
+    private val manager by lazy {CxrSessionManager.getInstance(context.applicationContext)}
+    private val scope=CoroutineScope(SupervisorJob()+Dispatchers.Main.immediate)
+    private val main=Handler(Looper.getMainLooper())
+    private var token:String?=null
+    private var session:CxrSession?=null
+    private var generation=0
+    private var hudReplacedFor:String?=null
+    private var helloFor=-1
+    private fun onMain(action:()->Unit){if(Looper.myLooper()==Looper.getMainLooper())action() else main.post(action)}
+    override fun checkEnvironment():EnvironmentStatus=when(val result=manager.checkRokidAppCompatibility(context)) {
+        is RokidAppStatus.NotInstalled->EnvironmentStatus.RokidAppMissing(result.downloadUrl)
+        is RokidAppStatus.VersionTooLow->EnvironmentStatus.RokidAppTooOld(result.downloadUrl)
+        is RokidAppStatus.Compatible->EnvironmentStatus.Ok
     }
-
-    override fun authorize(activity: Activity) {
-        _state.value = LinkState.Authorizing
-        // TODO(M3): we only need display + custom commands; request the minimum GlassPermission set
-        // the SDK accepts (VERIFY whether an empty list is allowed).
-        // manager.requestAuthorization(activity, listOf()) { result ->
-        //     if (result.isSuccess && result.token != null) {
-        //         token = result.token
-        //         _state.value = LinkState.Authorized
-        //     } else {
-        //         _state.value = LinkState.Failed("auth ${result.errorCode}: ${result.message}")
-        //     }
-        // }
-        // MainActivity must also forward onActivityResult -> manager.parseAuthorizationResult(...)
+    override fun authorize(activity:Activity) {
+        if(state.value==LinkState.Authorizing)return
+        mutableState.value=LinkState.Authorizing
+        try {
+            // Device management is used to install/launch the glasses app and control its brightness.
+            manager.requestAuthorization(activity,listOf(GlassPermission.DEVICE_MANAGE)){result->onMain {acceptAuth(result)}}
+        } catch(_:Exception){mutableState.value=LinkState.Failed("Could not open Rokid authorization. Open Hi Rokid and try again.")}
     }
-
+    fun onAuthorizationResult(resultCode:Int,data:Intent?) {
+        if(state.value!=LinkState.Authorizing)return
+        // parseAuthorizationResult invokes the registered callback; no auth Intent is logged.
+        try {manager.parseAuthorizationResult(resultCode,data)}
+        catch(_:Exception){mutableState.value=LinkState.Failed("Rokid authorization could not be read. Try again.")}
+    }
+    private fun acceptAuth(result:AuthResult) {
+        val authorized=result.token
+        if(result.isSuccess && !authorized.isNullOrBlank()){
+            token=authorized;mutableState.value=LinkState.Authorized
+        }else{token=null;mutableState.value=LinkState.Failed("Authorization was not granted (${result.errorCode?.name ?: "cancelled"}).")}
+    }
     override fun connect() {
-        val t = token ?: run { _state.value = LinkState.Failed("not authorized"); return }
-        _state.value = LinkState.Connecting
-        // TODO(M3):
-        // val apk = GlassesApkInstaller.ensureApkOnDisk(context)   // copies assets/glasses.apk to getExternalFilesDir("rokid")
-        // val config = SessionConfig(
-        //     sessionType = SessionType.CUSTOM_APP,
-        //     glassesPackageName = BuildConfig.GLASSES_PACKAGE,
-        //     glassesActivityName = BuildConfig.GLASSES_ACTIVITY,
-        //     glassesApkPath = apk?.absolutePath,
-        //     aiInterceptMode = AiInterceptMode.ALLOW_WITH_PAUSE,   // decision: see docs/ARCHITECTURE.md
-        // )
-        // val s = manager.create(config)
-        // s.addLifecycleCallback(lifecycleCallback)                  // register BEFORE connect
-        // s.addCustomCmdCallback(object : ICustomCmdSessionCallback {
-        //     override fun onCustomCmdResult(channelKey: String, data: ByteArray?) = onFrame(channelKey, data)
-        // })
-        // session = s
-        // s.connect(t)
+        val authorized=token ?: run {mutableState.value=LinkState.Failed("Authorize glasses first.");return}
+        if(state.value==LinkState.Connecting || state.value==LinkState.Ready || state.value==LinkState.UpdatingHud)return
+        openSession(authorized)
     }
-
-    // Lifecycle mapping (TODO(M3) wire into ISessionLifecycleCbk):
-    //   onConnectResult(false, code)      -> Failed("connect $code")
-    //   onSessionStarted()                -> Ready
-    //   onSessionPaused(AI_ASSIST)        -> Paused("ai")
-    //   onSessionPaused(BT_DISCONNECTED)  -> Paused("bluetooth")
-    //   onSessionResumed()                -> Ready   (coordinator then sends a full resync)
-    //   onSessionTerminating(..)          -> stop sending
-    //   onSessionClosed(CHAIN_TORN|LINK_LOST) -> Closed(needsReauth = true), token = null
-    //   onSessionClosed(other)            -> Closed(needsReauth = false)
-
-    private fun onFrame(channelKey: String, data: ByteArray?) {
-        if (channelKey != Channels.GLASSES_TO_PHONE || data == null) return
-        val caps = runCatching { Caps.fromBytes(data) }.getOrNull() ?: return
-        if (caps.size() < 2) return
-        val msg = ProtocolCodec.decode(caps.at(0).asString(), caps.at(1).asString())
-        if (msg == null) {
-            Log.w(TAG, "dropped unparseable frame (${data.size} bytes)")
-            return
+    private fun openSession(authorized:String) {
+        val attempt=++generation
+        mutableState.value=LinkState.Connecting
+        scope.launch {
+            val apk=try{withContext(Dispatchers.IO){GlassesApkInstaller.ensureApkOnDisk(context)}}catch(_:Exception){
+                if(attempt==generation)mutableState.value=LinkState.Failed("The bundled glasses app could not be prepared.");return@launch
+            }
+            if(attempt!=generation)return@launch
+            try {
+                session?.close()
+                val created=manager.create(SessionConfig(sessionType=SessionType.CUSTOM_APP,
+                    glassesPackageName=BuildConfig.GLASSES_PACKAGE,glassesActivityName=BuildConfig.GLASSES_ACTIVITY,
+                    glassesApkPath=apk.absolutePath,aiInterceptMode=AiInterceptMode.ALLOW_WITH_PAUSE))
+                session=created
+                var connectionFailure: LinkState.Failed? = null
+                created.addLifecycleCallback(object:ISessionLifecycleCbk {
+                    private fun update(value:LinkState){onMain {if(attempt==generation)mutableState.value=value}}
+                    override fun onSessionStarted(){Log.i("RokidNavLink","session_started");update(LinkState.Ready);onMain {requestHello(attempt)}}
+                    override fun onSessionPaused(reason:PausedReason){update(LinkState.Paused(reason.name))}
+                    override fun onSessionResumed(){update(LinkState.Ready)}
+                    override fun onSessionTerminating(reason:TerminatingReason,remainingMs:Long){update(LinkState.Paused("Closing"))}
+                    override fun onSessionClosed(reason:CloseReason){onMain {
+                        Log.i("RokidNavLink","session_closed reason=${reason.name}")
+                        if(attempt==generation){val reauth=reason==CloseReason.CHAIN_TORN || reason==CloseReason.LINK_LOST
+                            if(reauth)token=null
+                            session=null;mutableState.value=if(reason==CloseReason.CONNECT_FAILED && connectionFailure!=null)
+                                connectionFailure!! else LinkState.Closed(reason.name,reauth)}
+                    }}
+                    override fun onConnectResult(success:Boolean,error:SessionErrorCode?){onMain {
+                        Log.i("RokidNavLink","connect_result success=$success error=${error?.name ?: "none"}")
+                        if(!success && attempt==generation){
+                            connectionFailure=LinkState.Failed(if(error==SessionErrorCode.GLASSES_APP_INSTALL_FAILED)
+                                "Hi Rokid could not install the HUD. Save its installer, then use Hi Rokid → Toolbox → Glasses app management."
+                                else "Glasses connection failed (${error?.name ?: "unknown"}). Check Hi Rokid.",canRetry=true)
+                            mutableState.value=connectionFailure!!
+                        }
+                    }}
+                })
+                created.addCustomCmdCallback(object:ICustomCmdSessionCallback {
+                    override fun onCustomCmdResult(key:String,data:ByteArray?){if(attempt==generation)onFrame(key,data,attempt)}
+                })
+                created.connect(authorized)
+            } catch(_:Exception){if(attempt==generation)mutableState.value=LinkState.Failed("Could not start the glasses session. Reopen Hi Rokid and try again.")}
         }
-        _incoming.tryEmit(msg)
+    }
+    private fun onFrame(key:String,data:ByteArray?,attempt:Int) {
+        if(key!=Channels.GLASSES_TO_PHONE || data==null || data.size>MAX_FRAME_BYTES)return
+        val msg=runCatching {
+            val caps=Caps.fromBytes(data)
+            if(caps.size()!=2)null else ProtocolCodec.decode(caps.at(0).string,caps.at(1).string)
+        }.getOrNull() ?: return
+        if(msg is GlassesHello)onMain {checkHudVersion(msg,attempt)}
+        messages.tryEmit(msg)
     }
 
-    override fun send(message: NavMessage): Boolean {
-        if (_state.value != LinkState.Ready) return false
-        val (magic, body) = ProtocolCodec.encode(message)
-        val payload = Caps().apply {
-            write(magic)
-            write(body)
-        }
-        if (BuildConfig.DEBUG) Log.d(TAG, "-> ${message::class.simpleName} seq=${message.seq} ${body.length}B")
-        // TODO(M3):
-        // val r = session?.sendCustomCmd(Channels.PHONE_TO_GLASSES, payload, ByteArray(0)) ?: return false
-        // return r.isSuccess
-        return false
+    /**
+     * The SDK only installs the HUD when none is on the glasses (confirmed in its log: an installed HUD is
+     * opened as is), so a new build never reaches the glasses by itself. When the running HUD reports a
+     * different version than the one bundled here, uninstall it and open a fresh session: the SDK then
+     * finds no HUD and uploads, installs and opens the bundled APK. Tried once per bundled version, so a
+     * HUD that still reports something else after reinstalling keeps running instead of looping.
+     */
+    private fun checkHudVersion(hello:GlassesHello,attempt:Int) {
+        Log.i(TAG,"hud_hello installed=${hello.appVersion} bundled=${BuildConfig.BUNDLED_HUD_VERSION}")
+        if(attempt!=generation)return
+        helloFor=attempt
+        if(hello.appVersion!=BuildConfig.BUNDLED_HUD_VERSION)replaceHud(attempt)
     }
-
-    override fun setBrightness(percent: Int) {
-        // TODO(M8): session?.setGlassBrightness(percent.coerceIn(0, 100))
+    /** A HUD older than [HelloRequest] never answers it; silence therefore also means outdated. */
+    private fun requestHello(attempt:Int) {
+        if(attempt!=generation)return
+        send(HelloRequest())
+        main.postDelayed({
+            if(attempt==generation && helloFor!=attempt){Log.i(TAG,"hud_hello missing");replaceHud(attempt)}
+        },HELLO_TIMEOUT_MS)
     }
-
-    override fun disconnect() {
-        // TODO(M3): session?.close()
-        _state.value = LinkState.Idle
+    private fun replaceHud(attempt:Int) {
+        val bundled=BuildConfig.BUNDLED_HUD_VERSION
+        if(attempt!=generation || hudReplacedFor==bundled)return
+        hudReplacedFor=bundled
+        // v1.1 has no public uninstall; the session's own SDK client has one.
+        val client=session?.let(::linkClientOf) ?: run {Log.w(TAG,"hud_outdated, SDK client unreachable");return}
+        Log.i(TAG,"hud_outdated bundled=$bundled")
+        val update=++generation
+        mutableState.value=LinkState.UpdatingHud
+        main.postDelayed({if(update==generation)failHudUpdate()},HUD_UNINSTALL_TIMEOUT_MS)
+        client.appUninstall(object:IGlassAppCbk {
+            override fun onUnInstallAppResult(success:Boolean){onMain {
+                if(update!=generation)return@onMain
+                Log.i(TAG,"hud_uninstall success=$success")
+                if(!success){failHudUpdate();return@onMain}
+                session?.close();session=null
+                token?.let(::openSession) ?: run {mutableState.value=LinkState.Failed("Authorize glasses again.")}
+            }}
+            override fun onQueryAppResult(installed:Boolean){}
+            override fun onInstallAppResult(success:Boolean){}
+            override fun onOpenAppResult(success:Boolean){}
+            override fun onStopAppResult(success:Boolean){}
+            override fun onGlassAppResume(resumed:Boolean){}
+        })
     }
-
+    private fun failHudUpdate() {
+        generation++;session?.close();session=null
+        mutableState.value=LinkState.Failed("The glasses have an older HUD that couldn't be replaced. Remove it in Hi Rokid → Toolbox → Glasses app management, then connect again.",canRetry=true)
+    }
+    private fun linkClientOf(session:CxrSession):ExternalAppClient?=runCatching {
+        session.javaClass.declaredFields.firstOrNull {it.type==ExternalAppClient::class.java}
+            ?.apply {isAccessible=true}?.get(session) as ExternalAppClient?
+    }.getOrNull()
+    override fun send(message:NavMessage):Boolean {
+        if(state.value!=LinkState.Ready)return false
+        return runCatching {
+            val (magic,body)=ProtocolCodec.encode(message)
+            if(body.toByteArray(Charsets.UTF_8).size>MAX_FRAME_BYTES-128)return false
+            val caps=Caps().apply {write(magic);write(body)}
+            session?.sendCustomCmd(Channels.PHONE_TO_GLASSES,caps,ByteArray(0))?.isSuccess==true
+        }.getOrDefault(false)
+    }
+    override fun setBrightness(percent:Int){if(state.value==LinkState.Ready)session?.setGlassBrightness(percent.coerceIn(0,100))}
+    override fun disconnect(){generation++;session?.close();session=null;mutableState.value=if(token==null)LinkState.Idle else LinkState.Authorized}
     private companion object {
-        const val TAG = "CxrGlassesLink"
+        const val TAG="RokidNavLink"
+        const val HUD_UNINSTALL_TIMEOUT_MS=30_000L
+        const val HELLO_TIMEOUT_MS=8_000L
     }
 }

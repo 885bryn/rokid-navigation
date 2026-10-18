@@ -73,7 +73,8 @@ object Geo {
         val dLng = Math.toRadians(b.lng - a.lng)
         val h = sin(dLat / 2).let { it * it } +
             cos(Math.toRadians(a.lat)) * cos(Math.toRadians(b.lat)) * sin(dLng / 2).let { it * it }
-        return 2 * EARTH_RADIUS_M * atan2(sqrt(h), sqrt(1 - h))
+        val bounded = h.coerceIn(0.0, 1.0)
+        return 2 * EARTH_RADIUS_M * atan2(sqrt(bounded), sqrt(1 - bounded))
     }
 
     /**
@@ -81,7 +82,8 @@ object Geo {
      * few-km window the glasses map shows; the HUD renderer rotates these by heading.
      */
     fun toLocalMeters(origin: LatLng, p: LatLng): Pair<Double, Double> {
-        val x = Math.toRadians(p.lng - origin.lng) * EARTH_RADIUS_M * cos(Math.toRadians(origin.lat))
+        val deltaLng = ((p.lng - origin.lng + 540) % 360) - 180
+        val x = Math.toRadians(deltaLng) * EARTH_RADIUS_M * cos(Math.toRadians(origin.lat))
         val y = Math.toRadians(p.lat - origin.lat) * EARTH_RADIUS_M
         return x to y
     }
@@ -94,4 +96,34 @@ object Geo {
         val x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dLng)
         return (atan2(y, x) * 180 / PI + 360) % 360
     }
+
+    data class Projection(val metersAlong: Double, val distanceMeters: Double, val bearingDeg: Double)
+
+    /** Nearest segment in a local projection; ties use the earliest point on the route. */
+    fun projectOntoPolyline(points: List<LatLng>, position: LatLng): Projection? {
+        if (points.isEmpty()) return null
+        if (points.size == 1) return Projection(0.0, distanceMeters(points.first(), position), 0.0)
+        var best: Projection? = null
+        var along = 0.0
+        for (i in 0 until points.lastIndex) {
+            val a = points[i]
+            val b = points[i + 1]
+            val (ax, ay) = toLocalMeters(position, a)
+            val (bx, by) = toLocalMeters(position, b)
+            val dx = bx - ax
+            val dy = by - ay
+            val squared = dx * dx + dy * dy
+            val t = if (squared == 0.0) 0.0 else (-(ax * dx + ay * dy) / squared).coerceIn(0.0, 1.0)
+            val distance = kotlin.math.hypot(ax + t * dx, ay + t * dy)
+            val length = distanceMeters(a, b)
+            if (best == null || distance < best.distanceMeters) {
+                best = Projection(along + t * length, distance, bearingDeg(a, b))
+            }
+            along += length
+        }
+        return best
+    }
+
+    fun metersAlongPolyline(points: List<LatLng>, position: LatLng): Double =
+        projectOntoPolyline(points, position)?.metersAlong ?: 0.0
 }

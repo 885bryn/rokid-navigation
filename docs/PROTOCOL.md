@@ -14,9 +14,34 @@ Frames should stay under 8 KB (`MAX_FRAME_BYTES`, to be measured on hardware in 
 
 Units: meters, seconds, epoch-ms, degrees (0 = north, clockwise). Formatting happens on glasses.
 
+`alert.reportedAtMs` is optional (default `0`, unknown), epoch milliseconds, for the mockup's report-age
+label. Old senders remain valid; camera database entries use `0` and never invent a report age.
+WzSabre uses the `alert` / `alert_clear` wire messages. `source`
+is `WzSabre`, and IDs are namespaced separately for downloaded cameras and SABRE reports. The phone
+updates `distanceAheadMeters` and clears passed/removed/expired alerts. Clears remain part of the
+stateful resync so a reconnect cannot retain an alert cleared while disconnected. Trip end clears
+the glasses alert list. Police/camera messages have codec and HUD state regression coverage.
+
+Shared geometry helpers `Geo.projectOntoPolyline` and `Geo.metersAlongPolyline` return the nearest
+segment projection / accumulated meters for phone-side alert selection. They add no wire fields.
+
+`road_context` now carries actual selected OSM streets during guidance (same schema). The sender
+limits the entire JSON to 6 KB. Each message replaces the context for its route; the HUD rejects
+context for a different route and clears context on a route change. Road names are used only for
+selected upright map labels, and `major` remains available for styling.
+
+## HUD version and automatic updates
+The SDK installs the HUD only when none is on the glasses; an installed HUD is opened as is, even if
+older. On every session start the phone link sends `hello_request` (seq 0, handled outside sequence
+ordering); the HUD answers `hello`, whose `appVersion` is `0.2.0+<hash of all glasses APK inputs>`
+(root `build.gradle.kts`). If it differs from the bundled HUD, or no hello arrives within 8 s (HUDs
+older than `hello_request` stay silent), the phone uninstalls the HUD through the session's SDK client
+and opens a new session, which installs and opens the bundled APK. Tried once per bundled version.
+
 ## Phone → glasses
 | `t` | Rate | Purpose |
 |---|---|---|
+| `hello_request` | each session start | ask the HUD for `hello` (version check) |
 | `session_start` | once per trip + resync | units, 24h clock, destination name |
 | `route_chunk` | per route / reroute / resync | encoded polyline split into chunks; glasses reassemble with `RouteAssembler` |
 | `road_context` | optional, per route | nearby street polylines for map context (v2) |
@@ -27,21 +52,31 @@ Units: meters, seconds, epoch-ms, degrees (0 = north, clockwise). Formatting hap
 | `alert` / `alert_clear` | on change | police/camera/crash/etc. with distance ahead |
 | `detour_offer` / `detour_resolved` | rare | faster route offer; expires at `expiresAtMs` |
 | `nav_state` | on change | IDLE/ROUTING/ACTIVE/REROUTING/GPS_LOST/ARRIVED/ENDED |
-| `settings` | on change | voice muted, units, zoom |
+| `settings` | on change | voice muted, units, zoom, brightnessPercent (default 35) |
 
 ## Glasses → phone
 | `t` | When |
 |---|---|
 | `hello` | glasses app start; carries display size. Phone replies with a full resync. |
-| `resync` | glasses missed something (e.g. incomplete route chunks after 3 s) |
-| `action` | ACCEPT_DETOUR / DISMISS_DETOUR (with offerId), END_NAVIGATION, TOGGLE_VOICE, ZOOM_IN/OUT, SHOW_ALTERNATIVES, TOGGLE_UNITS |
+| `resync` | glasses missed something (e.g. incomplete route chunks after 5 s) |
+| `action` | ACCEPT_DETOUR / DISMISS_DETOUR (with offerId), END_NAVIGATION, TOGGLE_VOICE, ZOOM_IN/OUT, SHOW_ALTERNATIVES, TOGGLE_UNITS, CYCLE_BRIGHTNESS, CYCLE_ZOOM |
 | `input` | raw key name, for logs/calibration only |
 
 ## Resync rule
 Whenever the link becomes Ready (connect, resume after Paused, `hello`, `resync`), the phone sends:
-route chunks → then the last value of every stateful message (`session_start`, `nav_state`, `maneuver`,
-`progress`, `traffic`, active alerts, pending detour). See `NavSessionCoordinator.resyncAll`.
+session_start → route chunks → cached position, maneuver, progress, traffic, settings and alert state,
+then any unexpired detour. See `NavSessionCoordinator.resync`.
 
 ## Ordering
-`seq` is per-sender and monotonic. Receivers may drop a stateful message older than the last one of
-the same type they applied (TODO M9 if reordering is ever observed).
+Each sender uses monotonically increasing seq values. Cached messages are resequenced on resync.
+The glasses reject stale/duplicate frames globally; session_start begins a new receive sequence and
+clears trip snapshots before the full snapshot arrives. A phone restart may begin with a lower seq.
+
+Brightness is clamped to 5–100% on the phone; CYCLE_BRIGHTNESS selects 15/35/60/85%.
+CYCLE_ZOOM cycles 0/1/2. Both actions persist phone preferences and echo settings to glasses.
+Compact/expanded map presentation is local to the glasses and never resets when settings update.
+
+Resync messages use fresh increasing sequence numbers: session_start (resets receive sequence and
+trip snapshots), route chunks, then cached position/maneuver/progress/settings/traffic/alerts.
+The glasses reject stale/duplicate sequence numbers after session_start. An incomplete route
+requests a resync after five seconds. A phone restart can begin again with a lower session_start seq.

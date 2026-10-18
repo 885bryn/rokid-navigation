@@ -38,3 +38,4 @@ rootProject.name = "RokidNavigation"
 include(":protocol")
 include(":phone")
 include(":glasses")
+include(":tools")

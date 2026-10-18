@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>HUD trip info</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 480px; height: 398px; background: #000; color: {{g}}; font-family: 'Barlow Semi Condensed', sans-serif; font-variant-numeric: tabular-nums; position: relative; overflow: hidden; box-sizing: border-box; padding: 14px 18px; display: flex; flex-direction: column; gap: 10px">
+
+<div style="display: flex; align-items: center; height: 28px">
+<span style="font-size: 16px; font-weight: 700; letter-spacing: 0.12em; opacity: 0.6">TRIP INFO</span>
+<div style="flex: 1"></div>
+<span style="font-size: 18px; font-weight: 600; opacity: 0.6">to Home</span>
+</div>
+
+<div style="display: flex; align-items: baseline; gap: 10px">
+<span style="font-size: 22px; font-weight: 600; opacity: 0.75">Arrive</span>
+<span style="font-size: 64px; font-weight: 700; line-height: 1">12:41</span>
+<span style="font-size: 22px; font-weight: 600; opacity: 0.75">PM</span>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+<div style="display: flex; flex-direction: column; border: 2px solid currentColor; border-radius: 10px; padding: 6px 12px; opacity: 0.9"><span style="font-size: 30px; font-weight: 700; line-height: 1.1">18 min</span><span style="font-size: 15px; font-weight: 600; opacity: 0.65">left</span></div>
+<div style="display: flex; flex-direction: column; border: 2px solid currentColor; border-radius: 10px; padding: 6px 12px; opacity: 0.9"><span style="font-size: 30px; font-weight: 700; line-height: 1.1">9.2 mi</span><span style="font-size: 15px; font-weight: 600; opacity: 0.65">to go</span></div>
+<div style="display: flex; flex-direction: column; border: 2px solid currentColor; border-radius: 10px; padding: 6px 12px; opacity: 0.9"><span style="font-size: 30px; font-weight: 700; line-height: 1.1">+4 min</span><span style="font-size: 15px; font-weight: 600; opacity: 0.65">traffic</span></div>
+</div>
+
+<span style="font-size: 15px; font-weight: 700; letter-spacing: 0.12em; opacity: 0.6; margin-top: 2px">NEXT TURNS</span>
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="display: flex; align-items: center; gap: 12px; height: 34px">
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21 V13 A5 5 0 0 1 13 8 H18"></path><path d="M15 4 L19 8 L15 12"></path></svg>
+<span style="font-size: 22px; font-weight: 700; width: 70px">0.3 mi</span>
+<span style="font-size: 22px; font-weight: 600; opacity: 0.85">Main St</span>
+</div>
+<div style="display: flex; align-items: center; gap: 12px; height: 34px; opacity: 0.75">
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21 V13 A5 5 0 0 0 11 8 H6"></path><path d="M9 4 L5 8 L9 12"></path></svg>
+<span style="font-size: 22px; font-weight: 700; width: 70px">0.4 mi</span>
+<span style="font-size: 22px; font-weight: 600">Oak Ave</span>
+</div>
+<div style="display: flex; align-items: center; gap: 12px; height: 34px; opacity: 0.55">
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 22 V15 Q10 9 17 5"></path><path d="M12 4 L18 4.5 L17 10"></path></svg>
+<span style="font-size: 22px; font-weight: 700; width: 70px">2.1 mi</span>
+<span style="font-size: 22px; font-weight: 600">I-280 S ramp</span>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"g":{"editor":"color","default":"#3DFF8A","options":["#3DFF8A","#7CFFB0","#00E676"]},"$preview":{"width":480,"height":398}}'>
+class Component extends DCLogic {
+renderVals() {
+return { g: this.props.g ?? '#3DFF8A' };
+}
+}
+</script>
+</body>
+</html>

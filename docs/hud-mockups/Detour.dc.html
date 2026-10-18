@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>HUD faster route offer</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 480px; height: 398px; background: #000; color: {{g}}; font-family: 'Barlow Semi Condensed', sans-serif; font-variant-numeric: tabular-nums; position: relative; overflow: hidden">
+
+<div style="height: 118px; box-sizing: border-box; padding: 16px 18px 0; display: flex; gap: 16px; align-items: flex-start">
+<svg width="84" height="84" viewBox="0 0 84 84" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Continue straight"><path d="M42 76 V20"></path><path d="M28 34 L42 20 L56 34"></path></svg>
+<div style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0">
+<div style="display: flex; align-items: baseline; gap: 6px"><span style="font-size: 58px; font-weight: 700; line-height: 1">3.2</span><span style="font-size: 24px; font-weight: 600; opacity: 0.75">mi</span></div>
+<div style="font-size: 26px; font-weight: 600; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">US-101 N</div>
+</div>
+</div>
+
+<svg style="position: absolute; left: 0; top: 118px" width="480" height="220" viewBox="0 0 480 220" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<path d="M380 188 V-10" stroke-width="14"></path>
+<path d="M380 188 V-10" stroke="#000" stroke-width="6"></path>
+<path d="M380 60 V-10" stroke-width="14"></path>
+<path d="M380 150 Q430 140 440 90 V-10" stroke-width="4" stroke-dasharray="8 7"></path>
+<path d="M380 160 L396 196 L380 188 L364 196 Z" fill="currentColor" stroke="none"></path>
+</svg>
+
+<div style="position: absolute; left: 14px; top: 124px; width: 320px; box-sizing: border-box; padding: 12px 16px 14px; border: 2px solid currentColor; border-radius: 14px; background: #000; display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 15px; font-weight: 700; letter-spacing: 0.12em; opacity: 0.7">FASTER ROUTE</span>
+<span style="font-size: 44px; font-weight: 700; line-height: 1">Save 6 min</span>
+<span style="font-size: 20px; font-weight: 600; opacity: 0.85">via I-280 · +0.8 mi</span>
+<div style="margin-top: 8px; height: 4px; border-radius: 2px; position: relative">
+<div style="position: absolute; inset: 0; border-radius: 2px; background-color: currentColor; opacity: 0.25"></div>
+<div style="position: absolute; left: 0; top: 0; bottom: 0; width: 62%; border-radius: 2px; background-color: currentColor"></div>
+</div>
+<div style="margin-top: 8px; display: flex; gap: 16px; align-items: center">
+<div style="display: flex; align-items: center; gap: 6px"><span style="font-size: 14px; font-weight: 700; background-color: currentColor; border-radius: 6px; padding: 1px 7px"><span style="color: #000">TAP</span></span><span style="font-size: 18px; font-weight: 600">take it</span></div>
+<div style="display: flex; align-items: center; gap: 6px; opacity: 0.75"><span style="font-size: 14px; font-weight: 700; border: 1.5px solid currentColor; border-radius: 6px; padding: 0 6px">2× TAP</span><span style="font-size: 18px; font-weight: 600">keep</span></div>
+</div>
+</div>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 0; height: 60px; box-sizing: border-box; padding: 0 18px; display: flex; align-items: center; gap: 12px">
+<div style="display: flex; align-items: baseline; gap: 5px"><span style="font-size: 30px; font-weight: 700">12:53</span><span style="font-size: 15px; font-weight: 500; opacity: 0.6">ETA</span></div>
+<span style="font-size: 20px; opacity: 0.4">·</span>
+<span style="font-size: 24px; font-weight: 600; opacity: 0.85">29 min</span>
+<span style="font-size: 20px; opacity: 0.4">·</span>
+<span style="font-size: 24px; font-weight: 600; opacity: 0.85">14.1 mi</span>
+<div style="flex: 1"></div>
+<div style="display: flex; align-items: center; gap: 5px; border: 2px solid currentColor; border-radius: 8px; padding: 2px 8px"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="7"></circle><path d="M9 5 V9 L12 11"></path></svg><span style="font-size: 20px; font-weight: 700">+11 min</span></div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"g":{"editor":"color","default":"#3DFF8A","options":["#3DFF8A","#7CFFB0","#00E676"]},"$preview":{"width":480,"height":398}}'>
+class Component extends DCLogic {
+renderVals() {
+return { g: this.props.g ?? '#3DFF8A' };
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+package com.rokidnav.phone.ui
+
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import android.text.Html
+import android.text.method.LinkMovementMethod
+import android.widget.TextView
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProvider
+import com.rokidnav.phone.*
+import com.rokidnav.phone.glasses.LinkState
+import com.rokidnav.protocol.*
+
+@Composable
+fun NavigationScreen(activity:ComponentActivity,app:RokidNavApp) {
+    val vm=remember {ViewModelProvider(activity)[NavigationViewModel::class.java]}
+    val preferences by app.settings.state.collectAsState()
+    val query by vm.query.collectAsState();val suggestions by vm.suggestions.collectAsState()
+    val recents by vm.recents.collectAsState();val destination by vm.destination.collectAsState()
+    val options by vm.options.collectAsState();val selected by vm.selected.collectAsState()
+    val busy by vm.busy.collectAsState();val error by vm.error.collectAsState()
+    val state by app.navEngine.navState.collectAsState();val route by app.navEngine.activeRoute.collectAsState()
+    val maneuver by vm.currentManeuver.collectAsState();val progress by vm.progress.collectAsState()
+    val position by vm.position.collectAsState();val link by app.glassesLink.state.collectAsState()
+    val detour by app.coordinator.detour.collectAsState();val trafficError by app.traffic.error.collectAsState()
+    val attributes by vm.attribution.collectAsState()
+    var simulation by remember {mutableStateOf(false)}
+    var permissionMessage by remember {mutableStateOf<String?>(null)}
+    var pendingPlace by remember {mutableStateOf<String?>(null)}
+    val permissions=rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {grants ->
+        val id=pendingPlace;pendingPlace=null
+        if(grants[Manifest.permission.ACCESS_FINE_LOCATION]==true){permissionMessage=null;if(id!=null)vm.choose(id)}
+        else permissionMessage="Allow precise location in Android settings to calculate routes."
+    }
+    val notifications=rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {vm.start(activity,simulation)}
+    fun choose(id:String) {
+        if(ContextCompat.checkSelfPermission(activity,Manifest.permission.ACCESS_FINE_LOCATION)==PackageManager.PERMISSION_GRANTED)vm.choose(id)
+        else {pendingPlace=id;permissions.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION))}
+    }
+    val guiding=state in listOf(NavState.ACTIVE,NavState.REROUTING,NavState.GPS_LOST,NavState.ROUTING)
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+        Text("Where to?",style=MaterialTheme.typography.headlineMedium)
+        if(BuildConfig.MAPS_API_KEY.isBlank() || BuildConfig.ROUTES_API_KEY.isBlank()) {
+            Text("Google API setup is required for search, maps and live guidance.")
+            Text("Add the keys to local.properties and rebuild. You can still connect the glasses and use the HUD preview.",color=Color.LightGray)
+        } else if(!guiding) {
+            OutlinedTextField(query,{vm.query.value=it},Modifier.fillMaxWidth(),label={Text("Search destinations")},singleLine=true,enabled=!busy)
+            if(suggestions.isNotEmpty()) {
+                suggestions.forEach {place -> TextButton(onClick={choose(place.id)},enabled=!busy) {Column {Text(place.title);Text(place.address,style=MaterialTheme.typography.bodySmall)}}}
+                Text("Google Maps",fontSize=12.sp,color=Color.White)
+            } else if(query.isBlank() && recents.isNotEmpty()) {
+                Text("Recent destinations",style=MaterialTheme.typography.titleMedium)
+                recents.forEach {place -> TextButton(onClick={choose(place.id)},enabled=!busy){Text(place.title)}}
+                Text("Google Maps",fontSize=12.sp,color=Color.White)
+            }
+        }
+        if(busy)LinearProgressIndicator(Modifier.fillMaxWidth())
+        (error ?: permissionMessage)?.let {Text(it,color=MaterialTheme.colorScheme.error)}
+        if(guiding || state==NavState.ARRIVED) {
+            Text(if(state==NavState.ARRIVED)"You've arrived" else state.name.replace('_',' '),style=MaterialTheme.typography.titleLarge)
+            Text(app.navEngine.destination.collectAsState().value?.name ?: destination?.name.orEmpty())
+            maneuver?.let {Text("${phoneDistance(it.distanceToStepMeters,preferences.units)} · ${it.current.roadName}",style=MaterialTheme.typography.headlineSmall)}
+            progress?.let {Text("${(it.remainingSeconds+59)/60} min left · ${phoneDistance(it.remainingMeters,preferences.units)}")}
+            if(link!=LinkState.Ready)Text("Glasses link unavailable. Keep Hi Rokid running; phone guidance continues.",color=MaterialTheme.colorScheme.error)
+            detour?.let {offer ->
+                HorizontalDivider();Text("Faster route: save ${(offer.savesSeconds+59)/60} min via ${offer.via}")
+                Row {Button(onClick={app.coordinator.respondToDetour(true)}){Text("Take route")};TextButton(onClick={app.coordinator.respondToDetour(false)}){Text("Keep route")}}
+            }
+            Row {OutlinedButton(onClick=app.traffic::forceRefresh){Text("Check traffic")};TextButton(onClick=app.navEngine::stop){Text("End navigation")}}
+            trafficError?.let {Text(it,color=Color.LightGray)}
+        } else if(destination!=null && options.isNotEmpty()) {
+            Text(destination!!.name,style=MaterialTheme.typography.titleLarge)
+            options.forEachIndexed {index,option ->
+                OutlinedButton(onClick={vm.selected.value=index},Modifier.fillMaxWidth(),enabled=!busy) {
+                    Column(Modifier.fillMaxWidth()) {
+                        Text("${if(index==selected)"✓ " else ""}${option.description}")
+                        Text("${(option.durationSeconds+59)/60} min · ${phoneDistance(option.distanceMeters,preferences.units)} · +${((option.durationSeconds-option.staticDurationSeconds).coerceAtLeast(0)+59)/60} min traffic")
+                    }
+                }
+            }
+            Text("Google Maps",fontSize=12.sp,color=Color.White)
+            options.getOrNull(selected)?.warnings?.forEach {Text(it,color=Color.LightGray)}
+            if(BuildConfig.DEBUG)Row {Checkbox(simulation,{simulation=it});Text("Simulate this drive")}
+            Button(onClick={
+                if(Build.VERSION.SDK_INT>=33 && ContextCompat.checkSelfPermission(activity,Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)
+                    notifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+                else vm.start(activity,simulation)
+            },enabled=!busy){Text("Go")}
+        }
+        val lines=if(guiding)route?.encodedPolyline?.let(::listOf).orEmpty() else options.map {it.encodedPolyline}
+        if(BuildConfig.MAPS_API_KEY.isNotBlank() && lines.isNotEmpty())
+            RouteMap(lines,if(guiding)0 else selected,if(guiding)position?.let {LatLng(it.lat,it.lng)} else null,Modifier.fillMaxWidth().height(300.dp))
+        if(attributes.isNotEmpty())AndroidView(factory={TextView(it).apply {setTextColor(android.graphics.Color.LTGRAY);movementMethod=LinkMovementMethod.getInstance()}},update={it.text=Html.fromHtml(attributes.joinToString("<br>"),Html.FROM_HTML_MODE_LEGACY)})
+    }
+}
+
+@Composable
+fun SettingsScreen(app:RokidNavApp) {
+    val settings by app.settings.state.collectAsState()
+    val policeStatus by app.policeProvider.status.collectAsState()
+    var brightness by remember(settings.brightness){mutableFloatStateOf(settings.brightness.toFloat())}
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(14.dp)) {
+        Text("Display & alerts",style=MaterialTheme.typography.headlineMedium)
+        Text("The glasses use the bottom corners. Tap to expand or collapse the map; long press for the menu.")
+        Row {Switch(!settings.voiceMuted,{value->app.settings.update {it.copy(voiceMuted=!value)}});Text("Voice guidance")}
+        OutlinedButton(onClick={app.settings.update {it.copy(units=if(it.units==Units.IMPERIAL)Units.METRIC else Units.IMPERIAL)}}){Text("Units: ${settings.units}")}
+        OutlinedButton(onClick={app.settings.update {it.copy(zoom=(it.zoom+1)%3)}}){Text("Map zoom: ${when(settings.zoom){0->"Close";2->"Far";else->"Default"}}")}
+        Text("Glasses brightness: ${brightness.toInt()}%")
+        Slider(brightness,{brightness=it},valueRange=5f..100f,onValueChangeFinished={app.settings.update {it.copy(brightness=brightness.toInt())}})
+        Row {Switch(settings.police,{value->app.settings.update {it.copy(police=value)}});Text("WzSabre police reports")}
+        Row {Switch(settings.cameras,{value->app.settings.update {it.copy(cameras=value)}});Text("WzSabre speed cameras")}
+        val installed=remember {runCatching {app.packageManager.getPackageInfo("app.sabre.wzsabre",0);true}.getOrDefault(false)}
+        Text(if(installed)"WzSabre is installed. Enable its plugin integration for police reports." else "Install WzSabre and enable plugin integration for police reports.",color=Color.LightGray)
+        Text(if(settings.police)policeStatus else "Police reports disabled",color=Color.LightGray)
+        Text("Camera data uses WzSabre's ExCam database. Police report availability depends on the plugin and its report sources.",color=Color.LightGray)
+    }
+}
+
+private fun phoneDistance(meters:Int,units:Units):String = if(units==Units.IMPERIAL) {
+    if(meters<305)"${(meters*3.28084/50).toInt()*50} ft" else String.format(java.util.Locale.US,"%.1f mi",meters/1609.344)
+} else if(meters<1000)"$meters m" else String.format(java.util.Locale.US,"%.1f km",meters/1000.0)

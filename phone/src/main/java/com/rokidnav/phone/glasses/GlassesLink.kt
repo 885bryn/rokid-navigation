@@ -43,11 +43,13 @@ sealed interface LinkState {
     data object Authorizing : LinkState
     data object Authorized : LinkState
     data object Connecting : LinkState
+    /** The glasses run an older HUD than the phone bundles; it is being removed and reinstalled. */
+    data object UpdatingHud : LinkState
     /** Session started and glasses app is interactive. Only state in which [GlassesLink.send] works. */
     data object Ready : LinkState
     /** Temporarily unavailable (Rokid AI assistant took over, or Bluetooth dropped). Token still valid. */
     data class Paused(val reason: String) : LinkState
     /** Session ended. [needsReauth] = token invalid (CHAIN_TORN / LINK_LOST). */
     data class Closed(val reason: String, val needsReauth: Boolean) : LinkState
-    data class Failed(val message: String) : LinkState
+    data class Failed(val message: String,val canRetry:Boolean=false) : LinkState
 }

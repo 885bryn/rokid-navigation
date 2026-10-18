@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>HUD police alert</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 480px; height: 398px; background: #000; color: {{g}}; font-family: 'Barlow Semi Condensed', sans-serif; font-variant-numeric: tabular-nums; position: relative; overflow: hidden">
+
+<div style="height: 118px; box-sizing: border-box; padding: 16px 18px 0; display: flex; gap: 16px; align-items: flex-start">
+<svg width="84" height="84" viewBox="0 0 84 84" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Continue straight"><path d="M42 76 V20"></path><path d="M28 34 L42 20 L56 34"></path></svg>
+<div style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0">
+<div style="display: flex; align-items: baseline; gap: 6px"><span style="font-size: 58px; font-weight: 700; line-height: 1">1.8</span><span style="font-size: 24px; font-weight: 600; opacity: 0.75">mi</span></div>
+<div style="font-size: 26px; font-weight: 600; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">El Camino Real</div>
+</div>
+</div>
+
+<svg style="position: absolute; left: 0; top: 118px" width="480" height="220" viewBox="0 0 480 220" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<g stroke-width="3" opacity="0.22"><path d="M0 44 H480"></path><path d="M0 150 H480"></path><path d="M130 0 V220"></path><path d="M360 0 V220"></path></g>
+<path d="M240 188 V-10" stroke-width="14"></path>
+<path d="M240 188 V-10" stroke="#000" stroke-width="6"></path>
+<circle cx="240" cy="92" r="16" fill="#000" stroke-width="3"></circle>
+<path d="M240 82 L248 85 V91 C248 96 244.5 99 240 100.5 C235.5 99 232 96 232 91 V85 Z" stroke-width="2.4"></path>
+<path d="M240 160 L256 196 L240 188 L224 196 Z" fill="currentColor" stroke="none"></path>
+<rect x="458" y="12" width="8" height="196" rx="4" stroke-width="2" opacity="0.8"></rect>
+<rect x="458" y="30" width="8" height="20" fill="currentColor" stroke="none" opacity="0.45"></rect>
+<circle cx="462" cy="200" r="6" fill="currentColor" stroke="#000" stroke-width="2"></circle>
+</svg>
+
+<div style="position: absolute; left: 8px; right: 8px; bottom: 6px; height: 58px; box-sizing: border-box; padding: 0 14px; border-radius: 12px; background-color: currentColor; display: flex; align-items: center; gap: 12px">
+<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.2" stroke-linejoin="round" role="img" aria-label="Police"><path d="M12 2.5 L20 5.5 V11 C20 16 16.5 19.5 12 21.5 C7.5 19.5 4 16 4 11 V5.5 Z"></path><path d="M12 8 L13.2 10.6 L16 10.9 L13.9 12.7 L14.5 15.4 L12 14 L9.5 15.4 L10.1 12.7 L8 10.9 L10.8 10.6 Z" fill="#000" stroke-width="0.8"></path></svg>
+<div style="display: flex; flex-direction: column; color: #000; line-height: 1.05">
+<span style="font-size: 26px; font-weight: 700; letter-spacing: 0.04em">POLICE</span>
+<span style="font-size: 15px; font-weight: 600">Reported 6 min ago</span>
+</div>
+<div style="flex: 1"></div>
+<div style="display: flex; align-items: baseline; gap: 4px; color: #000"><span style="font-size: 38px; font-weight: 700">0.4</span><span style="font-size: 20px; font-weight: 600">mi</span></div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"g":{"editor":"color","default":"#3DFF8A","options":["#3DFF8A","#7CFFB0","#00E676"]},"$preview":{"width":480,"height":398}}'>
+class Component extends DCLogic {
+renderVals() {
+return { g: this.props.g ?? '#3DFF8A' };
+}
+}
+</script>
+</body>
+</html>

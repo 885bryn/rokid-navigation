@@ -17,12 +17,14 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <queries>
+        <package android:name="app.sabre.wzsabre" />
         <package android:name="com.rokid.sprite.aiapp" />
         <package android:name="com.rokid.sprite.global.aiapp" />
         <package android:name="com.rokid.uxr" />
     </queries>
 
     <application
+        android:icon="@drawable/ic_nav"
         android:name=".RokidNavApp"
         android:label="Rokid Nav"
         android:theme="@android:style/Theme.Material.NoActionBar">

@@ -1,35 +1,43 @@
 package com.rokidnav.glasses.link
 
-import com.rokidnav.protocol.NavMessage
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import com.rokidnav.protocol.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 
-/**
- * Plays a scripted trip so the HUD can be built and reviewed on an emulator (480x398 AVD) with no
- * phone, no glasses, no API key. This is the main development loop for all HUD work.
- *
- * TODO(M2): load assets/demo_trip.jsonl (one protocol JSON message per line, with a "delayMs"
- *  wrapper or a fixed cadence), and emit: session_start, route_chunk(s), then pos/maneuver/progress
- *  every second along the route, a traffic update, a police alert at ~40%, a detour_offer at ~60%,
- *  nav_state ARRIVED at the end. Loop forever. Actions the HUD sends are logged; ACCEPT_DETOUR may
- *  swap to a second scripted route.
- *  Generate the .jsonl once with a small JVM script in /tools from a real Routes API polyline.
- */
-class DemoPhoneLink(private val scope: CoroutineScope) : PhoneLink {
+/** Starts after subscribers attach; loops the recording with fresh timestamps. */
+class DemoPhoneLink(private val scope: CoroutineScope, private val load: () -> List<DemoRecording.Frame>) : PhoneLink {
     override val connected: StateFlow<Boolean> = MutableStateFlow(true)
-    private val _incoming = MutableSharedFlow<NavMessage>(extraBufferCapacity = 128)
-    override val incoming = _incoming.asSharedFlow()
+    private val messages = MutableSharedFlow<NavMessage>(extraBufferCapacity = 128)
+    override val incoming = messages.asSharedFlow()
+    private var job: Job? = null
+    private val seq = SeqCounter()
+    private var offerId: String? = null
 
     fun start() {
-        // TODO(M2)
+        if (job != null) return
+        job = scope.launch {
+            messages.subscriptionCount.first { it > 0 }
+            val frames = withContext(Dispatchers.IO) { load() }
+            while (isActive) {
+                val start = System.currentTimeMillis()
+                for (frame in frames) {
+                    delay(frame.delayMs)
+                    val message = DemoRecording.rebase(frame.message, seq.next(), start)
+                    if (message is DetourOffer) offerId = message.offerId
+                    messages.emit(message)
+                }
+                offerId = null
+                delay(2000)
+            }
+        }
     }
 
     override fun send(message: NavMessage) {
-        android.util.Log.d("DemoPhoneLink", "HUD -> phone: $message")
+        if (message is GlassesAction && message.targetId == offerId &&
+            (message.action == ActionType.ACCEPT_DETOUR || message.action == ActionType.DISMISS_DETOUR)) {
+            messages.tryEmit(DetourResolved(seq.next(), message.targetId, message.action == ActionType.ACCEPT_DETOUR))
+            offerId = null
+        }
     }
-
-    override fun close() = Unit
+    override fun close() { job?.cancel(); job = null }
 }

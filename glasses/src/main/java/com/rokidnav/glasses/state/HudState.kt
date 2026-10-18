@@ -21,7 +21,9 @@ data class HudState(
     val route: List<LatLng> = emptyList(),
     val routeTotalMeters: Int = 0,
     val traffic: List<TrafficSegment> = emptyList(),
+    val contextRoads: List<HudRoad> = emptyList(),
     val position: PositionUpdate? = null,
+    val previousPosition: PositionUpdate? = null,
     val maneuver: ManeuverUpdate? = null,
     val progress: TripProgress? = null,
 
@@ -29,13 +31,18 @@ data class HudState(
     val alerts: List<Alert> = emptyList(),
     val detour: DetourOffer? = null,
 
-    val mode: HudMode = HudMode.Map,
+    val mode: HudMode = HudMode.Compact,
     val mapZoom: Int = 1,         // 0 = close (~300 m ahead), 1 = default (~800 m), 2 = far (~2 km)
     val voiceMuted: Boolean = false,
+    val brightnessPercent: Int = 35,
     val nowMs: Long = 0,
 )
 
+data class HudRoad(val points: List<LatLng>, val name: String, val major: Boolean)
+
 sealed interface HudMode {
+    /** Bottom corners leave the road in the upper/central field clear. Tap to expand. */
+    data object Compact : HudMode
     /** Default: maneuver banner + map + status strip. */
     data object Map : HudMode
     /** Banner + status only, map hidden — less light in the eye, e.g. on highways. */

@@ -2,7 +2,10 @@ package com.rokidnav.phone
 
 import android.app.Application
 import com.rokidnav.phone.alerts.CompositeIncidentProvider
-import com.rokidnav.phone.alerts.MockIncidentProvider
+import com.rokidnav.phone.alerts.AndroidSabreClient
+import com.rokidnav.phone.alerts.WzSabrePoliceProvider
+import com.rokidnav.phone.alerts.WzSabreCameraProvider
+import com.rokidnav.phone.alerts.WzSabreCameraRepository
 import com.rokidnav.phone.glasses.CxrGlassesLink
 import com.rokidnav.phone.glasses.GlassesLink
 import com.rokidnav.phone.nav.GoogleNavigationEngine
@@ -16,7 +19,8 @@ import kotlinx.coroutines.Dispatchers
 
 /** Manual DI. Swap implementations here (e.g. a fake GlassesLink for UI work without hardware). */
 class RokidNavApp : Application() {
-    val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    // Serialize coordinator state and SDK calls. Providers move blocking work to Dispatchers.IO.
+    val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     lateinit var glassesLink: GlassesLink
         private set
@@ -25,23 +29,37 @@ class RokidNavApp : Application() {
     lateinit var coordinator: NavSessionCoordinator
         private set
 
+    lateinit var routesApi:RoutesApiClient
+        private set
+    lateinit var settings:com.rokidnav.phone.settings.SettingsRepository
+        private set
+    lateinit var policeProvider:WzSabrePoliceProvider
+        private set
+    lateinit var traffic:TrafficMonitor
+        private set
+
     override fun onCreate() {
         super.onCreate()
         instance = this
         glassesLink = CxrGlassesLink(this)
         navEngine = GoogleNavigationEngine(this)
-        val routesApi = RoutesApiClient(BuildConfig.MAPS_API_KEY)
+        routesApi = RoutesApiClient(BuildConfig.ROUTES_API_KEY,androidPackage=packageName,androidCert=RoutesApiClient.signingCertificate(this))
+        settings=com.rokidnav.phone.settings.SettingsRepository(this)
+        traffic=TrafficMonitor(routesApi,navEngine)
+        policeProvider=WzSabrePoliceProvider(AndroidSabreClient(this), navEngine.position)
         coordinator = NavSessionCoordinator(
             scope = appScope,
             link = glassesLink,
             engine = navEngine,
-            traffic = TrafficMonitor(routesApi, navEngine),
+            traffic = traffic,
             incidents = CompositeIncidentProvider(
                 listOf(
-                    // TODO(M7): replace with real providers; mock is debug-only.
-                    MockIncidentProvider(enabled = BuildConfig.DEBUG),
+                    com.rokidnav.phone.alerts.ConfiguredIncidentProvider(policeProvider,settings.state) {it.police},
+                    com.rokidnav.phone.alerts.ConfiguredIncidentProvider(WzSabreCameraProvider(WzSabreCameraRepository(java.io.File(filesDir, "cameras"))::load),settings.state) {it.cameras},
                 ),
             ),
+            settings=settings,
+            roads = com.rokidnav.phone.map.RoadContextProvider(java.io.File(cacheDir, "streets")),
         )
         coordinator.start()
     }

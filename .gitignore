@@ -11,3 +11,5 @@ captures/
 *.aab
 *.keystore
 /vendor/rokid-samples/
+/.tmp/
+/tools/bootstrap/

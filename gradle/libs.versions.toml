@@ -1,4 +1,4 @@
-# VERIFY on first Gradle sync: bump anything that fails to resolve. Versions marked TODO are unknown.
+# Resolved with Gradle 8.13 on JDK 17; see docs/ARCHITECTURE.md for SDK inspection notes.
 [versions]
 agp = "8.5.2"
 kotlin = "2.0.20"
@@ -10,13 +10,14 @@ activityCompose = "1.9.1"
 composeBom = "2024.09.00"
 appcompat = "1.7.0"
 okhttp = "4.12.0"
+xz = "1.10"
 desugar = "2.1.2"
 junit = "4.13.2"
 
 # Rokid
 cxrClientL = "1.1.2"
-# TODO(M0): read the real version from the CXRSWithCXRLSample glasses project (bundled in CxrlSample.zip).
-cxrServiceBridge = "1.0.0"
+# Published stable version, inspected directly; sample/hardware compatibility still needs M3 validation.
+cxrServiceBridge = "1.7.3"
 
 # Google
 navigationSdk = "6.1.0"
@@ -25,6 +26,7 @@ places = "4.1.0"
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCore" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
+androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
 androidx-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
 androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
 androidx-lifecycle-service = { module = "androidx.lifecycle:lifecycle-service", version.ref = "lifecycle" }
@@ -40,6 +42,7 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+xz = { module = "org.tukaani:xz", version.ref = "xz" }
 desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs_nio", version.ref = "desugar" }
 
 rokid-cxr-client-l = { module = "com.rokid.cxr:client-l", version.ref = "cxrClientL" }

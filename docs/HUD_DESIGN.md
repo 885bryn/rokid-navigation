@@ -1,14 +1,43 @@
 # Glasses HUD design
 
+**Mockups:** `docs/hud-mockups/*.dc.html` (one screen per file, drawn at 480×398 with exact px values;
+read them as markup specs, they need the design canvas runtime to render). Live canvas:
+https://claude.ai/artifact/PKm7697RoMapZGAnxadHcg (owner-only unless shared).
+Screens: Main (map mode), Approach (turn < 500 ft + lanes), Minimal (highway), Police, Detour,
+Congestion, Menu, TripInfo, Arrived. The "Visual spec" section below is what to implement.
+
 ## Display constraints
 - Monochrome **green** micro-LED waveguide. **Black = transparent** (you see the road). Every lit
   pixel costs battery and blocks the view, so: thin outlines over filled areas, black backgrounds,
   brightness hierarchy via alpha (100% primary, ~60% secondary, ~30% context).
 - ~480×398 px per eye (VERIFY). Lay out with fractions of the measured view size.
+- Hardware check: the native upright Activity reports 480×640. Fit the 480×398 design uniformly,
+  centered with 4% margin on each side; leave unused space black. Never stretch X and Y separately.
 - Text: min ~22 px for anything read while driving; the distance number is the biggest thing on screen.
 - Glanceable: each region answers one question in < 1 s.
 
-## Map mode (default)
+## Bottom-corner layout (default, user refinement)
+
+The user confirmed the upright, proportional layout fits, then requested a clear central field.
+The native 480×640 viewport now uses a bottom-corner composition, uniformly fit at 92%:
+- Upper roughly 62% is black/transparent during normal guidance.
+- Bottom-left: 44-unit turn glyph, 36-unit distance + 20-unit suffix, 22-unit road name;
+  approach lanes below it; 24-unit ETA and 20-unit remaining time/distance at the bottom.
+- Bottom-right: 212×186-unit heading-up street map, thin 6/3.5-unit hollow route (8/4 near a turn),
+  smaller position chevron. The miniature omits street labels and the traffic ribbon; the expanded
+  map provides both. OSM attribution stays below the miniature.
+- Alerts replace the bottom-left trip stats; detour controls replace its maneuver block.
+- Tap toggles **compact ↔ expanded**. A pending detour retains tap/2× tap accept/keep priority.
+  Double tap dismisses an alert. Long press opens the existing menu; closing/timeout restores the
+  previous compact or expanded mode. AI assistant input belongs to the system.
+- Expanded uses Claude's proportionate 480×398 composition. No automatic expansion or attention-
+  seeking animation occurs. Idle/arrival messages also stay low in the compact layout.
+
+Real renderer captures: `docs/screens/hud-corners-480x640.png` and
+`docs/screens/hud-expanded-480x640.png`. They were inspected on the phone at the native viewport;
+corner placement still requires a waveguide fit check.
+
+## Expanded map mode
 ```
 ┌──────────────────────────────────────────────┐  0%
 │  ┏━┓                                          │
@@ -25,7 +54,7 @@
 └──────────────────────────────────────────────┘ 100%
 ```
 
-**Minimal mode** (tap to toggle): banner + status strip only, map hidden. Good for highways.
+**Minimal mode** (legacy renderer): banner + status strip only, map hidden. Good for highways.
 
 **Overlays**
 - **Alert** — replaces the status strip with a filled bar: `[icon] POLICE  0.4 mi`. Shown when within
@@ -41,7 +70,7 @@ Rokid temple touchpad. Broadcast names from the CXR docs; single-finger swipe de
 
 | Gesture | Map / Minimal | Detour prompt showing | Menu |
 |---|---|---|---|
-| Tap | toggle Map ↔ Minimal | **accept detour** | select |
+| Tap | toggle Compact ↔ Expanded | **accept detour** | select |
 | Double tap | dismiss current alert | **keep current route** | back / close |
 | Long press | open menu | open menu | close |
 | Swipe forward | zoom in | — | next item |
@@ -49,7 +78,7 @@ Rokid temple touchpad. Broadcast names from the CXR docs; single-finger swipe de
 | AI button | system (never consumed) | | |
 
 ## Menu (long press)
-Root list, max 4 visible rows, highlighted row filled:
+Root list, all 5 rows visible at 54 px each, highlighted row filled:
 1. **Trip info** — arrival time, time left, distance left, next 3 maneuvers with distances.
 2. **Traffic & routes** — current delay, worst congestion ahead ("Jam in 2.1 mi, 1.3 mi long"),
    "Find faster route" (sends SHOW_ALTERNATIVES → phone runs a poll and may send a detour_offer).
@@ -58,6 +87,79 @@ Root list, max 4 visible rows, highlighted row filled:
 5. **End navigation** — confirm page (tap = end, double tap = cancel).
 
 Auto-close after 10 s without input. The menu never hides a new alert: alerts pop the menu closed.
+
+## Visual spec (from the mockups; px at 480×398, scale by viewWidth / 480)
+
+### User refinements (2026-10-17)
+
+Keep Claude's layouts and visual hierarchy, with a lower-lit-area treatment requested by the user:
+Barlow Medium 500 for normal text and SemiBold 600 for emphasis; primary distance 52 px + 22 px unit;
+road name 24 px; turn strokes 6.5 px in the 84 px box; route tube 10/6 px (14/8 when close);
+chevron 24×30; context roads 1.8 px at 22% alpha. Alerts and selected menu rows use outlines and
+a small selection accent instead of broad green fills. Small gesture pills and urgent delay badges
+retain their inverted treatment. These replace the heavier sizes/fills below. Battery savings have
+not been measured on glasses; the goal is fewer illuminated pixels while retaining readable text.
+
+Hardware fit refinement: the user confirmed native orientation is upright but the stretched layout
+was cramped. Uniform 92% fit replaces the separate X/Y scale (which stretched vertical dimensions
+by 61%). The status strip uses reserved slots: ETA 26 px, duration/distance 22 px, with bounded
+labels so the traffic badge cannot overlap them. Other reference sizes and thin strokes stay intact.
+
+Side streets and intersections are now part of the normal map, per the user's request. Live context
+comes from OpenStreetMap; selected road names stay upright, at least 15 px, and avoid overlapping.
+Demo streets are explicitly synthetic. Keep surrounding roads dimmer than the active route.
+
+**Palette:** one hue `#3DFF8A` (tweakable; the panel renders green regardless) on black. Hierarchy is
+by alpha only: 100% primary, 85% secondary text, 60–75% labels, 45% partial fills, 22% context
+streets. Inverted (filled green, black text) is reserved for things that need action now: the alert
+bar, the highlighted menu row, the primary gesture hint, and a delay badge once delay ≥ 5 min.
+
+**Type:** Barlow Semi Condensed (bundle the TTF in glasses assets; OFL), tabular numerals.
+Distance 58/700 + unit 24/600 @75%. Road name 26/600, single line, ellipsized. Status ETA 30/700,
+other status values 24/600 @85%. Small caps labels 15–16/700, letter-spacing 0.12em, @60%. Nothing
+under 15 px.
+
+**Strokes:** maneuver glyphs are open strokes (9 px in an 84 px box, round caps/joins), never filled
+shapes. Small glyphs 2.6 px in a 24 box.
+
+**Regions:** banner 0–118 px (padding 16/18, 84 px glyph, 16 px gap); map 118–338; status strip
+338–398 (padding 0/18, gap 12, items separated by `·` @40%).
+
+**Route line = a hollow tube** (14 px green stroke with a 6 px black stroke on top). Traffic fills the
+tube: free flow = hollow, SLOW = dashed fill (7 on / 6 off, 6 px), JAM = solid fill. This reads at a
+glance without color and keeps lit pixels low. Zoom 0 widens the tube to 20/9.
+Chevron: filled arrow 32×36 at (50%, ~85% of the map region). Context streets 3 px @22%.
+Next maneuver point: black dot with 3 px ring (zoom 0 only). Road label 15–16/600 @70% beside the
+turn.
+
+**Traffic ribbon:** right edge of the map, 8×196 px rounded outline @80% = the whole remaining route
+(destination at top, you at the bottom dot). SLOW segments fill @45%, JAM segments fill solid.
+
+**Approach state** (distance < 500 ft or 150 m): auto-zoom 0, 4 px progress bar along the bottom of
+the banner (filled part = distance left), lane pill centered under the banner (lanes 30×36, 2 px
+dividers @30%, recommended lanes 100% / others @30%).
+
+**Minimal mode:** banner + lane row + status strip; the middle stays black. Exit numbers go in an
+outlined tag (`EXIT 24B`, 18/700). The status strip shows "No delays" @60% when there's no delay.
+
+**Alert bar:** replaces the status strip, inset 8 px, 58 px tall, radius 12, filled. Icon 34 px
+black stroke, kind 26/700 caps, age 15/600 ("Reported 6 min ago"), distance 38/700 on the right.
+The incident is also marked on the route: black disc r16 with a 3 px ring and the kind glyph.
+
+**Detour card:** 320 px wide, top-left of the map region, 2 px border, radius 14, black fill.
+"FASTER ROUTE" label, "Save 6 min" 44/700, "via I-280 · +0.8 mi" 20/600, then a 4 px countdown bar
+and hints: `TAP` filled pill "take it", `2× TAP` outlined pill "keep" @75%. The alternative route is
+drawn on the map as a dashed 4 px line (8/7) next to the current tube.
+
+**Congestion callout:** when a JAM segment is within view, a 2 px leader line from the tube to a
+right-aligned label left of the route: "Heavy traffic" 20/700 + "in 0.6 mi · 1.2 mi long" 17/600.
+
+**Menu:** header row (label + "Home · 12:41" @60%), rows 54 px, label 28 px, right-side value @75%
+plus chevron, highlighted row filled. Gesture legend at the bottom 15/600 @55%.
+**Trip info:** "Arrive" + time 64/700, three outlined stat tiles (left / to go / traffic), then
+"NEXT TURNS" with 3 rows fading 100 → 75 → 55%.
+**Arrived:** centered 96 px check-in-circle, "You've arrived" 44/700, destination + side 26/600,
+trip summary, auto-close hint.
 
 ## Zoom levels
 0 = ~300 m ahead (city turns), 1 = ~800 m (default), 2 = ~2 km (highway). Auto-zoom (v2): zoom in as

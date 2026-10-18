@@ -10,30 +10,66 @@ Requires one Google Cloud project with billing and an API key restricted to the 
 | Maneuver data for the HUD | Navigation SDK **turn-by-turn data feed** (`registerServiceForNavUpdates` → `NavInfo`) | built for "devices not designed around a map" — exactly this |
 | Congestion numbers | Routes API `speedReadingIntervals` + `duration − staticDuration` | polled every ~2.5 min while driving |
 | Detour options | Routes API alternatives from current position (with heading) → `DetourEvaluator` | accepted detour → `navigator.setDestinations(..., routeToken)` |
-| Road alerts (police, etc.) | **No Google API** — see below | `IncidentProvider` interface |
-| Map context streets (v2) | OpenStreetMap | see below |
+| Police reports | **WzSabre** Android plugin via SABRE broadcasts | user-selected source; install plugin on phone |
+| Speed cameras | **WzSabre** ExCam database | cached on phone; daily update check when a route starts |
+| Map context streets | OpenStreetMap / Overpass | enabled for active guidance; cached on phone |
 
-## Police / hazard alerts — the honest situation
-Police, speed-trap and most hazard reports in Google Maps come from Waze crowdsourcing. **Google
-exposes none of it through public APIs** (not Routes, not Navigation SDK, not Places). Options:
+## WzSabre police reports and speed cameras
 
-| Option | Police? | Viable for a personal app? |
-|---|---|---|
-| Waze for Cities (Partner) data feed | yes | No — only for government/partner orgs |
-| Scraping Waze live-map endpoints | yes | Works technically, violates Waze ToS, breaks without warning. Not recommended; if the user chooses it anyway, isolate it in its own `IncidentProvider` behind a settings toggle. |
-| TomTom Traffic Incidents API | no (accidents, closures, roadworks, jams) | yes, free tier |
-| HERE Traffic API v7 incidents | no (same kinds) | yes, free tier |
-| Fixed speed / red-light cameras (OSM `highway=speed_camera`, or a camera DB) | cameras only | yes, static data |
-| Open the route in Waze on the phone | yes (in Waze) | Doesn't feed our HUD |
+The user selected [WzSabre](https://wzsabre.rocks/) for both on 2026-10-17. This replaces the planned
+OSM camera provider and resolves the police-source decision. No Google API is used for these alerts.
 
-Plan: M7 ships `TomTomIncidentProvider` (accidents/closures/construction/jams) + `OsmSpeedCameraProvider`.
-Police stays an open decision for the user — the HUD and protocol already support `AlertKind.POLICE`.
+Police reports use the separate `app.sabre.wzsabre` Android app. Download it from WzSabre's site,
+install it on the **phone**, and open/configure it before the first trip. `AndroidSabreClient` is a
+read-only host for the [published SABRE protocol](https://sabre.app/tech): register a response receiver,
+send an explicit handshake to `MainBroadcastReceiver`, then use the advertised fetch action.
+Each fetch has a unique request ID; responses are assembled across numbered batches. Requests use
+the latest road-snapped position and a 5 km radius, at most once per 30 seconds during an active trip.
+This sends that position to the WzSabre plugin, which handles the upstream network connection.
+This app does not submit, confirm, or discard reports. Receivers are unregistered on timeout or
+trip cancellation. Missing/unresponsive plugins leave navigation and static cameras running.
 
-## Map context streets (v2)
-Google gives no road vector data. To show side streets around the route on the glasses: on route
-start, the phone fetches OSM ways in a ~300 m corridor (Overpass API or a Protomaps PMTiles extract),
-simplifies them (Douglas–Peucker, ~5 m), and sends `road_context`. Keep it optional and off by default
-until the route-only map is solid.
+`WzSabrePoliceProvider` maps visible/hidden police and fixed/mobile camera reports to existing
+`AlertKind`s. Reports expire 20 minutes after the later of reporting/confirmation. Known headings
+must agree with route direction within 60 degrees. These distance, age, and direction thresholds
+are app policy and require road testing. The published protocol is implemented and unit tested;
+the installed WzSabre plugin's response behavior with our host package still needs device validation.
+
+`WzSabreCameraRepository` reads `https://wzsabre.rocks/cameras` for version metadata, then downloads
+`https://wzsabre.rocks/cameras.download` when the cached version differs. The
+[ExCam specification](https://highwayradar.com/excam) defines XZ-compressed UTF-8 JSON lines.
+On 2026-10-17, the live link and downloaded metadata both reported dataset **2026-07-19**,
+`World cameras by @schuster`. Downloads are validated before atomic cache replacement. Failed updates
+retain the last valid database; the full dataset stays in app-private storage and is not bundled in Git.
+Only speed/average-speed cameras are mapped to `SPEED_CAMERA`; dummy, red-light-only, and plate-reading
+cameras are excluded. Unknown JSON fields are ignored. Camera downloads contain no route or position.
+
+The coordinator combines each provider's latest complete snapshot, projects incidents onto the route,
+and sends an alert within 2 km ahead and 60 m of the route. Distances update with position; passed,
+removed, expired, or opposite-direction reports clear. Clears are retained for reconnection, and
+ending/changing a route cancels polling. The nearest active alert is displayed by the HUD.
+Nearest-segment projection cannot disambiguate every overlapping road or loop; validate on hardware.
+TomTom for other incident categories remains a separate M7 follow-up.
+
+## Map context streets
+The user requested visible side streets and intersections as a normal part of the HUD. The phone
+fetches actual road geometry and names from [Overpass](https://wiki.openstreetmap.org/wiki/Overpass_API),
+using `GET https://overpass-api.de/api/interpreter` with a 2 km `around` query and `out tags geom`.
+The query includes the current neighbourhood's centre; it does not include the destination or full route.
+Public road classes include residential streets and major-road links. No API key is required.
+
+`RoadContextProvider` simplifies geometry to ~5 m, chooses nearby streets, and limits the existing
+`road_context` message to 6 KB. It can omit some roads in dense areas to fit the link budget. Cache
+tiles last 24 hours and are bounded to 20 tiles. While guiding, refresh after 600 m of movement,
+no more than once every 30 seconds; retain cached data on errors. A cold cache without service
+access temporarily shows the route alone. The read-only live check in the public demo area returned
+173 ways, including Bay, Beach, Buchanan, and Chestnut Streets. POST returned HTTP 406 in this
+environment; the documented GET form succeeded and is used by the app.
+
+The HUD draws dim 1.8 px streets and up to six upright labels around its bright route. Phone setup
+links to [OpenStreetMap attribution/license information](https://www.openstreetmap.org/copyright);
+the HUD also displays credit while context is present. The checked-in demo uses synthetic streets,
+clearly marked in its generator. Actual street-map drive acceptance remains pending hardware access.
 
 ## Cost guardrails
 - Traffic poll only while moving and ACTIVE; stop in the final ~2 km.

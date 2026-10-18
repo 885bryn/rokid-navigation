@@ -33,8 +33,8 @@ an **Android phone**; the phone runs Google guidance and streams compact navigat
    user must read for > 1 s.
 
 ## Build & test
-- JDK 17. Android SDK 34. Open the root in Android Studio once to generate the Gradle wrapper
-  (`gradle wrapper --gradle-version 8.9` if Gradle is installed) — **the wrapper is not checked in yet (M0).**
+- JDK 17. Android SDK 34. Gradle wrapper 8.13 is included; open the root in Android Studio or use
+  `./gradlew` (`./gradlew.bat` in PowerShell). See docs/ARCHITECTURE.md for the Windows temp-path workaround.
 - `./gradlew :protocol:test` — fast, no Android. Run after any protocol change.
 - `./gradlew :phone:testDebugUnitTest :glasses:testDebugUnitTest`
 - `./gradlew :glasses:installDebug` on an emulator AVD sized 480×398 (landscape) → HUD demo mode.
