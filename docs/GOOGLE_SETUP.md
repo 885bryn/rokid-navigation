@@ -54,8 +54,8 @@ Hi Rokid → Toolbox → Glasses app management if Hi Rokid ever reports an inst
 5. On glasses, tap to expand/collapse; long press for menu. Check the bottom-corner placement in
    the actual waveguide. Only this new corner layout needs a fresh fit check; the upright full layout
    was previously confirmed comfortable.
-6. Enable WzSabre plugin integration for `com.rokidnav.phone`. Settings reports plugin timeout or
-   connection status during a trip. Live WzSabre IPC still needs device validation.
+6. Install WzSabre and exempt it from battery optimization; it has no settings of its own. Settings
+   shows its status during a trip. Live WzSabre IPC was confirmed on the phone on 2026-10-19.
 
 Until a real API response is available, route parser fixtures are explicitly synthetic/examples;
 there is no claim that live routing, route-token authorization, background performance, billing

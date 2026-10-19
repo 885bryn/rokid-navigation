@@ -142,7 +142,7 @@ fun SettingsScreen(app:RokidNavApp) {
             Text("Report accuracy: ${UserSettings.toleranceLabel(settings.alertToleranceMeters)} (within ${phoneDistance(settings.alertToleranceMeters,settings.units)} of route)")
         }
         val installed=remember {runCatching {app.packageManager.getPackageInfo("app.sabre.wzsabre",0);true}.getOrDefault(false)}
-        Text(if(installed)"WzSabre is installed. Enable its plugin integration for police reports." else "Install WzSabre and enable plugin integration for police reports.",color=Color.LightGray)
+        Text(if(installed)"WzSabre is installed. It needs no setup; keep it exempt from battery optimization." else "Install WzSabre from wzsabre.rocks for police reports.",color=Color.LightGray)
         Text(if(settings.police)policeStatus else "Police reports disabled",color=Color.LightGray)
         Text("Camera data uses WzSabre's ExCam database. Police report availability depends on the plugin and its report sources.",color=Color.LightGray)
     }

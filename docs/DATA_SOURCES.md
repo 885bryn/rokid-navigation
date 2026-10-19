@@ -24,7 +24,7 @@ install it on the **phone**, and open/configure it before the first trip. `Andro
 read-only host for the [published SABRE protocol](https://sabre.app/tech): register a response receiver,
 send an explicit handshake to `MainBroadcastReceiver`, then use the advertised fetch action.
 Each fetch has a unique request ID; responses are assembled across numbered batches. Requests use
-the latest road-snapped position and a 5 km radius, at most once per 30 seconds during an active trip.
+the latest road-snapped position and a 5 km radius, one at a time during an active trip.
 This sends that position to the WzSabre plugin, which handles the upstream network connection.
 This app does not submit, confirm, or discard reports. Receivers are unregistered on timeout or
 trip cancellation. Missing/unresponsive plugins leave navigation and static cameras running.
@@ -33,7 +33,9 @@ trip cancellation. Missing/unresponsive plugins leave navigation and static came
 `AlertKind`s. Reports expire 20 minutes after the later of reporting/confirmation. Known headings
 must agree with route direction within 60 degrees. These distance, age, and direction thresholds
 are app policy and require road testing. The published protocol is implemented and unit tested;
-the installed WzSabre plugin's response behavior with our host package still needs device validation.
+on 2026-10-19 WzSabre 2.2 answered every fetch on the phone after ~31 s (it queries Waze's live map
+first), so fetches wait up to 75 s and the next one starts 10 s after an answer. WzSabre has no
+"plugin integration" switch; it only needs to stay installed and exempt from battery optimization.
 
 `WzSabreCameraRepository` reads `https://wzsabre.rocks/cameras` for version metadata, then downloads
 `https://wzsabre.rocks/cameras.download` when the cached version differs. The
