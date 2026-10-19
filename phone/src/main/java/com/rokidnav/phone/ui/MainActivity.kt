@@ -23,6 +23,7 @@ import com.rokidnav.phone.BuildConfig
 import com.rokidnav.phone.RokidNavApp
 import com.rokidnav.phone.glasses.*
 import com.rokidnav.protocol.*
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class MainActivity:ComponentActivity() {
@@ -58,7 +59,7 @@ class MainActivity:ComponentActivity() {
                     0->NavigationScreen(this@MainActivity,app)
                     2->SettingsScreen(app)
                     else->SetupScreen(app.glassesLink,events,
-                    authorize={app.glassesLink.authorize(this@MainActivity)},connect=app.glassesLink::connect,
+                    authorize={app.glassesLink.authorize(this@MainActivity)},connect=app.glassesLink::connect,installWithRokid={installWithHiRokidOpen()},
                     openRokid={openRokid()},test={sendHudTest()},export={exportHud.launch("RokidNav-HUD.apk")},preview={startActivity(Intent().setClassName(BuildConfig.GLASSES_PACKAGE,BuildConfig.GLASSES_ACTIVITY).putExtra("demo",true).putExtra("phonePreview",true))})
                     }
                     }
@@ -69,6 +70,18 @@ class MainActivity:ComponentActivity() {
     }
     @Deprecated("Rokid SDK uses activity authorization results")
     override fun onActivityResult(requestCode:Int,resultCode:Int,data:Intent?){super.onActivityResult(requestCode,resultCode,data);(app.glassesLink as? CxrGlassesLink)?.onAuthorizationResult(resultCode,data)}
+    /**
+     * Installs or updates the HUD with Hi Rokid on screen, so its Wi-Fi transfer gets Location under the
+     * "while using the app" setting. A notification brings the user back once the HUD is running.
+     */
+    private fun installWithHiRokidOpen() {
+        openRokid()
+        app.glassesLink.connect()
+        app.appScope.launch {
+            val result=app.glassesLink.state.first {it==LinkState.Ready || it is LinkState.Failed || it is LinkState.Closed}
+            if(result==LinkState.Ready)HudInstalledNotice.show(this@MainActivity)
+        }
+    }
     private fun openRokid() {
         val launch=packageManager.getLaunchIntentForPackage("com.rokid.sprite.global.aiapp") ?: packageManager.getLaunchIntentForPackage("com.rokid.sprite.aiapp")
         if(launch!=null)startActivity(launch)
@@ -97,7 +110,7 @@ class MainActivity:ComponentActivity() {
 }
 
 @Composable
-private fun SetupScreen(link:GlassesLink,events:List<String>,authorize:()->Unit,connect:()->Unit,openRokid:()->Unit,test:()->Unit,export:()->Unit,preview:()->Unit) {
+private fun SetupScreen(link:GlassesLink,events:List<String>,authorize:()->Unit,connect:()->Unit,installWithRokid:()->Unit,openRokid:()->Unit,test:()->Unit,export:()->Unit,preview:()->Unit) {
     val state by link.state.collectAsState()
     var environment by remember {mutableStateOf<EnvironmentStatus?>(null)}
     var checkError by remember {mutableStateOf(false)}
@@ -115,6 +128,7 @@ private fun SetupScreen(link:GlassesLink,events:List<String>,authorize:()->Unit,
         Text(status,color=MaterialTheme.colorScheme.primary,style=MaterialTheme.typography.bodyLarge)
         val busy=state==LinkState.Authorizing || state==LinkState.Connecting || state==LinkState.UpdatingHud
         if(state==LinkState.Authorized || state is LinkState.Closed && !(state as LinkState.Closed).needsReauth || state is LinkState.Failed && (state as LinkState.Failed).canRetry) {
+            if((state as? LinkState.Failed)?.installBlocked==true)Button(onClick=installWithRokid,enabled=!busy){Text("Install with Hi Rokid open")}
             Button(onClick=connect,enabled=!busy){Text("Connect glasses")}
         } else if(state!=LinkState.Ready && state !is LinkState.Paused) {
             Button(onClick=authorize,enabled=!busy && environment is EnvironmentStatus.Ok){Text(if(state==LinkState.Authorizing)"Approve on the Rokid screen" else "Authorize glasses")}

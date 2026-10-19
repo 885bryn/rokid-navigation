@@ -56,5 +56,7 @@ sealed interface LinkState {
         val hudClosedOnGlasses get() = reason == HUD_CLOSED
         companion object { const val HUD_CLOSED = "GLASSES_APP_EXIT" }
     }
-    data class Failed(val message: String,val canRetry:Boolean=false) : LinkState
+    /** [installBlocked]: Hi Rokid could not send the HUD (its Wi-Fi transfer needs Location, which
+     *  "while using the app" only grants while Hi Rokid is on screen). Retry with Hi Rokid in front. */
+    data class Failed(val message: String,val canRetry:Boolean=false,val installBlocked:Boolean=false) : LinkState
 }
