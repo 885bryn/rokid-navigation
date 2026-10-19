@@ -14,6 +14,8 @@ class HudRenderer(context: Context) {
     private val bold = Typeface.createFromAsset(context.assets, "fonts/BarlowSemiCondensed-SemiBold.ttf")
     private val ink = Paint(Paint.ANTI_ALIAS_FLAG).apply { strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND; fontFeatureSettings = "tnum" }
     private val glyphs = ManeuverGlyphs()
+    /** Only the stretch of route around the driver ([ROUTE_BEHIND_M]..[ROUTE_AHEAD_M]); stroking a
+     *  whole long route every frame was the map's largest per-frame cost. Rebuilt on each position fix. */
     private val routePath = Path()
     private val minorRoads = Path()
     private val majorRoads = Path()
@@ -86,14 +88,12 @@ class HudRenderer(context: Context) {
             originLat = points.firstOrNull()?.lat ?: 0.0
             originLng = points.firstOrNull()?.lng ?: 0.0
             east = FloatArray(points.size); north = FloatArray(points.size); distances = DoubleArray(points.size)
-            routePath.reset()
             for (i in points.indices) {
                 east[i] = x(points[i].lng); north[i] = y(points[i].lat)
-                if (i == 0) routePath.moveTo(east[i],north[i]) else {
-                    routePath.lineTo(east[i],north[i]); distances[i] = distances[i-1] + Geo.distanceMeters(points[i-1],points[i])
-                }
+                if (i > 0) distances[i] = distances[i-1] + Geo.distanceMeters(points[i-1],points[i])
             }
         }
+        if (geometryChanged || old.position?.metersAlongRoute != next.position?.metersAlongRoute) routeWindow(next.position?.metersAlongRoute ?: 0)
         if (geometryChanged || old.contextRoads !== next.contextRoads) {
             val usedNames=HashSet<String>()
             minorRoads.reset();majorRoads.reset()
@@ -210,6 +210,16 @@ class HudRenderer(context: Context) {
         var n=name.lowercase().trim().replace(SPACES," ")
         for((long,short) in NAME_ABBREVIATIONS) n=n.replace(long,short)
         return n.replace(".","")
+    }
+    private fun routeWindow(along:Int) {
+        routePath.reset()
+        if(distances.isEmpty())return
+        val from=along-ROUTE_BEHIND_M;val to=along+ROUTE_AHEAD_M
+        var lo=0;var hi=distances.size-1
+        while(lo<hi){val mid=(lo+hi+1)/2;if(distances[mid]<=from)lo=mid else hi=mid-1}
+        routePath.moveTo(east[lo],north[lo])
+        var i=lo+1
+        while(i<distances.size){routePath.lineTo(east[i],north[i]);if(distances[i]>=to)break;i++}
     }
     private fun x(lng: Double) = (Math.toRadians((lng-originLng+540)%360-180)*6_371_000*cos(Math.toRadians(originLat))).toFloat()
     private fun y(lat: Double) = (-Math.toRadians(lat-originLat)*6_371_000).toFloat()
@@ -522,6 +532,11 @@ class HudRenderer(context: Context) {
     private val turnArrow=Path()
     private var aheadMeters=0f
     private var zoomTarget=0f
+    /** True while the map glides between two position fixes; once it reaches the latest fix (no newer
+     *  one yet, e.g. stopped or a late fix) there is nothing left to animate. */
+    val moving get()=s.position!=null && (s.navState==NavState.ACTIVE || s.navState==NavState.REROUTING) &&
+        (currentX!=previousX || currentY!=previousY || currentBearing!=previousBearing) &&
+        System.nanoTime()-receivedNanos<transitionMs*1_000_000L
     /** True while the map zoom is still easing toward its target, so the view keeps redrawing. */
     val zoomSettling get()=aheadMeters>0f && kotlin.math.abs(aheadMeters-zoomTarget)>aheadMeters*0.01f
     private var lastFrameNanos=0L
@@ -625,6 +640,9 @@ class HudRenderer(context: Context) {
     }
     companion object {
         const val GREEN = 0xFF3DFF8A.toInt()
+        /** Route kept in [routePath]: the map shows at most ~2.5 km ahead (MapZoom) plus its corners. */
+        private const val ROUTE_AHEAD_M = 4_000
+        private const val ROUTE_BEHIND_M = 600
         private const val MAX_LABELS = 10
         private const val LANE_SHOW_M = 2_000
         // Street-name sizes (expanded; compact draws them at 0.85×). Raised ~20% on 2026-10-18: the

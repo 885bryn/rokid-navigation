@@ -191,6 +191,18 @@ Dual monochrome green micro-LED waveguides, ~480×398 per eye (one source says 6
   investigate once connected; Maps SDK needs Google Play services, whose availability on these
   glasses has not been established. See Google's Maps Android setup documentation.
 
+## Glasses battery (2026-10-19)
+- The HUD redraws on state changes plus one capped frame loop while the map glides between ~1 Hz
+  fixes: 15 fps expanded, 10 fps corner map, nothing once the glide reaches the latest fix. Exactly one
+  frame is pending at a time (`HudView.nextFrame`); stacked `postInvalidateDelayed` loops had pushed it
+  to ~48 fps.
+- Only the route from 600 m behind to 4 km ahead is stroked (`HudRenderer.routeWindow`).
+- `HudStore.tick` does not re-emit an unchanged state, so an idle HUD draws nothing.
+- `FLAG_KEEP_SCREEN_ON` only while guiding or just arrived; with no trip the glasses sleep normally.
+- Brightness stays with the global Rokid setting.
+- Measured with the demo trip on the phone (proxy for the glasses): corner view 47% → 13% of a core,
+  expanded 62% → 22%; frames per 30 s 1436 → 303 and 1610 → 424; idle 0 frames.
+
 ## Phone UX
 1. **Setup** (first run / when link not Ready): Rokid AI App check → "Authorize glasses" → "Connect".
 2. **Search**: Places Autocomplete, recents, home/work shortcuts.

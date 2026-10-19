@@ -136,12 +136,15 @@ class HudStore(private val clock:()->Long=System::currentTimeMillis,private val 
         val stale=alertUpdatedAt.filterValues {now-it>=ALERT_STALE_MS}.keys
         stale.forEach(alertUpdatedAt::remove)
         val silent=lastMessageAt>0 && now-lastMessageAt>=PHONE_SILENT_MS
-        mutable.update {s->s.copy(nowMs=now,detour=s.detour?.takeIf {it.expiresAtMs>now},
+        mutable.update {s->val n=s.copy(nowMs=now,detour=s.detour?.takeIf {it.expiresAtMs>now},
             phoneSilent=silent && s.navState in listOf(NavState.ACTIVE,NavState.REROUTING,NavState.GPS_LOST),
             alerts=if(stale.isEmpty())s.alerts else s.alerts.filterNot {it.id in stale},
             alertSeenAt=if(stale.isEmpty())s.alertSeenAt else s.alertSeenAt-stale,
             mode=if(s.mode is HudMode.Menu && now-menuTouched>=10_000)returnMode else s.mode,
-            navState=if(s.navState==NavState.ARRIVED && now-arrivedAt>=10_000)NavState.IDLE else s.navState)}
+            navState=if(s.navState==NavState.ARRIVED && now-arrivedAt>=10_000)NavState.IDLE else s.navState)
+            // Battery: the clock alone only matters while an alert or detour shows time-based content.
+            // Otherwise an unchanged state is not re-emitted, so an idle HUD does not redraw every second.
+            if(s.alerts.isEmpty() && s.detour==null && n==s.copy(nowMs=now))s else n}
     }
     suspend fun tickLoop(){while(true){tick();delay(1000)}}
     companion object {

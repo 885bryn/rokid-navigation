@@ -28,7 +28,6 @@ class MainActivity:AppCompatActivity() {
         // Let the glasses compositor choose its native orientation. Forced landscape rotates the HUD.
         if(BuildConfig.DEBUG && intent.getBooleanExtra("phonePreview",false))
             requestedOrientation=android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         WindowCompat.setDecorFitsSystemWindows(window,false)
         WindowCompat.getInsetsController(window,window.decorView).hide(WindowInsetsCompat.Type.systemBars())
         vm=ViewModelProvider(this)[HudViewModel::class.java]
@@ -57,7 +56,7 @@ class MainActivity:AppCompatActivity() {
         })
         hud.setOnTouchListener { _,event -> gestures.onTouchEvent(event) }
         hud.post {vm.onDisplayReady(hud.width,hud.height)}
-        lifecycleScope.launch {repeatOnLifecycle(Lifecycle.State.STARTED){vm.store.state.collect(hud::render)}}
+        lifecycleScope.launch {repeatOnLifecycle(Lifecycle.State.STARTED){vm.store.state.collect {hud.render(it);keepScreenOn(it)}}}
         if(BuildConfig.DEBUG && intent.getBooleanExtra("capture",false))hud.postDelayed({
             hud.render(vm.store.state.value)
             val bitmap=Bitmap.createBitmap(hud.width,hud.height,Bitmap.Config.ARGB_8888)
@@ -85,6 +84,18 @@ class MainActivity:AppCompatActivity() {
         backGestureConsumed=vm.onKey(key)
         if(!backGestureConsumed)exitToHome()
         return backGestureConsumed
+    }
+    /** Battery: hold the display on only while guiding; with no trip the glasses may sleep as usual. */
+    private var screenHeld=false
+    private fun keepScreenOn(s:com.rokidnav.glasses.state.HudState) {
+        val hold=s.navState in HOLD_SCREEN
+        if(hold==screenHeld)return
+        screenHeld=hold
+        if(hold)window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+    private companion object {
+        val HOLD_SCREEN=setOf(com.rokidnav.protocol.NavState.ACTIVE,com.rokidnav.protocol.NavState.REROUTING,
+            com.rokidnav.protocol.NavState.GPS_LOST,com.rokidnav.protocol.NavState.ARRIVED)
     }
     /** Back to the Rokid home screen. The task stays alive, so an active trip resumes where it was. */
     private fun exitToHome(){if(!moveTaskToBack(true))finish()}
