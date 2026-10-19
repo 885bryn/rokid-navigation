@@ -19,13 +19,17 @@ fun main(args: Array<String>) {
     val steps = route.getValue("legs").jsonArray.first().jsonObject.getValue("steps").jsonArray
     val ends = ArrayList<Double>()
     var accumulated = 0.0
-    val instructions = steps.map { raw ->
+    // Synthetic lane guidance on the first turn so the HUD's lane row shows in demo and previews.
+    val demoLanes = listOf(
+        Lane(listOf(Maneuver.STRAIGHT), false), Lane(listOf(Maneuver.STRAIGHT), false),
+        Lane(listOf(Maneuver.STRAIGHT, Maneuver.TURN_RIGHT), true), Lane(listOf(Maneuver.TURN_RIGHT), true))
+    val instructions = steps.mapIndexed { index, raw ->
         val step = raw.jsonObject
         accumulated += step.getValue("distanceMeters").jsonPrimitive.double
         ends += accumulated
         val instruction = step.getValue("navigationInstruction").jsonObject
         Step(Maneuver.valueOf(instruction.getValue("maneuver").jsonPrimitive.content),
-            step.getValue("roadName").jsonPrimitive.content)
+            step.getValue("roadName").jsonPrimitive.content, lanes = if (index == 0) demoLanes else emptyList())
     }
     var seq = 0L
     val lines = ArrayList<String>()

@@ -271,8 +271,7 @@ class HudRenderer(context: Context) {
                 lanes(c)
                 status(c)
                 // Alerts never replace trip status: a chip in the map's top-right corner, below the lane box when shown.
-                val lanesShown=(s.maneuver?.current?.lanes?.isNotEmpty()==true) && (s.maneuver?.distanceToStepMeters ?: 9999)<150
-                if(s.alerts.isNotEmpty()) alertChip(c,452f,if(lanesShown)184f else 124f,28f,compact=false)
+                if(s.alerts.isNotEmpty()) alertChip(c,452f,if(lanesVisible())184f else 124f,28f,compact=false)
                 if(s.detour!=null) detour(c,s.detour!!)
             }
         }
@@ -314,16 +313,19 @@ class HudRenderer(context: Context) {
                 text(c,unit,82f+paint(36f,b=true).measureText(number),464f,20f,191)
                 text(c,compactRoad,18f,503f,22f,217)
             }
-            val lanesShown=m!=null && m.distanceToStepMeters<150 && m.current.lanes.isNotEmpty() && s.navState==NavState.ACTIVE
+            val lanesShown=lanesVisible()
             if(!lanesShown && cue.isNotEmpty() && s.navState==NavState.ACTIVE)text(c,ellipsize(cue,15f,220f),18f,528f,15f,166)
-            if(m!=null && m.distanceToStepMeters<150 && s.navState==NavState.ACTIVE) {
+            if(lanesShown && m!=null) {
+                // Lane row (Google Maps style): your lanes bright, the others dim, thin dividers between.
+                val lanes=m.current.lanes;val count=minOf(lanes.size,8)
+                val step=minOf(36f,212f/count);val size=minOf(30f,step-4f)
                 var laneIndex=0
-                while(laneIndex<m.current.lanes.size && laneIndex<7) {
-                    val lane=m.current.lanes[laneIndex];var direction=0
+                while(laneIndex<count) {
+                    val lane=lanes[laneIndex];val lx=18f+laneIndex*step;var direction=0
                     while(direction<lane.directions.size) {
-                        glyphs.draw(c,lane.directions[direction],18f+laneIndex*28f,516f,24f,
-                            paint(alpha=if(lane.recommended)255 else 77,stroke=7f));direction++
+                        glyphs.draw(c,lane.directions[direction],lx,508f,size,paint(alpha=laneAlpha(lane,lane.directions[direction]),stroke=7.5f));direction++
                     }
+                    if(laneIndex>0)c.drawLine(lx-3f,510f,lx-3f,508f+size,paint(alpha=77,stroke=1.5f))
                     laneIndex++
                 }
             }
@@ -366,15 +368,40 @@ class HudRenderer(context: Context) {
             right(c,if(s.navState==NavState.GPS_LOST) "GPS lost" else "Rerouting",460f,101f,22f)
         }
     }
+    /**
+     * Lane guidance shows whenever Google includes lanes for the next maneuver (it only does where lanes
+     * matter) and that maneuver is within [LANE_SHOW_M]; it was previously held back until 150 m.
+     */
+    private fun lanesVisible():Boolean {
+        val m=s.maneuver ?: return false
+        return s.navState==NavState.ACTIVE && m.current.lanes.isNotEmpty() && m.distanceToStepMeters<=LANE_SHOW_M
+    }
+    /**
+     * Your lanes bright, others dim. In a lane allowing several directions (e.g. straight + right) only the
+     * arrow that matches the maneuver is bright, like Google Maps, so overlapping arrows stay readable.
+     */
+    private fun laneAlpha(lane:Lane,direction:Maneuver):Int {
+        if(!lane.recommended)return 64
+        if(lane.directions.size<2)return 255
+        val turn=s.maneuver?.current?.maneuver ?: return 255
+        return if(laneSide(direction)==laneSide(turn))255 else 90
+    }
+    private fun laneSide(m:Maneuver)=when(m) {
+        Maneuver.TURN_LEFT,Maneuver.TURN_SLIGHT_LEFT,Maneuver.TURN_SHARP_LEFT,Maneuver.U_TURN_LEFT,Maneuver.MERGE_LEFT,
+        Maneuver.FORK_LEFT,Maneuver.ON_RAMP_LEFT,Maneuver.OFF_RAMP_LEFT,Maneuver.DESTINATION_LEFT,Maneuver.ROUNDABOUT_COUNTERCLOCKWISE->-1
+        Maneuver.TURN_RIGHT,Maneuver.TURN_SLIGHT_RIGHT,Maneuver.TURN_SHARP_RIGHT,Maneuver.U_TURN_RIGHT,Maneuver.MERGE_RIGHT,
+        Maneuver.FORK_RIGHT,Maneuver.ON_RAMP_RIGHT,Maneuver.OFF_RAMP_RIGHT,Maneuver.DESTINATION_RIGHT,Maneuver.ROUNDABOUT_CLOCKWISE->1
+        else->0
+    }
     private fun lanes(c:Canvas) {
         val lanes=s.maneuver?.current?.lanes ?: return
-        if(lanes.isEmpty() || (s.mode!=HudMode.Minimal && (s.maneuver?.distanceToStepMeters ?: 9999)>=150)) return
+        if(lanes.isEmpty() || (s.mode!=HudMode.Minimal && !lanesVisible())) return
         val count=minOf(lanes.size,8); val width=count*34f+20f; val left=240f-width/2
         if(s.mode!=HudMode.Minimal) { box(c,left,128f,left+width,178f,10f,fill=true,black=true);box(c,left,128f,left+width,178f,10f) }
         var i=0
         while(i<count) {
             val lane=lanes[i]; var j=0
-            while(j<lane.directions.size) { glyphs.draw(c,lane.directions[j],left+10+i*34,133f,34f,paint(alpha=if(lane.recommended)255 else 77,stroke=8f));j++ }
+            while(j<lane.directions.size) { glyphs.draw(c,lane.directions[j],left+10+i*34,133f,34f,paint(alpha=laneAlpha(lane,lane.directions[j]),stroke=8f));j++ }
             if(i>0)c.drawLine(left+8+i*34,136f,left+8+i*34,170f,paint(alpha=77,stroke=2f))
             i++
         }
@@ -426,8 +453,7 @@ class HudRenderer(context: Context) {
             c.save();c.translate(cx,anchor);c.scale(.65f,.65f);c.drawPath(chevron,paint());c.restore()
             return
         }
-        val lanesShown=(s.maneuver?.current?.lanes?.isNotEmpty()==true) && (s.maneuver?.distanceToStepMeters ?: 9999)<150
-        labels(c,px,py,heading,ppm,cx,306f,18f,446f,if(lanesShown)192f else 136f,326f,MAX_LABELS,1f)
+        labels(c,px,py,heading,ppm,cx,306f,18f,446f,if(lanesVisible())192f else 136f,326f,MAX_LABELS,1f)
         c.save();c.translate(cx,306f);c.drawPath(chevron,paint());c.restore()
         // Remaining-route ribbon, normalized by meters rather than polyline point index.
         box(c,458f,130f,466f,326f,4f,alpha=204)
@@ -602,6 +628,7 @@ class HudRenderer(context: Context) {
     companion object {
         const val GREEN = 0xFF3DFF8A.toInt()
         private const val MAX_LABELS = 10
+        private const val LANE_SHOW_M = 2_000
         // Street-name sizes (expanded; compact draws them at 0.85×). Raised ~20% on 2026-10-18: the
         // waveguide resolution made 14–17 px names hard to read.
         private const val LABEL_TURN = 20f

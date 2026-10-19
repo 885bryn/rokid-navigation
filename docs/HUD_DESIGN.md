@@ -177,6 +177,13 @@ The map shows a distance ahead computed every frame and eased (0.6 s time consta
   progressively down to 150 m at the corner. After the turn it eases back out.
 - **User setting** scales the result: Close 0.7×, Default 1×, Far 1.5×.
 
+## Lane guidance (2026-10-18)
+Shown whenever Google's turn data includes lanes for the next maneuver (Google only sends them where
+lanes matter) and it is within 2 km; previously only inside 150 m. Expanded: lane box under the banner.
+Compact: a row under the street name (replaces the turn cue while visible), up to 8 lanes, 30 px arrows
+with thin dividers. Your lanes are bright, the others at 25%; in a lane allowing several directions only
+the arrow on the maneuver's side is bright. The demo trip's first turn carries synthetic lanes.
+
 ## Map styling (2026-10-18)
 - **Route ahead:** solid green 9 px (compact 6 px) with a 3 px black edge each side — the strongest mark,
   so the road to drive on is never confused with a major street.
