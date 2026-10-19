@@ -68,6 +68,8 @@ class MainActivity:ComponentActivity() {
             }
         }
     }
+    /** Leaving or closing the app with no trip running frees Google's navigator and its notification. */
+    override fun onStop(){super.onStop();app.navEngine.releaseIfIdle()}
     @Deprecated("Rokid SDK uses activity authorization results")
     override fun onActivityResult(requestCode:Int,resultCode:Int,data:Intent?){super.onActivityResult(requestCode,resultCode,data);(app.glassesLink as? CxrGlassesLink)?.onAuthorizationResult(resultCode,data)}
     /**

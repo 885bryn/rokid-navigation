@@ -37,6 +37,9 @@ interface NavigationEngine {
     fun simulate(enabled: Boolean)
 
     fun stop()
+
+    /** Frees navigation resources (and their notification) when no trip is starting or running. */
+    fun releaseIfIdle() {}
 }
 
 data class Destination(val placeId: String?, val name: String, val location: LatLng)

@@ -143,6 +143,17 @@ class GoogleNavigationEngine(private val context:Context):NavigationEngine {
         runCatching {NavigationApi.getRoadSnappedLocationProvider(application)?.removeLocationListener(locationListener)}
         runCatching {nav.unregisterServiceForNavUpdates()}
         runCatching {nav.cleanup()}
+        // cleanup() alone once left Google's "Driving with Google Maps" service running after a trip
+        // (2026-10-19). Drop its service manager and stop that service, which runs in this app.
+        runCatching {NavigationApi.clearForegroundServiceManager()}
+        runCatching {context.stopService(android.content.Intent().setClassName(context,GOOGLE_NAV_SERVICE))}
+        android.util.Log.i("RokidNavEngine","navigator released")
+    }
+    override fun releaseIfIdle() {
+        if(_navState.value !in listOf(NavState.ROUTING,NavState.ACTIVE,NavState.REROUTING,NavState.GPS_LOST))release()
+    }
+    private companion object {
+        const val GOOGLE_NAV_SERVICE="com.google.android.libraries.geo.navcore.service.base.NavigationService"
     }
     internal fun onManeuver(update:ManeuverUpdate){if(_navState.value!=NavState.ENDED)_maneuver.tryEmit(update)}
     internal fun onNavStateFromFeed(state:NavState) {

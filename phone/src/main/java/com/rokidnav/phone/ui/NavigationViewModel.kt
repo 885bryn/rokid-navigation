@@ -103,7 +103,10 @@ class NavigationViewModel(application:Application):AndroidViewModel(application)
                     app.traffic.seed(option);app.navEngine.simulate(simulate)
                     options.value=emptyList() // A later trip must request a fresh route token.
                 }
-                else error.value=(app.navEngine as? GoogleNavigationEngine)?.error?.value ?: "Guidance could not start. Check Google API setup."
+                else {
+                    error.value=(app.navEngine as? GoogleNavigationEngine)?.error?.value ?: "Guidance could not start. Check Google API setup."
+                    app.navEngine.releaseIfIdle() // A failed start must not leave Google's navigation notification up.
+                }
             } finally {busy.value=false}
         }
     }
