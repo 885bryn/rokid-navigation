@@ -27,8 +27,6 @@ interface GlassesLink {
     /** Returns false (and drops the message) unless state is [LinkState.Ready]. */
     fun send(message: NavMessage): Boolean
 
-    fun setBrightness(percent: Int)
-
     fun disconnect()
 }
 

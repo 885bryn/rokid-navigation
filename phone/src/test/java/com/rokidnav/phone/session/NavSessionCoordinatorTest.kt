@@ -44,7 +44,6 @@ class NavSessionCoordinatorTest {
             sent += requireNotNull(ProtocolCodec.decode(magic, json))
             return true
         }
-        override fun setBrightness(percent: Int) {}
         override fun disconnect() {}
     }
     @Test fun sendsCountdownClearsWhileDisconnectedAndResyncsClearOnReconnect() = runTest {

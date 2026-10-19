@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.*
  *   user reports are often pinned off the road or on the wrong carriageway.
  */
 data class UserSettings(val units:Units=Units.METRIC,val voiceMuted:Boolean=false,
-    val zoom:Int=1,val brightness:Int=35,val police:Boolean=true,val cameras:Boolean=true,
+    val zoom:Int=1,val police:Boolean=true,val cameras:Boolean=true,
     val alertVoice:Boolean=true,val alertVoiceCameras:Boolean=true,val alertVoiceMeters:Int=1000,
     val alertToleranceMeters:Int=150) {
     companion object {
@@ -30,7 +30,7 @@ class SettingsRepository(context:Context) {
     }
     private val mutable=MutableStateFlow(normalize(UserSettings(
         runCatching {Units.valueOf(prefs.getString("units","METRIC")!!)}.getOrDefault(Units.METRIC),
-        prefs.getBoolean("muted",false),prefs.getInt("zoom",1),prefs.getInt("brightness",35),
+        prefs.getBoolean("muted",false),prefs.getInt("zoom",1),
         prefs.getBoolean("police",true),prefs.getBoolean("cameras",true),
         prefs.getBoolean("alertVoice",true),prefs.getBoolean("alertVoiceCameras",true),
         prefs.getInt("alertVoiceMeters",1000),prefs.getInt("alertToleranceMeters",150))))
@@ -39,13 +39,13 @@ class SettingsRepository(context:Context) {
         val next=normalize(transform(mutable.value))
         if(next==mutable.value)return
         prefs.edit().putString("units",next.units.name).putBoolean("muted",next.voiceMuted)
-            .putInt("zoom",next.zoom).putInt("brightness",next.brightness)
+            .putInt("zoom",next.zoom).remove("brightness")
             .putBoolean("police",next.police).putBoolean("cameras",next.cameras)
             .putBoolean("alertVoice",next.alertVoice).putBoolean("alertVoiceCameras",next.alertVoiceCameras)
             .putInt("alertVoiceMeters",next.alertVoiceMeters).putInt("alertToleranceMeters",next.alertToleranceMeters).apply()
         mutable.value=next
     }
-    private fun normalize(s:UserSettings)=s.copy(zoom=s.zoom.coerceIn(0,2),brightness=s.brightness.coerceIn(5,100),
+    private fun normalize(s:UserSettings)=s.copy(zoom=s.zoom.coerceIn(0,2),
         alertVoiceMeters=s.alertVoiceMeters.takeIf {it in UserSettings.VOICE_DISTANCES} ?: 1000,
         alertToleranceMeters=s.alertToleranceMeters.takeIf {it in UserSettings.TOLERANCES} ?: 150)
 }

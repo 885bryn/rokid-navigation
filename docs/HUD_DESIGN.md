@@ -88,7 +88,7 @@ Root list, all 5 rows visible at 54 px each, highlighted row filled:
 2. **Traffic & routes** — current delay, worst congestion ahead ("Jam in 2.1 mi, 1.3 mi long"),
    "Find faster route" (sends SHOW_ALTERNATIVES → phone runs a poll and may send a detour_offer).
 3. **Voice on/off** — TOGGLE_VOICE.
-4. **Display** — brightness (phone calls `setGlassBrightness`), units, default zoom.
+4. **Display** — units, default zoom. Brightness stays with the global Rokid setting.
 5. **End navigation** — confirm page (tap = end, double tap = cancel).
 
 Auto-close after 10 s without input. Alerts do not interrupt the menu; their chip shows after it closes.

@@ -41,7 +41,7 @@ class CxrGlassesLink(private val context:Context):GlassesLink {
         if(state.value==LinkState.Authorizing)return
         mutableState.value=LinkState.Authorizing
         try {
-            // Device management is used to install/launch the glasses app and control its brightness.
+            // Device management is used to install and launch the glasses app.
             manager.requestAuthorization(activity,listOf(GlassPermission.DEVICE_MANAGE)){result->onMain {acceptAuth(result)}}
         } catch(_:Exception){mutableState.value=LinkState.Failed("Could not open Rokid authorization. Open Hi Rokid and try again.")}
     }
@@ -200,7 +200,6 @@ class CxrGlassesLink(private val context:Context):GlassesLink {
             session?.sendCustomCmd(Channels.PHONE_TO_GLASSES,caps,ByteArray(0))?.isSuccess==true
         }.getOrDefault(false)
     }
-    override fun setBrightness(percent:Int){if(state.value==LinkState.Ready)session?.setGlassBrightness(percent.coerceIn(0,100))}
     override fun disconnect(){generation++;session?.close();session=null;mutableState.value=if(token==null)LinkState.Idle else LinkState.Authorized}
 
     private companion object {

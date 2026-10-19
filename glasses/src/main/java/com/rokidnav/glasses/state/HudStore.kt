@@ -65,7 +65,7 @@ class HudStore(private val clock:()->Long=System::currentTimeMillis,private val 
                 mutable.update {it.copy(navState=m.state,alerts=if(tripOver)emptyList() else it.alerts,
                     alertSeenAt=if(tripOver)emptyMap() else it.alertSeenAt)}
             }
-            is SettingsUpdate->mutable.update {it.copy(voiceMuted=m.voiceMuted,units=m.units,mapZoom=m.mapZoomLevel.coerceIn(0,2),brightnessPercent=m.brightnessPercent.coerceIn(0,100))}
+            is SettingsUpdate->mutable.update {it.copy(voiceMuted=m.voiceMuted,units=m.units,mapZoom=m.mapZoomLevel.coerceIn(0,2))}
             else->Unit
         }
     }
@@ -109,7 +109,7 @@ class HudStore(private val clock:()->Long=System::currentTimeMillis,private val 
     private fun menuKey(menu:HudMode.Menu,key:GlassesKey) {
         if(key==GlassesKey.LONG_PRESS){mode(returnMode);return}
         if(key==GlassesKey.DOUBLE_TAP || key==GlassesKey.BACK){mode(if(menu.page==MenuPage.ROOT)returnMode else HudMode.Menu(MenuPage.ROOT));return}
-        val count=when(menu.page){MenuPage.ROOT->5;MenuPage.SETTINGS->4;else->1}
+        val count=when(menu.page){MenuPage.ROOT->5;MenuPage.SETTINGS->3;else->1}
         if(key==GlassesKey.SWIPE_FORWARD || key==GlassesKey.SWIPE_BACK){mode(menu.copy(index=(menu.index+if(key==GlassesKey.SWIPE_FORWARD)1 else count-1)%count));return}
         if(key!=GlassesKey.TAP)return
         when(menu.page) {
@@ -123,7 +123,6 @@ class HudStore(private val clock:()->Long=System::currentTimeMillis,private val 
             MenuPage.SETTINGS->when(menu.index) {
                 0->{mutable.update {it.copy(units=if(it.units==Units.IMPERIAL)Units.METRIC else Units.IMPERIAL)};sendAction(GlassesAction(0,ActionType.TOGGLE_UNITS))}
                 1->{mutable.update {it.copy(mapZoom=(it.mapZoom+1)%3)};sendAction(GlassesAction(0,ActionType.CYCLE_ZOOM))}
-                2->{sendAction(GlassesAction(0,ActionType.CYCLE_BRIGHTNESS))}
                 else->mode(HudMode.Menu(MenuPage.ROOT))
             }
             MenuPage.TRAFFIC->{sendAction(GlassesAction(0,ActionType.SHOW_ALTERNATIVES));mode(returnMode)}

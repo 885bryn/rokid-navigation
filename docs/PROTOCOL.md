@@ -75,7 +75,8 @@ Each sender uses monotonically increasing seq values. Cached messages are resequ
 The glasses reject stale/duplicate frames globally; session_start begins a new receive sequence and
 clears trip snapshots before the full snapshot arrives. A phone restart may begin with a lower seq.
 
-Brightness is clamped to 5–100% on the phone; CYCLE_BRIGHTNESS selects 15/35/60/85%.
+`brightnessPercent` and CYCLE_BRIGHTNESS are deprecated and ignored: the glasses keep the global
+Rokid brightness. The fields stay for wire compatibility.
 CYCLE_ZOOM cycles 0/1/2. Both actions persist phone preferences and echo settings to glasses.
 Compact/expanded map presentation is local to the glasses and never resets when settings update.
 

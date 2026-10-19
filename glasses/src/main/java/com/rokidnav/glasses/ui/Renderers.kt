@@ -73,10 +73,9 @@ class HudRenderer(context: Context) {
     private var exit = ""
     private var jamLabel = ""
     private val menuLabels = arrayOf("Trip info", "Traffic & routes", "Voice guidance", "Display", "End navigation")
-    private val displayLabels = arrayOf("Units", "Zoom", "Brightness", "Back")
+    private val displayLabels = arrayOf("Units", "Zoom", "Back")
     private var unitsLabel = ""
     private var zoomLabel = ""
-    private var brightnessLabel = ""
 
     fun prepare(next: HudState) {
         val old = s
@@ -189,7 +188,6 @@ class HudRenderer(context: Context) {
         menuDestination=ellipsize("${next.destinationName} · $eta",18f,280f)
         unitsLabel=if(next.units==Units.IMPERIAL) "mi / ft" else "km / m"
         zoomLabel=when(next.mapZoom) {0->"Close"; 2->"Far"; else->"Default"}
-        brightnessLabel="${next.brightnessPercent}%"
         val along=next.position?.metersAlongRoute ?: 0
         val jam=next.traffic.firstOrNull { it.level==TrafficLevel.JAM && it.endMeters>along }
         jamLabel=if(jam==null) "" else "in ${Format.distance((jam.startMeters-along).coerceAtLeast(0),next.units)} · ${Format.distance(jam.endMeters-jam.startMeters,next.units)} long"
@@ -602,7 +600,7 @@ class HudRenderer(context: Context) {
             val top=52f+i*54f;val selected=m.index==i
             if(selected){box(c,18f,top,462f,top+54,12f);c.drawLine(22f,top+14,22f,top+40,paint(stroke=3f))}
             text(c,if(m.page==MenuPage.SETTINGS)displayLabels[i] else menuLabels[i],34f,top+36,26f,if(selected)255 else 200,selected,false)
-            val value=if(m.page==MenuPage.SETTINGS)when(i){0->unitsLabel;1->zoomLabel;2->brightnessLabel;else->""} else when(i){1->delayLabel;2->if(s.voiceMuted)"OFF" else "ON";else->""}
+            val value=if(m.page==MenuPage.SETTINGS)when(i){0->unitsLabel;1->zoomLabel;else->""} else when(i){1->delayLabel;2->if(s.voiceMuted)"OFF" else "ON";else->""}
             right(c,value,424f,top+33,20f,if(selected)255 else 163,black=false)
             if(i!=2 && i!=4 && m.page==MenuPage.ROOT){c.drawLine(436f,top+20,444f,top+27,paint(black=false,stroke=2.6f));c.drawLine(444f,top+27,436f,top+34,paint(black=false,stroke=2.6f))}
             i++

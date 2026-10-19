@@ -120,15 +120,12 @@ fun NavigationScreen(activity:ComponentActivity,app:RokidNavApp) {
 fun SettingsScreen(app:RokidNavApp) {
     val settings by app.settings.state.collectAsState()
     val policeStatus by app.policeProvider.status.collectAsState()
-    var brightness by remember(settings.brightness){mutableFloatStateOf(settings.brightness.toFloat())}
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(14.dp)) {
         Text("Display & alerts",style=MaterialTheme.typography.headlineMedium)
         Text("The glasses use the bottom corners. Tap to expand or collapse the map; long press for the menu.")
         Row {Switch(!settings.voiceMuted,{value->app.settings.update {it.copy(voiceMuted=!value)}});Text("Voice guidance")}
         OutlinedButton(onClick={app.settings.update {it.copy(units=if(it.units==Units.IMPERIAL)Units.METRIC else Units.IMPERIAL)}}){Text("Units: ${settings.units}")}
         OutlinedButton(onClick={app.settings.update {it.copy(zoom=(it.zoom+1)%3)}}){Text("Map zoom: ${when(settings.zoom){0->"Close";2->"Far";else->"Default"}}")}
-        Text("Glasses brightness: ${brightness.toInt()}%")
-        Slider(brightness,{brightness=it},valueRange=5f..100f,onValueChangeFinished={app.settings.update {it.copy(brightness=brightness.toInt())}})
         Row {Switch(settings.police,{value->app.settings.update {it.copy(police=value)}});Text("WzSabre police reports")}
         Row {Switch(settings.cameras,{value->app.settings.update {it.copy(cameras=value)}});Text("WzSabre speed cameras")}
         Text("Alerts on the glasses clear themselves once passed; no tapping needed.",color=Color.LightGray)

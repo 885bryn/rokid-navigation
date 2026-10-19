@@ -119,8 +119,9 @@ HUD delivery, native orientation, and tap return events have been checked on har
 
 ## M8 — Menu & settings
 - [x] Menu pages, auto-close, alert pre-emption, restore previous compact/expanded mode.
-- [x] Voice, units, brightness (`setGlassBrightness` only Ready), zoom and source toggles persisted on
-      the phone with app-private SharedPreferences, pushed via `settings`. Brightness hardware test pending.
+- [x] Voice, units, zoom and source toggles persisted on the phone with app-private
+      SharedPreferences, pushed via `settings`. Brightness follows the global Rokid setting (the app
+      never calls `setGlassBrightness`).
 - **Accept:** every menu item works from the touchpad alone.
 - Compact bottom-corner layout is default; tap expands/collapses. Native-size compact/expanded
   renderer captures saved in docs/screens. Settings and menu logic compile and have local coverage;

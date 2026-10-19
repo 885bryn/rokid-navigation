@@ -39,7 +39,6 @@ data class HudState(
     val mode: HudMode = HudMode.Compact,
     val mapZoom: Int = 1,         // 0 = close (~300 m ahead), 1 = default (~800 m), 2 = far (~2 km)
     val voiceMuted: Boolean = false,
-    val brightnessPercent: Int = 35,
     val nowMs: Long = 0,
 )
 

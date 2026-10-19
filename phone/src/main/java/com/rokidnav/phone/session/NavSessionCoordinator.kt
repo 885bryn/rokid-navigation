@@ -140,8 +140,7 @@ class NavSessionCoordinator(private val scope:CoroutineScope,private val link:Gl
     fun respondToDetour(accept:Boolean){offer.value?.let {action(GlassesAction(0,if(accept)ActionType.ACCEPT_DETOUR else ActionType.DISMISS_DETOUR,it.offerId))}}
     private fun applySettings(value:UserSettings) {
         preferences=value;engine.setVoiceMuted(value.voiceMuted)
-        if(link.state.value==LinkState.Ready)link.setBrightness(value.brightness)
-        sendStateful("settings",SettingsUpdate(seq.next(),value.voiceMuted,value.units,value.zoom,value.brightness))
+        sendStateful("settings",SettingsUpdate(seq.next(),value.voiceMuted,value.units,value.zoom))
     }
     private fun changeSettings(transform:(UserSettings)->UserSettings) {
         if(settings!=null)settings.update(transform) else applySettings(transform(preferences))
@@ -163,7 +162,8 @@ class NavSessionCoordinator(private val scope:CoroutineScope,private val link:Gl
             ActionType.ZOOM_IN->changeSettings {it.copy(zoom=(it.zoom-1).coerceAtLeast(0))}
             ActionType.ZOOM_OUT->changeSettings {it.copy(zoom=(it.zoom+1).coerceAtMost(2))}
             ActionType.CYCLE_ZOOM->changeSettings {it.copy(zoom=(it.zoom+1)%3)}
-            ActionType.CYCLE_BRIGHTNESS->changeSettings {it.copy(brightness=when {it.brightness<35->35;it.brightness<60->60;it.brightness<85->85;else->15})}
+            // The glasses keep their own Rokid brightness; older HUDs may still send this.
+            ActionType.CYCLE_BRIGHTNESS->Unit
             ActionType.SHOW_ALTERNATIVES->traffic.forceRefresh()
         }
     }

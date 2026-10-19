@@ -63,7 +63,8 @@ Not planned, but `GlassesLink` is the seam if it's ever wanted.
   remaining M3 gestures, payload limits and AI pause/resume still need validation.
 - Glasses keys arrive as system broadcasts (`com.android.action.ACTION_SPRITE_BUTTON_CLICK`, `..._DOUBLE_CLICK`,
   `..._LONG_PRESS`, two-finger tap/swipe, `ACTION_AI_START`, ...) plus normal `onKeyDown` KeyEvents.
-- Brightness/volume: `session.setGlassBrightness(0..100)`, `setGlassVolume`.
+- Brightness/volume: `session.setGlassBrightness(0..100)`, `setGlassVolume`. Rokid Nav does not call
+  them: the glasses keep the user's global Rokid brightness.
 
 ## Glasses hardware (from reviews, unverified)
 Dual monochrome green micro-LED waveguides, ~480×398 per eye (one source says 640×480), 23° FOV,
@@ -114,7 +115,7 @@ Dual monochrome green micro-LED waveguides, ~480×398 per eye (one source says 6
   This is an environment workaround, not a required project-wide Gradle setting.
 - M3 wiring uses verified `com.rokid.cxr.session` types. `onConnectResult`'s `SessionErrorCode`
   argument is **nullable** in Kotlin. Authorization requests `DEVICE_MANAGE` for app install/launch
-  and device brightness; camera/microphone/media permissions are not requested.
+  (Rokid Nav leaves device brightness alone); camera/microphone/media permissions are not requested.
 - Only the link wrapper parses auth results and retains the token. Callbacks are attached before
   `connect()`. Connection callbacks are guarded by an attempt generation so an old session cannot
   overwrite a newer session's state. Capability calls require Ready.
@@ -222,9 +223,9 @@ Dual monochrome green micro-LED waveguides, ~480×398 per eye (one source says 6
   when sampled points match the active route within 45 m.
 - Detours have a 30-second expiry and phone/glasses controls, reject stale IDs, and resolve accepted
   only after engine success. Tests cover expiry, successful/failed switches and monotonic resync.
-- Settings use app-private SharedPreferences (no extra persistence dependency): voice, units, zoom,
-  brightness and WzSabre source toggles. Disabled source flows stop polling; police timeout status is
-  visible on the phone. Brightness uses the SDK wrapper only when Ready.
+- Settings use app-private SharedPreferences (no extra persistence dependency): voice, units, zoom
+  and WzSabre source toggles. Disabled source flows stop polling; police timeout status is
+  visible on the phone. Brightness is left to the global Rokid setting (no `setGlassBrightness`).
 - v0.2.0 phone build embeds an identical glasses APK. Added Save glasses installer via Android's
   document picker as an explicit fallback for the observed first SDK install failure. HUD version is
   visible with the handshake so an outdated glasses install can be identified.
