@@ -85,20 +85,32 @@ class MainActivity:AppCompatActivity() {
         if(!backGestureConsumed)exitToHome()
         return backGestureConsumed
     }
-    /** Battery: hold the display on only while guiding; with no trip the glasses may sleep as usual. */
+    /**
+     * Battery: hold the display on only while the phone is actually guiding (link up, not silent).
+     * Without a live trip the HUD closes itself after a while, so the glasses can sleep instead of
+     * showing an idle or "Phone not sending" screen all night.
+     */
     private var screenHeld=false
+    private var idleSince=0L
+    private val idleExit=Runnable {if(!isFinishing){android.util.Log.i("RokidNavHud","idle_exit");finish()}}
     private fun keepScreenOn(s:com.rokidnav.glasses.state.HudState) {
-        val hold=s.navState in HOLD_SCREEN
-        if(hold==screenHeld)return
-        screenHeld=hold
-        if(hold)window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        val live=s.navState in HOLD_SCREEN && s.linkConnected && !s.phoneSilent
+        if(live!=screenHeld) {
+            screenHeld=live
+            if(live)window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+        if(demo)return
+        if(live){idleSince=0L;hud.removeCallbacks(idleExit)}
+        else if(idleSince==0L){idleSince=SystemClock.uptimeMillis();hud.postDelayed(idleExit,IDLE_EXIT_MS)}
     }
+    private val demo get()=intent.getBooleanExtra("demo",false)
     private companion object {
         val HOLD_SCREEN=setOf(com.rokidnav.protocol.NavState.ACTIVE,com.rokidnav.protocol.NavState.REROUTING,
             com.rokidnav.protocol.NavState.GPS_LOST,com.rokidnav.protocol.NavState.ARRIVED)
+        const val IDLE_EXIT_MS=5*60_000L
     }
     /** Back to the Rokid home screen. The task stays alive, so an active trip resumes where it was. */
     private fun exitToHome(){if(!moveTaskToBack(true))finish()}
     override fun onStart(){super.onStart();vm.onForeground()}
-    override fun onDestroy(){unregisterReceiver(keyReceiver);super.onDestroy()}
+    override fun onDestroy(){hud.removeCallbacks(idleExit);unregisterReceiver(keyReceiver);super.onDestroy()}
 }

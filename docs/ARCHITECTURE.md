@@ -200,6 +200,11 @@ Dual monochrome green micro-LED waveguides, ~480×398 per eye (one source says 6
 - `HudStore.tick` does not re-emit an unchanged state, so an idle HUD draws nothing.
 - `FLAG_KEEP_SCREEN_ON` only while guiding or just arrived; with no trip the glasses sleep normally.
 - Brightness stays with the global Rokid setting.
+- Overnight drain (reported 2026-10-19): the phone held its CXR session open indefinitely after a trip,
+  which keeps the HUD app running on the glasses, and older HUDs held the screen on permanently. Now the
+  phone closes the session after `NavSessionCoordinator.IDLE_CLOSE_MS` (3 min) without a trip and
+  reconnects when the next trip goes ACTIVE; the HUD holds the screen only while the link is up and the
+  phone is sending, and finishes itself after 5 min without a live trip.
 - Measured with the demo trip on the phone (proxy for the glasses): corner view 47% → 13% of a core,
   expanded 62% → 22%; frames per 30 s 1436 → 303 and 1610 → 424; idle 0 frames.
 

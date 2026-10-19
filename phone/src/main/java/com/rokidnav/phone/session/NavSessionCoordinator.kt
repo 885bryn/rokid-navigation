@@ -84,7 +84,18 @@ class NavSessionCoordinator(private val scope:CoroutineScope,private val link:Gl
         }
         scope.launch {link.incoming.collect {when(it){is GlassesHello,is ResyncRequest->resync();is GlassesAction->action(it);else->Unit}}}
         scope.launch {link.state.collect {if(it==LinkState.Ready){applySettings(settings?.state?.value ?: preferences);resync()}}}
+        // Glasses battery: an open session keeps the HUD running on the glasses (and Rokid may relaunch
+        // it whenever they wake), so close it after IDLE_CLOSE_MS without a trip. The next trip reopens it.
+        scope.launch {combine(engine.navState,link.state){nav,state->nav !in GUIDING && state==LinkState.Ready}
+            .distinctUntilChanged().collectLatest {idle->if(idle){delay(IDLE_CLOSE_MS);link.disconnect()}}}
+        scope.launch {engine.navState.map {it==NavState.ACTIVE}.distinctUntilChanged().collect {
+            if(it && link.state.value==LinkState.Authorized)link.connect()
+        }}
         traffic.start(scope)
+    }
+    companion object {
+        const val IDLE_CLOSE_MS=3*60_000L
+        private val GUIDING=setOf(NavState.ROUTING,NavState.ACTIVE,NavState.REROUTING,NavState.GPS_LOST)
     }
     private fun activeGuidance()=combine(engine.activeRoute,engine.navState){route,state->
         route.takeIf {state in listOf(NavState.ACTIVE,NavState.REROUTING,NavState.GPS_LOST)}}.distinctUntilChanged()

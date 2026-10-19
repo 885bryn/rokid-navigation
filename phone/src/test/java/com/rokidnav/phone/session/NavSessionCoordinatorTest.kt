@@ -37,14 +37,37 @@ class NavSessionCoordinatorTest {
         val sent = mutableListOf<NavMessage>()
         override fun checkEnvironment() = EnvironmentStatus.Ok
         override fun authorize(activity: Activity) {}
-        override fun connect() {}
+        var connects = 0
+        var disconnects = 0
+        override fun connect() { connects++; state.value = LinkState.Ready }
         override fun send(message: NavMessage): Boolean {
             if (state.value != LinkState.Ready) return false
             val (magic, json) = ProtocolCodec.encode(message)
             sent += requireNotNull(ProtocolCodec.decode(magic, json))
             return true
         }
-        override fun disconnect() {}
+        override fun disconnect() { disconnects++; state.value = LinkState.Authorized }
+    }
+    @Test fun closesTheGlassesSessionWhenIdleAndReopensItForTheNextTrip() = runTest {
+        val engine = Engine()
+        val link = Link()
+        val none = object : IncidentProvider {
+            override val name = "none"
+            override fun incidentsAlong(routePolyline: String) = flowOf(emptyList<Incident>())
+        }
+        NavSessionCoordinator(backgroundScope, link, engine, TrafficMonitor(RoutesApiClient(""), engine), none).start()
+        runCurrent()
+        advanceTimeBy(NavSessionCoordinator.IDLE_CLOSE_MS * 2); runCurrent()
+        assertEquals("guiding keeps the session", 0, link.disconnects)
+        engine.stop(); runCurrent()
+        advanceTimeBy(NavSessionCoordinator.IDLE_CLOSE_MS - 1_000); runCurrent()
+        assertEquals(0, link.disconnects)
+        advanceTimeBy(2_000); runCurrent()
+        assertEquals(1, link.disconnects)
+        assertEquals(LinkState.Authorized, link.state.value)
+        engine.navState.value = NavState.ACTIVE; runCurrent()
+        assertEquals(1, link.connects)
+        assertEquals(LinkState.Ready, link.state.value)
     }
     @Test fun sendsCountdownClearsWhileDisconnectedAndResyncsClearOnReconnect() = runTest {
         val engine = Engine()
