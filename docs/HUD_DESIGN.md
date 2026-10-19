@@ -180,7 +180,8 @@ The map shows a distance ahead computed every frame and eased (0.6 s time consta
 ## Map styling (2026-10-18)
 - **Route ahead:** solid green 9 px (compact 6 px) with a 3 px black edge each side — the strongest mark,
   so the road to drive on is never confused with a major street.
-- **Traffic on the route:** slow = dashed black core, jam = solid black core (hollow line).
+- **Traffic:** never drawn inside the route (user request: no dark marks in the line). Shown by the
+  expanded map's side ribbon and the status delay badge.
 - **Turn arrow:** filled arrowhead with a black edge 25 m past the turn, pointing along the route, shown
   once the turn is within the visible distance.
 - **Streets:** residential 2.5 px at 45%, major 4 px at 65% (compact 2 / 3 px).

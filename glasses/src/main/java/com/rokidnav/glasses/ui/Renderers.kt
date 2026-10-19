@@ -404,16 +404,8 @@ class HudRenderer(context: Context) {
         val routeW=if(compact)6f else 9f
         c.drawPath(routePath,paint(black=true,stroke=(routeW+6f)/ppm))
         c.drawPath(routePath,paint(stroke=routeW/ppm))
-        // Traffic on the route: slow = dashed black core, jam = solid black core (hollow line).
-        var i=0
-        while(i<trafficPaths.size) {
-            if(trafficLevels[i]!=TrafficLevel.NORMAL) {
-                val p=paint(black=true,stroke=routeW*0.45f/ppm)
-                if(trafficLevels[i]==TrafficLevel.SLOW)p.pathEffect=slowDash(ppm)
-                c.drawPath(trafficPaths[i],p)
-            }
-            i++
-        }
+        // The route stays solid bright green end to end (user request): traffic is shown by the side
+        // ribbon in the expanded map and the delay badge, never as dark marks inside the route.
         // Turn arrow just past the turn, pointing the way to go, once the turn is in view.
         val toStep=s.maneuver?.distanceToStepMeters
         if(hasManeuverPoint && toStep!=null && toStep<aheadMeters && turnArrowAt(position.metersAlongRoute.coerceAtLeast(0)+toStep+25.0)) {
@@ -440,7 +432,7 @@ class HudRenderer(context: Context) {
         // Remaining-route ribbon, normalized by meters rather than polyline point index.
         box(c,458f,130f,466f,326f,4f,alpha=204)
         val along=position.metersAlongRoute.coerceAtLeast(0);val remaining=(s.routeTotalMeters-along).coerceAtLeast(1)
-        i=0
+        var i=0
         while(i<s.traffic.size) {
             val segment=s.traffic[i]
             if(segment.endMeters>along && segment.level!=TrafficLevel.NORMAL) {
@@ -488,15 +480,6 @@ class HudRenderer(context: Context) {
             placedLabelX[placed]=lx;placedLabelY[placed]=ly;placedLabelW[placed]=w;placed++
         }
     }
-    /** 7 px on / 6 px off on screen; rebuilt only when the scale changes by more than 10%. */
-    private fun slowDash(ppm:Float):DashPathEffect {
-        if(slowDashEffect==null || kotlin.math.abs(ppm-slowDashPpm)>slowDashPpm*0.1f) {
-            slowDashPpm=ppm;slowDashEffect=DashPathEffect(floatArrayOf(7f/ppm,6f/ppm),0f)
-        }
-        return slowDashEffect!!
-    }
-    private var slowDashEffect:DashPathEffect?=null
-    private var slowDashPpm=0f
     /** Sets [arrowX]/[arrowY]/[arrowDeg] to the route point [meters] along and its heading; false past the end. */
     private fun turnArrowAt(meters:Double):Boolean {
         var i=1
