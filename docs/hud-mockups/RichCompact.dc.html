@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rich map compact corner</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 480px; height: 640px; background: #000; color: {{g}}; font-family: 'Barlow Semi Condensed', sans-serif; font-variant-numeric: tabular-nums; position: relative; overflow: hidden">
+
+<div style="position: absolute; left: 36px; top: 420px; width: 200px; display: flex; flex-direction: column; gap: 4px">
+<div style="display: flex; align-items: center; gap: 12px">
+<svg width="40" height="40" viewBox="0 0 84 84" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Turn right"><path d="M30 76 V46 A14 14 0 0 1 44 32 H56"></path><path d="M50 18 L64 32 L50 46"></path></svg>
+<div style="display: flex; align-items: baseline; gap: 5px"><span style="font-size: 34px; font-weight: 700; line-height: 1">0.3</span><span style="font-size: 17px; font-weight: 600; opacity: 0.75">mi</span></div>
+</div>
+<span style="font-size: 20px; font-weight: 600">Bay Street</span>
+<span style="font-size: 14px; font-weight: 600; opacity: 0.65">2nd right · after Francisco St</span>
+</div>
+
+<div style="position: absolute; left: 36px; top: 530px; width: 200px; display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; align-items: baseline; gap: 5px"><span style="font-size: 24px; font-weight: 700">11:59</span><span style="font-size: 12px; font-weight: 500; opacity: 0.6">ETA</span></div>
+<div style="display: flex; justify-content: space-between"><span style="font-size: 18px; font-weight: 600; opacity: 0.85">18 min</span><span style="font-size: 18px; font-weight: 600; opacity: 0.85">1.6 mi</span></div>
+</div>
+
+<svg style="position: absolute; left: 258px; top: 408px" width="192" height="174" viewBox="0 0 192 174" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<g stroke-width="1.8" opacity="0.42">
+<path d="M0 16 H192"></path><path d="M0 84 H192"></path><path d="M0 118 H192"></path><path d="M0 152 H192"></path>
+<path d="M0 50 H82"></path>
+<path d="M34 0 V174"></path><path d="M128 0 V174"></path><path d="M180 0 V174"></path>
+<path d="M92 0 V40"></path>
+</g>
+<g stroke-width="3.5" opacity="0.7"><path d="M154 0 V174"></path></g>
+<path d="M92 166 V60 Q92 50 102 50 H192" stroke-width="10"></path>
+<path d="M92 166 V60 Q92 50 102 50 H192" stroke="#000" stroke-width="4"></path>
+<path d="M128 50 H192" stroke-width="4" stroke-dasharray="5 4" stroke-linecap="butt"></path>
+<path d="M92 140 L103 165 L92 159 L81 165 Z" fill="currentColor" stroke="none"></path>
+<g fill="currentColor" stroke="none" font-family="'Barlow Semi Condensed', sans-serif" font-weight="600">
+<text x="104" y="42" font-size="12" font-weight="700">Bay St</text>
+<text x="4" y="79" font-size="10.5" opacity="0.6">Francisco</text>
+<text x="158" y="104" font-size="10.5" opacity="0.75">Van Ness</text>
+</g>
+</svg>
+<span style="position: absolute; left: 258px; top: 586px; font-size: 10px; font-weight: 500; opacity: 0.5">© OpenStreetMap</span>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"g":{"editor":"color","default":"#3DFF8A","options":["#3DFF8A","#7CFFB0","#00E676"]},"$preview":{"width":480,"height":640}}'>
+class Component extends DCLogic {
+renderVals() {
+return { g: this.props.g ?? '#3DFF8A' };
+}
+}
+</script>
+</body>
+</html>

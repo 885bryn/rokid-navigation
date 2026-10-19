@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rich map approaching turn</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 480px; height: 640px; background: #000; color: {{g}}; font-family: 'Barlow Semi Condensed', sans-serif; font-variant-numeric: tabular-nums; position: relative; overflow: hidden">
+
+<div style="position: absolute; left: 24px; right: 24px; top: 150px; display: flex; gap: 16px; align-items: flex-start">
+<svg width="64" height="64" viewBox="0 0 84 84" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Turn right"><path d="M30 76 V46 A14 14 0 0 1 44 32 H56"></path><path d="M50 18 L64 32 L50 46"></path></svg>
+<div style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0">
+<div style="display: flex; align-items: baseline; gap: 6px"><span style="font-size: 46px; font-weight: 700; line-height: 1">400</span><span style="font-size: 20px; font-weight: 600; opacity: 0.75">ft</span></div>
+<div style="font-size: 22px; font-weight: 600; line-height: 1.1">Bay Street</div>
+<div style="font-size: 16px; font-weight: 600; opacity: 0.7; margin-top: 2px">2nd right · after Francisco St</div>
+</div>
+</div>
+<div style="position: absolute; left: 24px; right: 24px; top: 238px; height: 4px; border-radius: 2px">
+<div style="position: absolute; inset: 0; border-radius: 2px; background-color: currentColor; opacity: 0.25"></div>
+<div style="position: absolute; left: 0; top: 0; bottom: 0; width: 34%; border-radius: 2px; background-color: currentColor"></div>
+</div>
+
+<svg style="position: absolute; left: 24px; top: 250px" width="408" height="204" viewBox="0 0 408 204" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<g stroke-width="3.5" opacity="0.42">
+<path d="M0 130 H408"></path>
+<path d="M0 66 H186"></path>
+<path d="M210 0 V46"></path>
+<path d="M60 0 V204"></path><path d="M360 0 V204"></path>
+</g>
+<path d="M210 196 V90 Q210 66 234 66 H408" stroke-width="20"></path>
+<path d="M210 196 V90 Q210 66 234 66 H408" stroke="#000" stroke-width="9"></path>
+<circle cx="210" cy="130" r="5" fill="currentColor" stroke="none" opacity="0.7"></circle>
+<circle cx="214" cy="68" r="9" fill="#000" stroke-width="3"></circle>
+<path d="M300 40 L320 52 L300 64" stroke-width="3" opacity="0.9"></path>
+<path d="M210 160 L228 200 L210 192 L192 200 Z" fill="currentColor" stroke="none"></path>
+<g fill="currentColor" stroke="none" font-family="'Barlow Semi Condensed', sans-serif" font-weight="600">
+<text x="250" y="102" font-size="20" font-weight="700">Bay St</text>
+<text x="70" y="122" font-size="14" opacity="0.65">Francisco St</text>
+<text x="70" y="58" font-size="14" opacity="0.55">Bay St</text>
+<text x="222" y="180" font-size="13" opacity="0.55">Polk St</text>
+</g>
+</svg>
+
+<span style="position: absolute; left: 24px; top: 456px; font-size: 11px; font-weight: 500; opacity: 0.55">© OpenStreetMap contributors</span>
+
+<div style="position: absolute; left: 24px; right: 24px; top: 474px; height: 40px; display: flex; align-items: center; gap: 14px">
+<div style="display: flex; align-items: baseline; gap: 5px"><span style="font-size: 26px; font-weight: 700">12:00</span><span style="font-size: 13px; font-weight: 500; opacity: 0.6">ETA</span></div>
+<span style="font-size: 20px; font-weight: 600; opacity: 0.85">17 min</span>
+<span style="font-size: 20px; font-weight: 600; opacity: 0.85">1.4 mi</span>
+<div style="flex: 1"></div>
+<div style="display: flex; align-items: center; gap: 5px; border: 2px solid currentColor; border-radius: 8px; padding: 2px 8px"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="7"></circle><path d="M9 5 V9 L12 11"></path></svg><span style="font-size: 18px; font-weight: 700">+4 min</span></div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"g":{"editor":"color","default":"#3DFF8A","options":["#3DFF8A","#7CFFB0","#00E676"]},"$preview":{"width":480,"height":640}}'>
+class Component extends DCLogic {
+renderVals() {
+return { g: this.props.g ?? '#3DFF8A' };
+}
+}
+</script>
+</body>
+</html>

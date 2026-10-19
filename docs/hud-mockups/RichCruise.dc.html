@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rich map cruising</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 480px; height: 640px; background: #000; color: {{g}}; font-family: 'Barlow Semi Condensed', sans-serif; font-variant-numeric: tabular-nums; position: relative; overflow: hidden">
+
+<div style="position: absolute; left: 24px; right: 24px; top: 150px; display: flex; gap: 16px; align-items: flex-start">
+<svg width="64" height="64" viewBox="0 0 84 84" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Turn right"><path d="M30 76 V46 A14 14 0 0 1 44 32 H56"></path><path d="M50 18 L64 32 L50 46"></path></svg>
+<div style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0">
+<div style="display: flex; align-items: baseline; gap: 6px"><span style="font-size: 46px; font-weight: 700; line-height: 1">0.3</span><span style="font-size: 20px; font-weight: 600; opacity: 0.75">mi</span></div>
+<div style="font-size: 22px; font-weight: 600; line-height: 1.1">Bay Street</div>
+</div>
+<div style="display: flex; align-items: center; gap: 6px; border: 2px solid currentColor; border-radius: 10px; padding: 3px 8px 3px 10px; opacity: 0.7; margin-top: 4px"><span style="font-size: 15px; font-weight: 600">then</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Turn left"><path d="M16 21 V13 A5 5 0 0 0 11 8 H6"></path><path d="M9 4 L5 8 L9 12"></path></svg></div>
+</div>
+
+<svg style="position: absolute; left: 24px; top: 244px" width="408" height="210" viewBox="0 0 408 210" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<g stroke-width="2" opacity="0.42">
+<path d="M0 22 H408"></path><path d="M0 104 H408"></path><path d="M0 146 H408"></path><path d="M0 188 H408"></path>
+<path d="M0 62 H190"></path>
+<path d="M78 0 V210"></path><path d="M140 0 V210"></path><path d="M266 0 V210"></path><path d="M384 0 V210"></path>
+<path d="M204 0 V48"></path>
+<path d="M0 130 L60 98 L140 56"></path>
+</g>
+<g stroke-width="4.5" opacity="0.7"><path d="M326 0 V210"></path></g>
+<path d="M204 196 V76 Q204 62 218 62 H408" stroke-width="13"></path>
+<path d="M204 196 V76 Q204 62 218 62 H408" stroke="#000" stroke-width="5.5"></path>
+<path d="M290 62 H408" stroke-width="5.5" stroke-dasharray="7 6" stroke-linecap="butt"></path>
+<circle cx="204" cy="62" r="5" fill="#000" stroke-width="2.5"></circle>
+<path d="M204 166 L218 198 L204 191 L190 198 Z" fill="currentColor" stroke="none"></path>
+<g fill="currentColor" stroke="none" font-family="'Barlow Semi Condensed', sans-serif" font-weight="600">
+<text x="232" y="52" font-size="15" font-weight="700">Bay St</text>
+<text x="10" y="98" font-size="12" opacity="0.6">Francisco St</text>
+<text x="10" y="140" font-size="12" opacity="0.6">Chestnut St</text>
+<text x="10" y="182" font-size="12" opacity="0.6">Lombard St</text>
+<text x="333" y="128" font-size="12.5" opacity="0.8">Van Ness</text>
+<text x="146" y="200" font-size="12" opacity="0.6">Larkin</text>
+<text x="212" y="140" font-size="12" opacity="0.6">Polk St</text>
+</g>
+</svg>
+
+<svg style="position: absolute; left: 436px; top: 258px" width="16" height="182" viewBox="0 0 16 182" fill="none" stroke="currentColor" aria-hidden="true">
+<rect x="4" y="2" width="8" height="176" rx="4" stroke-width="2" opacity="0.8"></rect>
+<rect x="4" y="50" width="8" height="26" fill="currentColor" stroke="none" opacity="0.45"></rect>
+<circle cx="8" cy="172" r="5" fill="currentColor" stroke="#000" stroke-width="2"></circle>
+</svg>
+
+<span style="position: absolute; left: 24px; top: 456px; font-size: 11px; font-weight: 500; opacity: 0.55">© OpenStreetMap contributors</span>
+
+<div style="position: absolute; left: 24px; right: 24px; top: 474px; height: 40px; display: flex; align-items: center; gap: 14px">
+<div style="display: flex; align-items: baseline; gap: 5px"><span style="font-size: 26px; font-weight: 700">12:00</span><span style="font-size: 13px; font-weight: 500; opacity: 0.6">ETA</span></div>
+<span style="font-size: 20px; font-weight: 600; opacity: 0.85">18 min</span>
+<span style="font-size: 20px; font-weight: 600; opacity: 0.85">1.6 mi</span>
+<div style="flex: 1"></div>
+<div style="display: flex; align-items: center; gap: 5px; border: 2px solid currentColor; border-radius: 8px; padding: 2px 8px"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="7"></circle><path d="M9 5 V9 L12 11"></path></svg><span style="font-size: 18px; font-weight: 700">+4 min</span></div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"g":{"editor":"color","default":"#3DFF8A","options":["#3DFF8A","#7CFFB0","#00E676"]},"$preview":{"width":480,"height":640}}'>
+class Component extends DCLogic {
+renderVals() {
+return { g: this.props.g ?? '#3DFF8A' };
+}
+}
+</script>
+</body>
+</html>
