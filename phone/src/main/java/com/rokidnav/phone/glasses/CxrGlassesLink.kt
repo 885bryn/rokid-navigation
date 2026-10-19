@@ -105,7 +105,8 @@ class CxrGlassesLink(private val context:Context):GlassesLink {
                         Log.i("RokidNavLink","connect_result success=$success error=${error?.name ?: "none"}")
                         if(!success && attempt==generation){
                             connectionFailure=LinkState.Failed(if(error==SessionErrorCode.GLASSES_APP_INSTALL_FAILED)
-                                "Hi Rokid could not install the HUD. Save its installer, then use Hi Rokid → Toolbox → Glasses app management."
+                                "Hi Rokid couldn't send the HUD to the glasses. It transfers over Wi-Fi and needs Location set to " +
+                                "\"Allow all the time\": Settings → Apps → Hi Rokid → Permissions → Location. Then tap Connect again."
                                 else "Glasses connection failed (${error?.name ?: "unknown"}). Check Hi Rokid.",canRetry=true)
                             mutableState.value=connectionFailure!!
                         }

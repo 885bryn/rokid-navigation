@@ -171,6 +171,12 @@ Dual monochrome green micro-LED waveguides, ~480×398 per eye (one source says 6
   (`ExternalAppClient.appUninstall`, reached by field type since v1.1 has no public API) and reconnects
   so the SDK installs the bundled HUD. Verified: 0.2.0 → 0.2.0+16c82db8 replaced in ~18 s with no
   user action; reconnecting to a current HUD skips the reinstall (hello in 0.1 s). See PROTOCOL.md.
+- **Install failures explained (2026-10-18):** Hi Rokid transfers the HUD APK over a Wi-Fi hotspot the
+  glasses join. With Hi Rokid's Location permission at "only while using the app", the install runs while
+  Hi Rokid is in the background, Android rejects its fine-location access (`checkNearbyDevicesPermission
+  ... does not have Fine Location permission`), Hi Rokid logs 加入热点失败 (failed to join hotspot) and
+  answers install=false → `GLASSES_APP_INSTALL_FAILED`. Fix: Hi Rokid Location = "Allow all the time".
+  This is very likely GPT's original unexplained first-install failure too. The phone's error now says so.
 - HUD leaving the foreground ends the session: the SDK's `onGlassAppResume(false)` terminates with
   `TerminatingReason.GLASSES_APP_EXIT` (seen in `CxrSessionImpl` bytecode; reproduced when double-click
   exited to Rokid home mid-trip and the user came back to a frozen HUD). The glasses cannot restart a
