@@ -381,9 +381,13 @@ class HudRenderer(context: Context) {
     }
     private fun map(c:Canvas,nanos:Long,compact:Boolean=false) {
         val position=s.position ?: return
-        val zoom=if((s.maneuver?.distanceToStepMeters ?: 9999)<150)0 else s.mapZoom
-        val visible=when(zoom){0->300f;2->2000f;else->800f}
-        val ppm=(if(compact)148f else 188f)/visible
+        // Continuous auto-zoom (MapZoom): speed sets the cruise view, an upcoming turn pulls it in early.
+        val target=MapZoom.targetMeters(position.speedMps,s.maneuver?.distanceToStepMeters,s.maneuver?.current?.maneuver,s.mapZoom)
+        val dt=if(lastFrameNanos==0L)0f else ((nanos-lastFrameNanos)/1e9f).coerceIn(0f,0.5f)
+        lastFrameNanos=nanos
+        aheadMeters=MapZoom.ease(aheadMeters,target,dt)
+        zoomTarget=target
+        val ppm=(if(compact)148f else 188f)/aheadMeters
         val t=((nanos-receivedNanos)/1_000_000.0/transitionMs).toFloat().coerceIn(0f,1f)
         val px=previousX+(currentX-previousX)*t; val py=previousY+(currentY-previousY)*t
         val heading=previousBearing+((currentBearing-previousBearing+540)%360-180)*t
@@ -392,26 +396,32 @@ class HudRenderer(context: Context) {
         c.save()
         if(compact)c.clipRect(254f,418f,466f,604f) else c.clipRect(0f,118f,450f,338f)
         c.translate(cx,anchor);c.rotate(-heading);c.scale(ppm,ppm);c.translate(-px,-py)
-        // Road hierarchy (docs/HUD_DESIGN.md "Rich map"): residential thin at 42%, major roads thick at 70%.
-        c.drawPath(minorRoads,paint(alpha=107,stroke=(if(compact)1.8f else if(zoom==0)3.5f else 2f)/ppm))
-        c.drawPath(majorRoads,paint(alpha=179,stroke=(if(compact)3.5f else if(zoom==0)6f else 4.5f)/ppm))
+        // Streets: visible but clearly below the route. Residential 2.5 px at 45%, major 4 px at 65%.
+        c.drawPath(minorRoads,paint(alpha=115,stroke=(if(compact)2f else 2.5f)/ppm))
+        c.drawPath(majorRoads,paint(alpha=166,stroke=(if(compact)3f else 4f)/ppm))
+        // Route: the strongest mark on the map. Solid and bright, with a black edge that separates it
+        // from any street it runs along or crosses.
+        val routeW=if(compact)6f else 9f
+        c.drawPath(routePath,paint(black=true,stroke=(routeW+6f)/ppm))
+        c.drawPath(routePath,paint(stroke=routeW/ppm))
+        // Traffic on the route: slow = dashed black core, jam = solid black core (hollow line).
         var i=0
-        c.drawPath(routePath,paint(stroke=(if(compact)if(zoom==0)8f else 6f else if(zoom==0)14f else 10f)/ppm))
-        c.drawPath(routePath,paint(black=true,stroke=(if(compact)if(zoom==0)4f else 3.5f else if(zoom==0)8f else 6f)/ppm))
-        i=0
         while(i<trafficPaths.size) {
             if(trafficLevels[i]!=TrafficLevel.NORMAL) {
-                val p=paint(stroke=(if(compact)if(zoom==0)4f else 3.5f else if(zoom==0)8f else 6f)/ppm)
-                // Dash is applied in screen space below, using the same cached path.
-                if(trafficLevels[i]==TrafficLevel.SLOW) {
-                    p.pathEffect=metricSlowDash(zoom)
-                }
+                val p=paint(black=true,stroke=routeW*0.45f/ppm)
+                if(trafficLevels[i]==TrafficLevel.SLOW)p.pathEffect=slowDash(ppm)
                 c.drawPath(trafficPaths[i],p)
             }
             i++
         }
-        if(zoom==0 && hasManeuverPoint) {
-            c.drawCircle(maneuverX,maneuverY,9f/ppm,paint(black=true));c.drawCircle(maneuverX,maneuverY,9f/ppm,paint(stroke=3f/ppm))
+        // Turn arrow just past the turn, pointing the way to go, once the turn is in view.
+        val toStep=s.maneuver?.distanceToStepMeters
+        if(hasManeuverPoint && toStep!=null && toStep<aheadMeters && turnArrowAt(position.metersAlongRoute.coerceAtLeast(0)+toStep+25.0)) {
+            c.save();c.translate(arrowX,arrowY);c.rotate(arrowDeg);c.scale(1/ppm,1/ppm)
+            val size=if(compact)9f else 13f
+            turnArrow.reset();turnArrow.moveTo(0f,-size);turnArrow.lineTo(size*0.9f,size*0.7f);turnArrow.lineTo(-size*0.9f,size*0.7f);turnArrow.close()
+            c.drawPath(turnArrow,paint(black=true,stroke=5f));c.drawPath(turnArrow,paint())
+            c.restore()
         }
         if(s.alerts.isNotEmpty()) {
             val a=s.alerts[0];val ax=x(a.lng);val ay=y(a.lat)
@@ -440,7 +450,7 @@ class HudRenderer(context: Context) {
             };i++
         }
         c.drawCircle(462f,318f,6f,paint());c.drawCircle(462f,318f,6f,paint(black=true,stroke=2f))
-        if(jamLabel.isNotEmpty() && s.detour==null && s.traffic.anyJamInWindow(along,visible.toInt())) {
+        if(jamLabel.isNotEmpty() && s.detour==null && s.traffic.anyJamInWindow(along,aheadMeters.toInt())) {
             c.drawLine(226f,196f,170f,196f,paint(alpha=179,stroke=2f));right(c,"Heavy traffic",162f,190f,20f,b=true)
             right(c,jamLabel,162f,210f,17f,204)
         }
@@ -478,8 +488,36 @@ class HudRenderer(context: Context) {
             placedLabelX[placed]=lx;placedLabelY[placed]=ly;placedLabelW[placed]=w;placed++
         }
     }
-    private val metricDashes = arrayOf(300f,800f,2000f).map { visible -> DashPathEffect(floatArrayOf(7f*visible/188f,6f*visible/188f),0f) }.toTypedArray()
-    private fun metricSlowDash(zoom:Int)=metricDashes[zoom.coerceIn(0,2)]
+    /** 7 px on / 6 px off on screen; rebuilt only when the scale changes by more than 10%. */
+    private fun slowDash(ppm:Float):DashPathEffect {
+        if(slowDashEffect==null || kotlin.math.abs(ppm-slowDashPpm)>slowDashPpm*0.1f) {
+            slowDashPpm=ppm;slowDashEffect=DashPathEffect(floatArrayOf(7f/ppm,6f/ppm),0f)
+        }
+        return slowDashEffect!!
+    }
+    private var slowDashEffect:DashPathEffect?=null
+    private var slowDashPpm=0f
+    /** Sets [arrowX]/[arrowY]/[arrowDeg] to the route point [meters] along and its heading; false past the end. */
+    private fun turnArrowAt(meters:Double):Boolean {
+        var i=1
+        while(i<distances.size && distances[i]<meters)i++
+        if(i>=distances.size)return false
+        val len=(distances[i]-distances[i-1]).coerceAtLeast(.01)
+        val f=((meters-distances[i-1])/len).toFloat()
+        val dx=east[i]-east[i-1];val dy=north[i]-north[i-1]
+        arrowX=east[i-1]+dx*f;arrowY=north[i-1]+dy*f
+        arrowDeg=Math.toDegrees(kotlin.math.atan2(dx.toDouble(),-dy.toDouble())).toFloat()
+        return true
+    }
+    private var arrowX=0f
+    private var arrowY=0f
+    private var arrowDeg=0f
+    private val turnArrow=Path()
+    private var aheadMeters=0f
+    private var zoomTarget=0f
+    /** True while the map zoom is still easing toward its target, so the view keeps redrawing. */
+    val zoomSettling get()=aheadMeters>0f && kotlin.math.abs(aheadMeters-zoomTarget)>aheadMeters*0.01f
+    private var lastFrameNanos=0L
     private fun List<TrafficSegment>.anyJamInWindow(along:Int,visible:Int):Boolean {
         var i=0;while(i<size){val t=this[i];if(t.level==TrafficLevel.JAM && t.endMeters>along && t.startMeters<along+visible)return true;i++};return false
     }

@@ -24,6 +24,6 @@ class HudView(context: Context) : View(context) {
         canvas.scale(scale,scale)
         if(compact)renderer.drawCompact(canvas,System.nanoTime()) else renderer.draw(canvas,System.nanoTime())
         canvas.restore()
-        if(isAttachedToWindow && state.navState==NavState.ACTIVE && (state.position?.speedMps ?: 0f)>=.5f)postInvalidateDelayed(33)
+        if(isAttachedToWindow && (renderer.zoomSettling || state.navState==NavState.ACTIVE && (state.position?.speedMps ?: 0f)>=.5f))postInvalidateDelayed(33)
     }
 }

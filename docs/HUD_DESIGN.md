@@ -130,8 +130,8 @@ shapes. Small glyphs 2.6 px in a 24 box.
 **Regions:** banner 0–118 px (padding 16/18, 84 px glyph, 16 px gap); map 118–338; status strip
 338–398 (padding 0/18, gap 12, items separated by `·` @40%).
 
-**Route line = a hollow tube** (14 px green stroke with a 6 px black stroke on top). Traffic fills the
-tube: free flow = hollow, SLOW = dashed fill (7 on / 6 off, 6 px), JAM = solid fill. This reads at a
+**Route line:** superseded 2026-10-18 by solid route + black edge (see "Map styling"). Originally a hollow
+tube where traffic filled it. This reads at a
 glance without color and keeps lit pixels low. Zoom 0 widens the tube to 20/9.
 Chevron: filled arrow 32×36 at (50%, ~85% of the map region). Context streets 3 px @22%.
 Next maneuver point: black dot with 3 px ring (zoom 0 only). Street labels (2026-10-18, enlarged for the waveguide): turn street 20 px bold, major/"after" 18, other
@@ -168,6 +168,19 @@ plus chevron, highlighted row filled. Gesture legend at the bottom 15/600 @55%.
 **Arrived:** centered 96 px check-in-circle, "You've arrived" 44/700, destination + side 26/600,
 trip summary, auto-close hint.
 
-## Zoom levels
-0 = ~300 m ahead (city turns), 1 = ~800 m (default), 2 = ~2 km (highway). Auto-zoom (v2): zoom in as
-a maneuver approaches (< 300 m), out on highways at speed.
+## Zoom (2026-10-18: continuous, `MapZoom`)
+The map shows a distance ahead computed every frame and eased (0.6 s time constant), never fixed steps:
+- **Cruise view from speed:** 200 m standing/slow, 350 m at 50 km/h, 700 m at 80, 1.2 km at 110, 1.6 km
+  at 130+ (linear between).
+- **Turn framing:** a real maneuver (not straight / name change) pulls the view to `distance × 1.4 + 60 m`
+  as soon as that is tighter than the cruise view, so the turn sits ~70% up the map and the zoom tightens
+  progressively down to 150 m at the corner. After the turn it eases back out.
+- **User setting** scales the result: Close 0.7×, Default 1×, Far 1.5×.
+
+## Map styling (2026-10-18)
+- **Route ahead:** solid green 9 px (compact 6 px) with a 3 px black edge each side — the strongest mark,
+  so the road to drive on is never confused with a major street.
+- **Traffic on the route:** slow = dashed black core, jam = solid black core (hollow line).
+- **Turn arrow:** filled arrowhead with a black edge 25 m past the turn, pointing along the route, shown
+  once the turn is within the visible distance.
+- **Streets:** residential 2.5 px at 45%, major 4 px at 65% (compact 2 / 3 px).
