@@ -21,7 +21,7 @@ class ProtocolCodecTest {
             AlertCleared(11, "a1"),
             DetourResolved(12, "d1", true),
             NavStateUpdate(13, NavState.ACTIVE),
-            SettingsUpdate(14, true, Units.IMPERIAL, 2, 60),
+            SettingsUpdate(14, true, Units.IMPERIAL, 2, 60, demoMode = true),
             GlassesAction(20,ActionType.CYCLE_BRIGHTNESS),
             GlassesAction(21,ActionType.CYCLE_ZOOM),
             GlassesHello(15, "0.1", 480, 398),
@@ -50,6 +50,7 @@ class ProtocolCodecTest {
     @Test fun oldSettingsDefaultBrightness() {
         val old="""{"t":"settings","seq":1,"voiceMuted":false,"units":"IMPERIAL","mapZoomLevel":1}"""
         assertEquals(35,(ProtocolCodec.decode(ProtocolVersion.MAGIC,old) as SettingsUpdate).brightnessPercent)
+        assertEquals(false,(ProtocolCodec.decode(ProtocolVersion.MAGIC,old) as SettingsUpdate).demoMode)
     }
     @Test fun oldAlertsHaveUnknownReportTime() {
         val old="""{"t":"alert","seq":1,"id":"p1","kind":"POLICE","distanceAheadMeters":100,"lat":0,"lng":0}"""

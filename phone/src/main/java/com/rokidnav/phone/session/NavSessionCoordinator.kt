@@ -151,7 +151,7 @@ class NavSessionCoordinator(private val scope:CoroutineScope,private val link:Gl
     fun respondToDetour(accept:Boolean){offer.value?.let {action(GlassesAction(0,if(accept)ActionType.ACCEPT_DETOUR else ActionType.DISMISS_DETOUR,it.offerId))}}
     private fun applySettings(value:UserSettings) {
         preferences=value;engine.setVoiceMuted(value.voiceMuted)
-        sendStateful("settings",SettingsUpdate(seq.next(),value.voiceMuted,value.units,value.zoom))
+        sendStateful("settings",SettingsUpdate(seq.next(),value.voiceMuted,value.units,value.zoom,demoMode=value.demoMode))
     }
     private fun changeSettings(transform:(UserSettings)->UserSettings) {
         if(settings!=null)settings.update(transform) else applySettings(transform(preferences))

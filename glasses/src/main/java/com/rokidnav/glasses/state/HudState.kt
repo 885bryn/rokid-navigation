@@ -39,6 +39,8 @@ data class HudState(
     val mode: HudMode = HudMode.Compact,
     val mapZoom: Int = 1,         // 0 = close (~300 m ahead), 1 = default (~800 m), 2 = far (~2 km)
     val voiceMuted: Boolean = false,
+    /** From phone settings: redraw the map at 30 fps all the time (demos). */
+    val demoMode: Boolean = false,
     val nowMs: Long = 0,
 )
 

@@ -65,7 +65,7 @@ class HudStore(private val clock:()->Long=System::currentTimeMillis,private val 
                 mutable.update {it.copy(navState=m.state,alerts=if(tripOver)emptyList() else it.alerts,
                     alertSeenAt=if(tripOver)emptyMap() else it.alertSeenAt)}
             }
-            is SettingsUpdate->mutable.update {it.copy(voiceMuted=m.voiceMuted,units=m.units,mapZoom=m.mapZoomLevel.coerceIn(0,2))}
+            is SettingsUpdate->mutable.update {it.copy(voiceMuted=m.voiceMuted,units=m.units,mapZoom=m.mapZoomLevel.coerceIn(0,2),demoMode=m.demoMode)}
             else->Unit
         }
     }

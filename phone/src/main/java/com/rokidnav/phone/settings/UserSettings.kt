@@ -14,7 +14,9 @@ import kotlinx.coroutines.flow.*
 data class UserSettings(val units:Units=Units.METRIC,val voiceMuted:Boolean=false,
     val zoom:Int=1,val police:Boolean=true,val cameras:Boolean=true,
     val alertVoice:Boolean=true,val alertVoiceCameras:Boolean=true,val alertVoiceMeters:Int=1000,
-    val alertToleranceMeters:Int=150) {
+    val alertToleranceMeters:Int=150,
+    /** Demo mode: the glasses map runs at 30 fps all the time, for showing the HUD to others. */
+    val demoMode:Boolean=false) {
     companion object {
         val VOICE_DISTANCES=listOf(500,1000,2000)
         val TOLERANCES=listOf(60,150,300)
@@ -33,7 +35,8 @@ class SettingsRepository(context:Context) {
         prefs.getBoolean("muted",false),prefs.getInt("zoom",1),
         prefs.getBoolean("police",true),prefs.getBoolean("cameras",true),
         prefs.getBoolean("alertVoice",true),prefs.getBoolean("alertVoiceCameras",true),
-        prefs.getInt("alertVoiceMeters",1000),prefs.getInt("alertToleranceMeters",150))))
+        prefs.getInt("alertVoiceMeters",1000),prefs.getInt("alertToleranceMeters",150),
+        prefs.getBoolean("demoMode",false))))
     val state=mutable.asStateFlow()
     fun update(transform:(UserSettings)->UserSettings) {
         val next=normalize(transform(mutable.value))
@@ -42,7 +45,8 @@ class SettingsRepository(context:Context) {
             .putInt("zoom",next.zoom).remove("brightness")
             .putBoolean("police",next.police).putBoolean("cameras",next.cameras)
             .putBoolean("alertVoice",next.alertVoice).putBoolean("alertVoiceCameras",next.alertVoiceCameras)
-            .putInt("alertVoiceMeters",next.alertVoiceMeters).putInt("alertToleranceMeters",next.alertToleranceMeters).apply()
+            .putInt("alertVoiceMeters",next.alertVoiceMeters).putInt("alertToleranceMeters",next.alertToleranceMeters)
+            .putBoolean("demoMode",next.demoMode).apply()
         mutable.value=next
     }
     private fun normalize(s:UserSettings)=s.copy(zoom=s.zoom.coerceIn(0,2),

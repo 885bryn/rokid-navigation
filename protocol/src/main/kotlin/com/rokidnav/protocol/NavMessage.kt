@@ -162,7 +162,10 @@ data class SettingsUpdate(
     val voiceMuted: Boolean,
     val units: Units,
     val mapZoomLevel: Int,
+    /** Deprecated, ignored: the glasses keep the global Rokid brightness. */
     val brightnessPercent: Int = 35,
+    /** Demo mode: the map redraws at 30 fps all the time (smooth for demos, more battery). */
+    val demoMode: Boolean = false,
 ) : NavMessage
 
 // ---------------------------------------------------------------- glasses -> phone

@@ -128,6 +128,7 @@ fun SettingsScreen(app:RokidNavApp) {
         OutlinedButton(onClick={app.settings.update {it.copy(zoom=(it.zoom+1)%3)}}){Text("Map zoom: ${when(settings.zoom){0->"Close";2->"Far";else->"Default"}}")}
         Row {Switch(settings.police,{value->app.settings.update {it.copy(police=value)}});Text("WzSabre police reports")}
         Row {Switch(settings.cameras,{value->app.settings.update {it.copy(cameras=value)}});Text("WzSabre speed cameras")}
+        Row {Switch(settings.demoMode,{value->app.settings.update {it.copy(demoMode=value)}});Text("Demo mode: smooth 30 fps map on the glasses (uses more battery)")}
         Text("Alerts on the glasses clear themselves once passed; no tapping needed.",color=Color.LightGray)
         Row {Switch(settings.alertVoice,{value->app.settings.update {it.copy(alertVoice=value)}});Text("Voice warning for each new report")}
         if(settings.alertVoice) {

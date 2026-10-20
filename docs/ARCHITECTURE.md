@@ -193,7 +193,8 @@ Dual monochrome green micro-LED waveguides, ~480×398 per eye (one source says 6
 
 ## Glasses battery (2026-10-19)
 - The HUD redraws on state changes plus one capped frame loop while the map glides between ~1 Hz
-  fixes: 15 fps expanded, 10 fps corner map, nothing once the glide reaches the latest fix. Exactly one
+  fixes: 10 fps big map, 5 fps corner map (lowered 2026-10-20; the phone's Demo mode setting runs the
+  visible map at 30 fps all the time instead), nothing once the glide reaches the latest fix. Exactly one
   frame is pending at a time (`HudView.nextFrame`); stacked `postInvalidateDelayed` loops had pushed it
   to ~48 fps.
 - Only the route from 600 m behind to 4 km ahead is stroked (`HudRenderer.routeWindow`).

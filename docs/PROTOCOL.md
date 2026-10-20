@@ -55,7 +55,7 @@ and opens a new session, which installs and opens the bundled APK. Tried once pe
 | `alert` / `alert_clear` | on change | police/camera/crash/etc. with distance ahead |
 | `detour_offer` / `detour_resolved` | rare | faster route offer; expires at `expiresAtMs` |
 | `nav_state` | on change | IDLE/ROUTING/ACTIVE/REROUTING/GPS_LOST/ARRIVED/ENDED |
-| `settings` | on change | voice muted, units, zoom, brightnessPercent (default 35) |
+| `settings` | on change | voice muted, units, zoom, brightnessPercent (default 35, ignored), demoMode (default false: 30 fps map) |
 
 ## Glasses → phone
 | `t` | When |
