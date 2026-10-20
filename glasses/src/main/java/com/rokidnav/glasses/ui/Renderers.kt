@@ -28,6 +28,15 @@ class HudRenderer(context: Context) {
     private var labelOrder = IntArray(0)
     private var turnRoad = -1
     private var cueRoad = -1
+    /** Named major roads grouped by street (normalized name): each street carries at most one label,
+     *  on one piece ([groupPiece]) at a fixed point that only moves when it falls behind or out of reach. */
+    private var groupNames = emptyArray<String>()
+    private var groupMembers = emptyArray<IntArray>()
+    private var groupPiece = IntArray(0)
+    private var roadGroup = IntArray(0)
+    /** Streets whose label was drawn last frame; they keep their place before any new street is added. */
+    private var groupShown = BooleanArray(0)
+    private var lastLabelAddNanos = 0L
     private val placedLabelX = FloatArray(MAX_LABELS)
     private val placedLabelY = FloatArray(MAX_LABELS)
     private val placedLabelW = FloatArray(MAX_LABELS)
@@ -95,19 +104,41 @@ class HudRenderer(context: Context) {
         }
         if (geometryChanged || old.position?.metersAlongRoute != next.position?.metersAlongRoute) routeWindow(next.position?.metersAlongRoute ?: 0)
         if (geometryChanged || old.contextRoads !== next.contextRoads) {
-            val usedNames=HashSet<String>()
             minorRoads.reset();majorRoads.reset()
             for(road in next.contextRoads) {
                 val path=if(road.major)majorRoads else minorRoads
                 road.points.forEachIndexed { i,p -> if(i==0) path.moveTo(x(p.lng),y(p.lat)) else path.lineTo(x(p.lng),y(p.lat)) }
             }
             hasRoads=next.contextRoads.isNotEmpty()
-            roadNames=next.contextRoads.map { road ->
-                if(road.name.isNotBlank() && usedNames.add(road.name))ellipsize(road.name,LABEL_MAJOR,150f) else ""
-            }.toTypedArray()
+            // Keep each street's label point (and whether it was shown) across road-context refreshes.
+            val previous=HashMap<String,FloatArray>()
+            if(!geometryChanged)for(g in groupNames.indices)if(groupPiece[g]>=0)
+                previous[groupNames[g]]=floatArrayOf(roadEast[groupPiece[g]],roadNorth[groupPiece[g]],if(groupShown[g])1f else 0f)
+            val groups=LinkedHashMap<String,MutableList<Int>>()
+            next.contextRoads.forEachIndexed { i,road -> if(road.major && road.name.isNotBlank()) groups.getOrPut(normalizeName(road.name)){mutableListOf()}.add(i) }
+            groupNames=groups.keys.toTypedArray()
+            groupMembers=groups.values.map { it.toIntArray() }.toTypedArray()
+            groupPiece=IntArray(groupNames.size){-1}
+            groupShown=BooleanArray(groupNames.size)
+            roadGroup=IntArray(next.contextRoads.size){-1}
+            groupMembers.forEachIndexed { g,members -> members.forEach { roadGroup[it]=g } }
+            roadNames=Array(next.contextRoads.size){""}
             roadMajor=BooleanArray(next.contextRoads.size) {next.contextRoads[it].major}
             roadEast=FloatArray(next.contextRoads.size)
             roadNorth=FloatArray(next.contextRoads.size)
+            turnRoad=-1;cueRoad=-1
+            for(g in groupNames.indices) {
+                val keep=previous[groupNames[g]] ?: continue
+                var best=Float.MAX_VALUE;var pick=-1;var px=0f;var py=0f
+                for(i in groupMembers[g]) {
+                    val d=anchor(next.contextRoads[i].points,i,keep[0],keep[1])
+                    if(d<best){best=d;pick=i;px=roadEast[i];py=roadNorth[i]}
+                }
+                if(pick>=0 && best<STICKY_REANCHOR_M*STICKY_REANCHOR_M) {
+                    groupPiece[g]=pick;roadEast[pick]=px;roadNorth[pick]=py;groupShown[g]=keep[2]>0f
+                    roadNames[pick]=ellipsize(next.contextRoads[pick].name,LABEL_MAJOR,150f)
+                }
+            }
         }
         if (geometryChanged || old.traffic !== next.traffic) {
             trafficPaths = next.traffic.map { segment -> range(segment.startMeters.toDouble(),segment.endMeters.toDouble()) }.toTypedArray()
@@ -139,31 +170,52 @@ class HudRenderer(context: Context) {
             cue=next.maneuver?.let { m -> TurnCue.compute(next.route,along,m.distanceToStepMeters,m.current.maneuver,next.contextRoads) }.orEmpty()
             val turnName=normalizeName(next.maneuver?.current?.roadName.orEmpty())
             val cueName=normalizeName(cue.substringAfter(" · after ","").takeIf {cue.contains(" · after ")}.orEmpty())
-            // Anchor names near the look-ahead window, not at a long street's distant midpoint. The turn
-            // street is labelled on its piece nearest the turn, the "after" street halfway to the turn.
+            // Labels (user request 2026-10-20): only named major streets plus the turn street, and they
+            // must not keep swapping. A street keeps its label point until that point falls behind the
+            // driver or out of reach; only then does it move to the piece nearest the look-ahead point.
             val angle=Math.toRadians(currentBearing.toDouble())
-            val aheadX=currentX+sin(angle).toFloat()*350f
-            val aheadY=currentY-cos(angle).toFloat()*350f
+            val sine=sin(angle).toFloat();val cosine=cos(angle).toFloat()
+            val lookAhead=if(aheadMeters>0f)(aheadMeters*0.5f).coerceIn(200f,1500f) else 350f
+            val aheadX=currentX+sine*lookAhead;val aheadY=currentY-cosine*lookAhead
+            val reach=maxOf(aheadMeters*1.3f,500f)
             val turnX=if(hasManeuverPoint)maneuverX else aheadX;val turnY=if(hasManeuverPoint)maneuverY else aheadY
-            val cueX=(currentX+turnX)/2;val cueY=(currentY+turnY)/2
+            // The turn street (any class) is labelled in bold on its piece nearest the turn.
+            if(turnRoad>=0 && turnRoad<roadNames.size)roadNames[turnRoad]=""
             turnRoad=-1;cueRoad=-1
-            var turnBest=Float.MAX_VALUE;var cueBest=Float.MAX_VALUE
-            for(index in next.contextRoads.indices) {
-                val name=normalizeName(next.contextRoads[index].name)
-                val (tx,ty)=when {
-                    name.isNotEmpty() && name==turnName -> turnX to turnY
-                    name.isNotEmpty() && name==cueName -> cueX to cueY
-                    else -> aheadX to aheadY
-                }
-                val best=anchor(next.contextRoads[index].points,index,tx,ty)
-                if(name.isNotEmpty() && name==turnName && best<turnBest){turnBest=best;turnRoad=index}
-                if(name.isNotEmpty() && name==cueName && best<cueBest){cueBest=best;cueRoad=index}
+            var turnBest=Float.MAX_VALUE;var turnX2=0f;var turnY2=0f
+            if(turnName.isNotEmpty())for(index in next.contextRoads.indices) {
+                if(normalizeName(next.contextRoads[index].name)!=turnName)continue
+                val saveX=roadEast[index];val saveY=roadNorth[index]
+                val best=anchor(next.contextRoads[index].points,index,turnX,turnY)
+                if(best<turnBest){turnBest=best;turnRoad=index;turnX2=roadEast[index];turnY2=roadNorth[index]}
+                roadEast[index]=saveX;roadNorth[index]=saveY
             }
-            // The chosen piece carries the label even if an earlier piece of the same street took the name.
-            if(turnRoad>=0)roadNames[turnRoad]=ellipsize(next.contextRoads[turnRoad].name,LABEL_TURN,170f)
-            if(cueRoad>=0)roadNames[cueRoad]=ellipsize(next.contextRoads[cueRoad].name,LABEL_MAJOR,150f)
-            labelOrder=next.contextRoads.indices.filter { roadNames[it].isNotEmpty() }
-                .sortedBy { when { it==turnRoad->0; it==cueRoad->1; roadMajor[it]->2; else->3 } }.toIntArray()
+            for(g in groupNames.indices) {
+                val p=groupPiece[g]
+                if(groupNames[g]==turnName){if(p>=0)roadNames[p]="";groupPiece[g]=-1;groupShown[g]=false;continue}
+                if(p>=0) {
+                    val dx=roadEast[p]-currentX;val dy=roadNorth[p]-currentY
+                    val along=dx*sine-dy*cosine
+                    if(along>-40f && dx*dx+dy*dy<reach*reach)continue
+                    roadNames[p]=""
+                }
+                var best=Float.MAX_VALUE;var pick=-1;var px=0f;var py=0f
+                for(i in groupMembers[g]) {
+                    val d=anchor(next.contextRoads[i].points,i,aheadX,aheadY)
+                    if(d<best){best=d;pick=i;px=roadEast[i];py=roadNorth[i]}
+                }
+                groupPiece[g]=pick
+                if(pick>=0){roadEast[pick]=px;roadNorth[pick]=py;roadNames[pick]=ellipsize(next.contextRoads[pick].name,LABEL_MAJOR,150f)}
+                if(p!=pick)groupShown[g]=false
+            }
+            if(turnRoad>=0){roadEast[turnRoad]=turnX2;roadNorth[turnRoad]=turnY2;roadNames[turnRoad]=ellipsize(next.contextRoads[turnRoad].name,LABEL_TURN,170f)}
+            for(g in groupNames.indices)if(groupNames[g]==cueName)cueRoad=groupPiece[g]
+            // Stable order: the turn street, the "after" street, then streets in a fixed order.
+            val order=ArrayList<Int>()
+            if(turnRoad>=0)order+=turnRoad
+            if(cueRoad>=0 && cueRoad!=turnRoad)order+=cueRoad
+            for(g in groupNames.indices){val p=groupPiece[g];if(p>=0 && p!=turnRoad && p!=cueRoad)order+=p}
+            labelOrder=order.toIntArray()
         }
         val formatted = Format.distance(next.maneuver?.distanceToStepMeters ?: 0,next.units).split(' ',limit=2)
         number=formatted[0]; unit=formatted.getOrElse(1){""}
@@ -460,11 +512,11 @@ class HudRenderer(context: Context) {
         }
         c.restore()
         if(compact) {
-            labels(c,px,py,heading,ppm,cx,anchor,258f,462f,426f,600f,3,0.85f)
+            labels(c,nanos,px,py,heading,ppm,cx,anchor,258f,462f,426f,600f,COMPACT_LABELS,0.85f)
             c.save();c.translate(cx,anchor);c.scale(.65f,.65f);c.drawPath(chevron,paint());c.restore()
             return
         }
-        labels(c,px,py,heading,ppm,cx,306f,18f,446f,if(lanesVisible())192f else 136f,326f,MAX_LABELS,1f)
+        labels(c,nanos,px,py,heading,ppm,cx,306f,18f,446f,if(lanesVisible())192f else 136f,326f,MAX_LABELS,1f)
         c.save();c.translate(cx,306f);c.drawPath(chevron,paint());c.restore()
         // Remaining-route ribbon, normalized by meters rather than polyline point index.
         box(c,458f,130f,466f,326f,4f,alpha=204)
@@ -490,13 +542,22 @@ class HudRenderer(context: Context) {
      * bold and bright, the "after" street and major roads brighter than the rest. Skips labels that would
      * overlap one already placed or the chevron. A black halo cuts the road lines behind each name.
      */
-    private fun labels(c:Canvas,px:Float,py:Float,heading:Float,ppm:Float,cx:Float,cy:Float,
+    private fun labels(c:Canvas,nanos:Long,px:Float,py:Float,heading:Float,ppm:Float,cx:Float,cy:Float,
                        left:Float,right:Float,top:Float,bottom:Float,max:Int,scale:Float) {
         val angle=Math.toRadians(heading.toDouble())
         val cosine=cos(angle).toFloat();val sine=sin(angle).toFloat()
-        var placed=0;var k=0
+        var placed=0
+        val mayAdd=nanos-lastLabelAddNanos>=LABEL_ADD_GAP_NS
+        var added=false
+        // Pass 0: the turn street and streets already on screen keep their place. Pass 1: one new street.
+        for(pass in 0..1) {
+        var k=0
         while(k<labelOrder.size && placed<max) {
             val i=labelOrder[k];k++
+            val g=roadGroup.getOrElse(i){-1}
+            val keep=i==turnRoad || (g>=0 && groupShown[g])
+            if(pass==0 && !keep)continue
+            if(pass==1 && (keep || added || (!mayAdd && placed>0)))continue
             val turn=i==turnRoad;val after=i==cueRoad
             val size=(if(turn)LABEL_TURN else if(after || roadMajor[i])LABEL_MAJOR else LABEL_MINOR)*scale
             val alpha=if(turn)255 else if(after)166 else if(roadMajor[i])204 else 153
@@ -504,17 +565,19 @@ class HudRenderer(context: Context) {
             val dx=roadEast[i]-px;val dy=roadNorth[i]-py
             val lx=cx+(dx*cosine+dy*sine)*ppm+8*scale
             val ly=cy+(-dx*sine+dy*cosine)*ppm-8*scale
-            if(lx<left || lx+w>right || ly-size<top || ly>bottom)continue
-            if(abs(lx+w/2-cx)<w/2+24*scale && abs(ly-cy)<40*scale)continue
+            if(lx<left || lx+w>right || ly-size<top || ly>bottom){if(g>=0)groupShown[g]=false;continue}
+            if(abs(lx+w/2-cx)<w/2+24*scale && abs(ly-cy)<40*scale){if(g>=0)groupShown[g]=false;continue}
             var overlaps=false;var j=0
             while(j<placed){
                 if(lx<placedLabelX[j]+placedLabelW[j]+6 && placedLabelX[j]<lx+w+6 && abs(ly-placedLabelY[j])<size+4)overlaps=true
                 j++
             }
-            if(overlaps)continue
+            if(overlaps){if(g>=0)groupShown[g]=false;continue}
             val halo=paint(size,b=turn,black=true,stroke=4f*scale);c.drawText(roadNames[i],lx,ly,halo)
             c.drawText(roadNames[i],lx,ly,paint(size,alpha,b=turn))
             placedLabelX[placed]=lx;placedLabelY[placed]=ly;placedLabelW[placed]=w;placed++
+            if(g>=0 && !groupShown[g]){groupShown[g]=true;if(pass==1){added=true;lastLabelAddNanos=nanos}}
+        }
         }
     }
     /** Sets [arrowX]/[arrowY]/[arrowDeg] to the route point [meters] along and its heading; false past the end. */
@@ -648,7 +711,13 @@ class HudRenderer(context: Context) {
          *  plus its corners. */
         private const val ROUTE_AHEAD_M = 9_000
         private const val ROUTE_BEHIND_M = 600
-        private const val MAX_LABELS = 10
+        /** At most this many street names at once (big map / corner map); user request 2026-10-20. */
+        private const val MAX_LABELS = 4
+        private const val COMPACT_LABELS = 2
+        /** At most one new street name appears per this interval, so names don't keep swapping. */
+        private const val LABEL_ADD_GAP_NS = 2_000_000_000L
+        /** On a road-context refresh a street keeps its label point if a piece is still this close (m). */
+        private const val STICKY_REANCHOR_M = 60f
         private const val LANE_SHOW_M = 2_000
         // Street-name sizes (expanded; compact draws them at 0.85×). Raised ~20% on 2026-10-18: the
         // waveguide resolution made 14–17 px names hard to read.

@@ -188,6 +188,10 @@ the arrow on the maneuver's side is bright. The demo trip's first turn carries s
 ## Map styling (2026-10-18)
 - **Route ahead (2026-10-20):** hollow green tube 12 px (compact 8 px) with a black middle 45% of its
   width and a 3 px black edge each side. The tube is wider than any street, so it stays the strongest mark.
+- **Street names (2026-10-20):** only named major streets (OSM tertiary and above, e.g. Kingsway,
+  Granville) plus the turn street. One label per street, at a fixed point that moves only when it falls
+  behind or out of reach. Names already shown keep their place; at most one new name per 2 s. At most
+  4 names on the big map, 2 on the corner map.
 - **Big map zoom (2026-10-20):** shows 2.5× more road than the corner map, for an overview of the route.
 - **Traffic:** never drawn inside the route (user request: no dark marks in the line). Shown by the
   expanded map's side ribbon and the status delay badge.
