@@ -28,7 +28,7 @@ The native 480×640 viewport now uses a bottom-corner composition, uniformly fit
   map provides both. OSM attribution stays below the miniature.
 - Alerts are a small chip in the map's top-left corner (compact) or top-right (expanded); trip stats
   always stay visible. Detour controls replace the maneuver block.
-- Tap toggles **compact ↔ expanded**. A pending detour retains tap/2× tap accept/keep priority.
+- Tap cycles **corner map → big map → instructions only** (map off). A pending detour retains tap/2× tap accept/keep priority.
   Alerts need no input. Double tap / Back exit to the Rokid home screen unless the menu, a detour offer
   or the arrival screen needs them. Long press opens the existing menu; closing/timeout restores the
   previous compact or expanded mode. AI assistant input belongs to the system.
@@ -56,7 +56,8 @@ corner placement still requires a waveguide fit check.
 └──────────────────────────────────────────────┘ 100%
 ```
 
-**Minimal mode** (legacy renderer): banner + status strip only, map hidden. Good for highways.
+**Minimal mode** (2026-10-20): the corner layout's left-side instructions, lanes and ETA with the
+map turned off. Third view in the tap cycle; no map frames are drawn, so it uses the least power.
 
 **Overlays**
 - **Alert (passive, 2026-10-18)** — a chip `[icon] POLICE 0.4 mi` (+N when more are queued) in the
@@ -75,7 +76,7 @@ Rokid temple touchpad. Broadcast names from the CXR docs; single-finger swipe de
 
 | Gesture | Map / Minimal | Detour prompt showing | Menu |
 |---|---|---|---|
-| Tap | toggle Compact ↔ Expanded | **accept detour** | select |
+| Tap | cycle corner map → big map → instructions only | **accept detour** | select |
 | Double tap | **exit to Rokid home** (task kept, trip resumes on return) | **keep current route** | back / close |
 | Long press | open menu | open menu | close |
 | Swipe forward | zoom in | — | next item |
@@ -130,7 +131,7 @@ shapes. Small glyphs 2.6 px in a 24 box.
 **Regions:** banner 0–118 px (padding 16/18, 84 px glyph, 16 px gap); map 118–338; status strip
 338–398 (padding 0/18, gap 12, items separated by `·` @40%).
 
-**Route line:** superseded 2026-10-18 by solid route + black edge (see "Map styling"). Originally a hollow
+**Route line:** solid from 2026-10-18; back to a hollow tube with a black middle on 2026-10-20 (see "Map styling"). Originally a hollow
 tube where traffic filled it. This reads at a
 glance without color and keeps lit pixels low. Zoom 0 widens the tube to 20/9.
 Chevron: filled arrow 32×36 at (50%, ~85% of the map region). Context streets 3 px @22%.
@@ -185,8 +186,9 @@ with thin dividers. Your lanes are bright, the others at 25%; in a lane allowing
 the arrow on the maneuver's side is bright. The demo trip's first turn carries synthetic lanes.
 
 ## Map styling (2026-10-18)
-- **Route ahead:** solid green 9 px (compact 6 px) with a 3 px black edge each side — the strongest mark,
-  so the road to drive on is never confused with a major street.
+- **Route ahead (2026-10-20):** hollow green tube 12 px (compact 8 px) with a black middle 45% of its
+  width and a 3 px black edge each side. The tube is wider than any street, so it stays the strongest mark.
+- **Big map zoom (2026-10-20):** shows 2.5× more road than the corner map, for an overview of the route.
 - **Traffic:** never drawn inside the route (user request: no dark marks in the line). Shown by the
   expanded map's side ribbon and the status delay badge.
 - **Turn arrow:** filled arrowhead with a black edge 25 m past the turn, pointing along the route, shown

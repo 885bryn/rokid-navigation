@@ -34,9 +34,11 @@ class HudStoreTest {
         assertNull(store.state.value.detour)
     }
 
-    @Test fun tapExpandsAndCollapsesWhenNoDetour() {
+    @Test fun tapCyclesCornerMapBigMapAndInstructionsOnlyWhenNoDetour() {
         store.onKey(GlassesKey.TAP)
         assertEquals(HudMode.Map, store.state.value.mode)
+        store.onKey(GlassesKey.TAP)
+        assertEquals(HudMode.Minimal, store.state.value.mode)
         store.onKey(GlassesKey.TAP)
         assertEquals(HudMode.Compact, store.state.value.mode)
     }

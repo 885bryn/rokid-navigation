@@ -29,8 +29,9 @@ This sends that position to the WzSabre plugin, which handles the upstream netwo
 This app does not submit, confirm, or discard reports. Receivers are unregistered on timeout or
 trip cancellation. Missing/unresponsive plugins leave navigation and static cameras running.
 
-`WzSabrePoliceProvider` maps visible/hidden police and fixed/mobile camera reports to existing
-`AlertKind`s. Reports expire 20 minutes after the later of reporting/confirmation. Known headings
+`WzSabrePoliceProvider` maps reports to existing `AlertKind`s. WzSabre 2.2 sends Waze's own type names
+(`POLICE`, `POLICE_HIDING`, `POLICE_WITH_MOBILE_CAMERA`, `CAMERA`, ...), not only the spec's
+`FIXED_CAMERA`/`MOBILE_CAMERA`: any type containing `CAMERA` is a camera, any `POLICE*` is police. Reports expire 20 minutes after the later of reporting/confirmation. Known headings
 must agree with route direction within 60 degrees. These distance, age, and direction thresholds
 are app policy and require road testing. The published protocol is implemented and unit tested;
 on 2026-10-19 WzSabre 2.2 answered every fetch on the phone after ~31 s (it queries Waze's live map
@@ -43,8 +44,8 @@ first), so fetches wait up to 75 s and the next one starts 10 s after an answer.
 On 2026-10-17, the live link and downloaded metadata both reported dataset **2026-07-19**,
 `World cameras by @schuster`. Downloads are validated before atomic cache replacement. Failed updates
 retain the last valid database; the full dataset stays in app-private storage and is not bundled in Git.
-Only speed/average-speed cameras are mapped to `SPEED_CAMERA`; dummy, red-light-only, and plate-reading
-cameras are excluded. Unknown JSON fields are ignored. Camera downloads contain no route or position.
+Every enforcement camera (speed, average speed, red light, lane, ...) maps to `SPEED_CAMERA`; dummy and
+plate-reading-only cameras are excluded (2026-10-20: red-light cameras were missing before). Unknown JSON fields are ignored. Camera downloads contain no route or position.
 
 The coordinator combines each provider's latest complete snapshot, projects incidents onto the route,
 and sends an alert within 2 km ahead and within the **report accuracy** setting of the route line

@@ -307,7 +307,8 @@ class HudRenderer(context: Context) {
             text(c,"Rokid Nav → Show on glasses",18f,600f,18f,153)
             return
         }
-        map(c,nanos,compact=true)
+        // Minimal: the same corner instructions with the map turned off (third view in the tap cycle).
+        if(s.mode!=HudMode.Minimal)map(c,nanos,compact=true)
         val d=s.detour
         if(d!=null) {
             text(c,detourSaving,18f,458f,28f,b=true)
@@ -403,9 +404,9 @@ class HudRenderer(context: Context) {
     }
     private fun lanes(c:Canvas) {
         val lanes=s.maneuver?.current?.lanes ?: return
-        if(lanes.isEmpty() || (s.mode!=HudMode.Minimal && !lanesVisible())) return
+        if(lanes.isEmpty() || !lanesVisible()) return
         val count=minOf(lanes.size,8); val width=count*34f+20f; val left=240f-width/2
-        if(s.mode!=HudMode.Minimal) { box(c,left,128f,left+width,178f,10f,fill=true,black=true);box(c,left,128f,left+width,178f,10f) }
+        box(c,left,128f,left+width,178f,10f,fill=true,black=true);box(c,left,128f,left+width,178f,10f)
         var i=0
         while(i<count) {
             val lane=lanes[i]; var j=0
@@ -417,7 +418,9 @@ class HudRenderer(context: Context) {
     private fun map(c:Canvas,nanos:Long,compact:Boolean=false) {
         val position=s.position ?: return
         // Continuous auto-zoom (MapZoom): speed sets the cruise view, an upcoming turn pulls it in early.
-        val target=MapZoom.targetMeters(position.speedMps,s.maneuver?.distanceToStepMeters,s.maneuver?.current?.maneuver,s.mapZoom)
+        // The big map shows EXPANDED_ZOOM_OUT× more road than the corner map, for an overview of the route.
+        val target=MapZoom.targetMeters(position.speedMps,s.maneuver?.distanceToStepMeters,s.maneuver?.current?.maneuver,s.mapZoom)*
+            (if(compact)1f else EXPANDED_ZOOM_OUT)
         val dt=if(lastFrameNanos==0L)0f else ((nanos-lastFrameNanos)/1e9f).coerceIn(0f,0.5f)
         lastFrameNanos=nanos
         aheadMeters=MapZoom.ease(aheadMeters,target,dt)
@@ -434,13 +437,13 @@ class HudRenderer(context: Context) {
         // Streets: visible but clearly below the route. Residential 2.5 px at 45%, major 4 px at 65%.
         c.drawPath(minorRoads,paint(alpha=115,stroke=(if(compact)2f else 2.5f)/ppm))
         c.drawPath(majorRoads,paint(alpha=166,stroke=(if(compact)3f else 4f)/ppm))
-        // Route: the strongest mark on the map. Solid and bright, with a black edge that separates it
-        // from any street it runs along or crosses.
-        val routeW=if(compact)6f else 9f
+        // Route: a bright hollow tube with a black middle (user request 2026-10-20, replacing the solid
+        // line), plus a black outer edge that separates it from any street it runs along or crosses.
+        // Traffic is shown by the side ribbon in the expanded map and the delay badge, not on the route.
+        val routeW=if(compact)8f else 12f
         c.drawPath(routePath,paint(black=true,stroke=(routeW+6f)/ppm))
         c.drawPath(routePath,paint(stroke=routeW/ppm))
-        // The route stays solid bright green end to end (user request): traffic is shown by the side
-        // ribbon in the expanded map and the delay badge, never as dark marks inside the route.
+        c.drawPath(routePath,paint(black=true,stroke=routeW*0.45f/ppm))
         // Turn arrow just past the turn, pointing the way to go, once the turn is in view.
         val toStep=s.maneuver?.distanceToStepMeters
         if(hasManeuverPoint && toStep!=null && toStep<aheadMeters && turnArrowAt(position.metersAlongRoute.coerceAtLeast(0)+toStep+25.0)) {
@@ -640,8 +643,10 @@ class HudRenderer(context: Context) {
     }
     companion object {
         const val GREEN = 0xFF3DFF8A.toInt()
-        /** Route kept in [routePath]: the map shows at most ~2.5 km ahead (MapZoom) plus its corners. */
-        private const val ROUTE_AHEAD_M = 4_000
+        private const val EXPANDED_ZOOM_OUT = 2.5f
+        /** Route kept in [routePath]: the big map shows at most ~6 km ahead (MapZoom × EXPANDED_ZOOM_OUT)
+         *  plus its corners. */
+        private const val ROUTE_AHEAD_M = 9_000
         private const val ROUTE_BEHIND_M = 600
         private const val MAX_LABELS = 10
         private const val LANE_SHOW_M = 2_000

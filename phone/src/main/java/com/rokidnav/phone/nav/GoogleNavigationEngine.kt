@@ -51,6 +51,7 @@ class GoogleNavigationEngine(private val context:Context):NavigationEngine {
         if(navigator!=null)return true
         _error.value=null
         return suspendCancellableCoroutine { continuation ->
+            quietGoogleNotification()
             NavigationApi.getNavigator(activity,object:NavigationApi.NavigatorListener {
                 override fun onError(code:Int) {
                     _error.value=when(code) {
@@ -149,10 +150,30 @@ class GoogleNavigationEngine(private val context:Context):NavigationEngine {
         runCatching {context.stopService(android.content.Intent().setClassName(context,GOOGLE_NAV_SERVICE))}
         android.util.Log.i("RokidNavEngine","navigator released")
     }
+    /**
+     * Google's navigation service otherwise posts its own turn-by-turn notification and updates it at
+     * every step, which popped up on the phone for each direction. Give it one fixed, silent notification
+     * on our low-importance "guidance" channel instead. Must run before the navigator is created; release()
+     * clears the manager, so each new navigator sets it again.
+     */
+    private fun quietGoogleNotification() {
+        val manager=context.getSystemService(android.app.NotificationManager::class.java)
+        manager.createNotificationChannel(android.app.NotificationChannel(com.rokidnav.phone.session.NavForegroundService.CHANNEL,
+            "Navigation",android.app.NotificationManager.IMPORTANCE_LOW))
+        val open=android.app.PendingIntent.getActivity(context,3,android.content.Intent(context,com.rokidnav.phone.ui.MainActivity::class.java),
+            android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT)
+        val notification=androidx.core.app.NotificationCompat.Builder(context,com.rokidnav.phone.session.NavForegroundService.CHANNEL)
+            .setSmallIcon(android.R.drawable.ic_menu_directions).setContentTitle("Rokid navigation")
+            .setContentText("Google guidance is running").setContentIntent(open)
+            .setOngoing(true).setSilent(true).setOnlyAlertOnce(true).build()
+        runCatching {NavigationApi.initForegroundServiceManagerProvider(application,GOOGLE_NOTIFICATION_ID) {notification}}
+            .onFailure {android.util.Log.w("RokidNavEngine","quiet notification not set: ${it.javaClass.simpleName}")}
+    }
     override fun releaseIfIdle() {
         if(_navState.value !in listOf(NavState.ROUTING,NavState.ACTIVE,NavState.REROUTING,NavState.GPS_LOST))release()
     }
     private companion object {
+        const val GOOGLE_NOTIFICATION_ID=72
         const val GOOGLE_NAV_SERVICE="com.google.android.libraries.geo.navcore.service.base.NavigationService"
     }
     internal fun onManeuver(update:ManeuverUpdate){if(_navState.value!=NavState.ENDED)_maneuver.tryEmit(update)}

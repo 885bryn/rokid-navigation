@@ -22,7 +22,7 @@ class HudView(context: Context) : View(context) {
     override fun onDraw(canvas:Canvas){
         super.onDraw(canvas)
         // The native glasses Activity is portrait. Independent X/Y scales made text 61% taller.
-        val compact=state.mode==com.rokidnav.glasses.state.HudMode.Compact
+        val compact=state.mode==com.rokidnav.glasses.state.HudMode.Compact || state.mode==com.rokidnav.glasses.state.HudMode.Minimal
         val designHeight=if(compact)640f else 398f
         val scale=minOf(width/480f,height/designHeight)*.92f
         canvas.save()
@@ -31,7 +31,8 @@ class HudView(context: Context) : View(context) {
         if(compact)renderer.drawCompact(canvas,System.nanoTime()) else renderer.draw(canvas,System.nanoTime())
         canvas.restore()
         removeCallbacks(nextFrame)
-        if(isAttachedToWindow && (renderer.zoomSettling || renderer.moving))postDelayed(nextFrame,if(compact)COMPACT_FRAME_MS else FRAME_MS)
+        val mapShown=state.mode!=com.rokidnav.glasses.state.HudMode.Minimal
+        if(isAttachedToWindow && mapShown && (renderer.zoomSettling || renderer.moving))postDelayed(nextFrame,if(compact)COMPACT_FRAME_MS else FRAME_MS)
     }
     override fun onDetachedFromWindow(){removeCallbacks(nextFrame);super.onDetachedFromWindow()}
     private companion object {

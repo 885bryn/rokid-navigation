@@ -46,9 +46,13 @@ object SabreProtocol {
     }
 
     private fun incident(item: JsonObject): Incident? {
-        val kind = when (item.getValue("type").jsonPrimitive.content) {
-            "POLICE_VISIBLE", "POLICE_HIDING" -> AlertKind.POLICE
-            "FIXED_CAMERA", "MOBILE_CAMERA" -> AlertKind.SPEED_CAMERA
+        // WzSabre 2.2 sends Waze's own names (subtype, else type): POLICE, POLICE_VISIBLE, POLICE_HIDING,
+        // POLICE_WITH_MOBILE_CAMERA, CAMERA, ... rather than only the SABRE spec's FIXED_/MOBILE_CAMERA.
+        // Matching just the spec names dropped every Waze camera and every plain POLICE report.
+        val type = item.getValue("type").jsonPrimitive.content
+        val kind = when {
+            "CAMERA" in type -> AlertKind.SPEED_CAMERA
+            type == "POLICE" || type.startsWith("POLICE_") -> AlertKind.POLICE
             else -> return null
         }
         val lat = item.getValue("lat").jsonPrimitive.double

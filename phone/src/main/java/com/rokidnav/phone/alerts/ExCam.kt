@@ -18,6 +18,7 @@ import org.tukaani.xz.XZInputStream
 
 /** ExCam: https://highwayradar.com/excam. Unknown JSON fields are deliberately ignored. */
 object ExCam {
+    private const val PLATE_READING = 8192
     data class Version(val date: String, val revision: Int = 0)
     data class Link(val version: Version, val dataUrl: String)
     data class Database(val version: Version, val cameras: List<Incident>)
@@ -43,15 +44,16 @@ object ExCam {
             val lon = item.getValue("lon").jsonPrimitive.double
             require(lat.isFinite() && lat in -90.0..90.0 && lon.isFinite() && lon in -180.0..180.0)
             val flags = item.getValue("flg").jsonPrimitive.int
-            // Only speed / average-speed enforcement; dummy and red-light-only cameras are excluded.
-            if (flags and 13 != 0 && flags and 64 == 0) {
+            // Every enforcement camera (speed, red light, average speed, lane, ...). Dummy cameras (64)
+            // and plate-reading-only cameras (8192) are excluded: they enforce nothing on the road.
+            if (flags and 64 == 0 && flags and PLATE_READING.inv() != 0) {
                 val directions = (item["dir"] as? JsonArray)?.map { it.jsonPrimitive.double }.orEmpty()
                 require(directions.all { it.isFinite() && it in 0.0..359.0 })
                 cameras += Incident(
                     id = "wzsabre:camera:$lat:$lon:$flags:${directions.sorted().joinToString(",")}",
                     kind = AlertKind.SPEED_CAMERA,
                     location = LatLng(lat, lon),
-                    description = "Speed camera",
+                    description = if (flags and 1 == 0 && flags and 2 != 0) "Red-light camera" else "Speed camera",
                     reportedAtMs = 0, // A dataset date is not an incident report time.
                     source = "WzSabre",
                     headings = directions,

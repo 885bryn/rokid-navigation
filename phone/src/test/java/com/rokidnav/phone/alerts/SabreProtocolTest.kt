@@ -22,13 +22,20 @@ class SabreProtocolTest {
           {"alert_source":"waze","alert_id":"a1","type":"POLICE_HIDING","lat":1,"lon":2,"report_ts":100,"heading_deg":-720,"future":true},
           {"alert_source":"waze","alert_id":"a2","type":"MOBILE_CAMERA","lat":1,"lon":2,"report_ts":101,"confirm_ts":110},
           {"alert_source":"waze","alert_id":"a3","type":"OTHER","lat":1,"lon":2,"report_ts":100},
+          {"alert_source":"waze","alert_id":"w1","type":"POLICE","lat":1,"lon":2,"report_ts":100},
+          {"alert_source":"waze","alert_id":"w2","type":"CAMERA","lat":1,"lon":2,"report_ts":100},
+          {"alert_source":"waze","alert_id":"w3","type":"POLICE_WITH_MOBILE_CAMERA","lat":1,"lon":2,"report_ts":100},
+          {"alert_source":"waze","alert_id":"w4","type":"HAZARD_ON_ROAD","lat":1,"lon":2,"report_ts":100},
           {"alert_source":"waze","alert_id":"bad","type":"POLICE_VISIBLE","lat":200,"lon":2,"report_ts":100}
         ]}}""")
-        assertEquals(2, batch.incidents.size)
+        // WzSabre sends Waze names (POLICE, CAMERA, POLICE_WITH_MOBILE_CAMERA) as well as the spec names.
+        assertEquals(5, batch.incidents.size)
+        assertEquals(listOf(AlertKind.POLICE, AlertKind.SPEED_CAMERA, AlertKind.POLICE, AlertKind.SPEED_CAMERA, AlertKind.SPEED_CAMERA),
+            batch.incidents.map { it.kind })
         assertEquals(AlertKind.POLICE, batch.incidents.first().kind)
         assertEquals(100_000L, batch.incidents.first().reportedAtMs)
         assertTrue(batch.incidents.first().headings.isEmpty())
-        assertEquals(1_310_000L, batch.incidents.last().expiresAtMs)
+        assertEquals(1_310_000L, batch.incidents[1].expiresAtMs)
     }
     @Test(expected = IllegalArgumentException::class) fun rejectsInvalidBatchIndex() {
         SabreProtocol.batch("""{"request_id":"r1","response":{"n_batches":1,"batch_id":1,"alerts":[]}}""")

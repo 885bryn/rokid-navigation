@@ -45,11 +45,11 @@ data class HudState(
 data class HudRoad(val points: List<LatLng>, val name: String, val major: Boolean)
 
 sealed interface HudMode {
-    /** Bottom corners leave the road in the upper/central field clear. Tap to expand. */
+    /** Bottom corners leave the road in the upper/central field clear. Tap cycles Compact → Map → Minimal. */
     data object Compact : HudMode
     /** Default: maneuver banner + map + status strip. */
     data object Map : HudMode
-    /** Banner + status only, map hidden — less light in the eye, e.g. on highways. */
+    /** Corner instructions and ETA only, map turned off: least light in the eye and least power. */
     data object Minimal : HudMode
     /** Long-press menu. [index] is the highlighted item. */
     data class Menu(val page: MenuPage, val index: Int = 0) : HudMode
