@@ -96,7 +96,7 @@ class HudStore(private val clock:()->Long=System::currentTimeMillis,private val 
                 sendAction(GlassesAction(0,if(key==GlassesKey.TAP)ActionType.ACCEPT_DETOUR else ActionType.DISMISS_DETOUR,d.offerId))
                 mutable.update {it.copy(detour=null)}
             }
-            key==GlassesKey.LONG_PRESS->{returnMode=s.mode;mode(HudMode.Menu(MenuPage.ROOT))}
+            key==GlassesKey.MENU->{returnMode=s.mode;mode(HudMode.Menu(MenuPage.ROOT))}
             key==GlassesKey.TAP->mode(when(s.mode){HudMode.Compact->HudMode.Map;HudMode.Map->HudMode.Minimal;else->HudMode.Compact})
             key==GlassesKey.SWIPE_FORWARD->{mutable.update {it.copy(mapZoom=(it.mapZoom-1).coerceAtLeast(0))};sendAction(GlassesAction(0,ActionType.ZOOM_IN))}
             key==GlassesKey.SWIPE_BACK->{mutable.update {it.copy(mapZoom=(it.mapZoom+1).coerceAtMost(2))};sendAction(GlassesAction(0,ActionType.ZOOM_OUT))}
@@ -107,7 +107,7 @@ class HudStore(private val clock:()->Long=System::currentTimeMillis,private val 
     }
     private fun mode(value:HudMode){mutable.update {it.copy(mode=value)}}
     private fun menuKey(menu:HudMode.Menu,key:GlassesKey) {
-        if(key==GlassesKey.LONG_PRESS){mode(returnMode);return}
+        if(key==GlassesKey.MENU){mode(returnMode);return}
         if(key==GlassesKey.DOUBLE_TAP || key==GlassesKey.BACK){mode(if(menu.page==MenuPage.ROOT)returnMode else HudMode.Menu(MenuPage.ROOT));return}
         val count=when(menu.page){MenuPage.ROOT->5;MenuPage.SETTINGS->3;else->1}
         if(key==GlassesKey.SWIPE_FORWARD || key==GlassesKey.SWIPE_BACK){mode(menu.copy(index=(menu.index+if(key==GlassesKey.SWIPE_FORWARD)1 else count-1)%count));return}

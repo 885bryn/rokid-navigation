@@ -43,8 +43,8 @@ class HudStoreTest {
         assertEquals(HudMode.Compact, store.state.value.mode)
     }
 
-    @Test fun longPressOpensMenuDoubleTapCloses() {
-        store.onKey(GlassesKey.LONG_PRESS)
+    @Test fun twoFingerTapOpensMenuDoubleTapCloses() {
+        store.onKey(GlassesKey.MENU)
         assertEquals(HudMode.Menu(MenuPage.ROOT), store.state.value.mode)
         store.onKey(GlassesKey.DOUBLE_TAP)
         assertEquals(HudMode.Compact, store.state.value.mode)
@@ -80,7 +80,7 @@ class HudStoreTest {
 
     @Test fun newAlertsNeverInterruptTheMenu() {
         val alert=com.rokidnav.protocol.Alert(1,"p1",com.rokidnav.protocol.AlertKind.POLICE,1000,0.0,0.0)
-        store.onKey(GlassesKey.LONG_PRESS)
+        store.onKey(GlassesKey.MENU)
         store.onMessage(alert)
         assertEquals(HudMode.Menu(MenuPage.ROOT),store.state.value.mode)
         assertEquals(1,store.state.value.alerts.size)
@@ -93,7 +93,7 @@ class HudStoreTest {
         assertEquals(false,store.onKey(GlassesKey.BACK))
         assertEquals(1,store.state.value.alerts.size)                      // alerts are not dismissed by it
         // Menu: back out of it.
-        store.onKey(GlassesKey.LONG_PRESS)
+        store.onKey(GlassesKey.MENU)
         assertEquals(true,store.onKey(GlassesKey.DOUBLE_TAP))
         assertEquals(HudMode.Compact,store.state.value.mode)
         // Detour offer: double-tap keeps the current route.
@@ -130,14 +130,14 @@ class HudStoreTest {
         var now=1000L
         val actions=mutableListOf<GlassesAction>()
         val hud=HudStore(clock={now}){actions+=it}
-        hud.onKey(GlassesKey.LONG_PRESS)
+        hud.onKey(GlassesKey.MENU)
         repeat(4){hud.onKey(GlassesKey.SWIPE_FORWARD)}
         hud.onKey(GlassesKey.TAP)
         assertEquals(MenuPage.CONFIRM_END,(hud.state.value.mode as HudMode.Menu).page)
         assertEquals(0,actions.size)
         hud.onKey(GlassesKey.TAP)
         assertEquals(ActionType.END_NAVIGATION,actions.single().action)
-        hud.onKey(GlassesKey.LONG_PRESS)
+        hud.onKey(GlassesKey.MENU)
         now+=10_000
         hud.tick()
         assertEquals(HudMode.Compact,hud.state.value.mode)
@@ -158,7 +158,7 @@ class HudStoreTest {
         now+=5000;hud.tick();hud.tick()
         assertEquals(1,resyncs)
         hud.onKey(GlassesKey.TAP)
-        hud.onKey(GlassesKey.LONG_PRESS)
+        hud.onKey(GlassesKey.MENU)
         now+=10000;hud.tick()
         assertEquals(HudMode.Map,hud.state.value.mode)
     }

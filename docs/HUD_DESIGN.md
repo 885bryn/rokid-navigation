@@ -30,7 +30,7 @@ The native 480×640 viewport now uses a bottom-corner composition, uniformly fit
   always stay visible. Detour controls replace the maneuver block.
 - Tap cycles **corner map → big map → instructions only** (map off). A pending detour retains tap/2× tap accept/keep priority.
   Alerts need no input. Double tap / Back exit to the Rokid home screen unless the menu, a detour offer
-  or the arrival screen needs them. Long press opens the existing menu; closing/timeout restores the
+  or the arrival screen needs them. A two-finger tap opens the existing menu (touch and hold stays with the Rokid AI assistant); closing/timeout restores the
   previous compact or expanded mode. AI assistant input belongs to the system.
 - Expanded uses Claude's proportionate 480×398 composition. No automatic expansion or attention-
   seeking animation occurs. Idle/arrival messages also stay low in the compact layout.
@@ -78,12 +78,13 @@ Rokid temple touchpad. Broadcast names from the CXR docs; single-finger swipe de
 |---|---|---|---|
 | Tap | cycle corner map → big map → instructions only | **accept detour** | select |
 | Double tap | **exit to Rokid home** (task kept, trip resumes on return) | **keep current route** | back / close |
-| Long press | open menu | open menu | close |
+| Two-finger tap | open menu | open menu | close |
+| Touch and hold | Rokid AI assistant (not used by the HUD) | — | — |
 | Swipe forward | zoom in | — | next item |
 | Swipe back | zoom out | — | previous item |
 | AI button | system (never consumed) | | |
 
-## Menu (long press)
+## Menu (two-finger tap)
 Root list, all 5 rows visible at 54 px each, highlighted row filled:
 1. **Trip info** — arrival time, time left, distance left, next 3 maneuvers with distances.
 2. **Traffic & routes** — current delay, worst congestion ahead ("Jam in 2.1 mi, 1.3 mi long"),

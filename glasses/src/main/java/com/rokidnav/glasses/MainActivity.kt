@@ -47,7 +47,9 @@ class MainActivity:AppCompatActivity() {
             override fun onDown(e:MotionEvent)=true
             override fun onSingleTapConfirmed(e:MotionEvent):Boolean {vm.onKey(GlassesKey.TAP);return true}
             override fun onDoubleTap(e:MotionEvent):Boolean {handleKey(GlassesKey.DOUBLE_TAP);return true}
-            override fun onLongPress(e:MotionEvent){vm.onKey(GlassesKey.LONG_PRESS)}
+            // Phone preview only: a phone has no two-finger touchpad gesture, so long press stands in for
+            // MENU there. On the glasses touch and hold belongs to the Rokid AI assistant.
+            override fun onLongPress(e:MotionEvent){if(intent.getBooleanExtra("phonePreview",false) || intent.getBooleanExtra("demo",false))vm.onKey(GlassesKey.MENU)}
             override fun onFling(e1:MotionEvent?,e2:MotionEvent,velocityX:Float,velocityY:Float):Boolean {
                 val start=e1 ?: return false
                 if(kotlin.math.abs(e2.x-start.x)<hud.width*.1f)return false

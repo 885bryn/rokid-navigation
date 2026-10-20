@@ -26,16 +26,19 @@ enum class KeyType(val action: String) {
 
 /** Our normalized input vocabulary. HUD logic only ever sees these. */
 enum class GlassesKey {
-    TAP, DOUBLE_TAP, LONG_PRESS, SWIPE_FORWARD, SWIPE_BACK, BACK;
+    /** [MENU] opens and closes the menu: a two-finger tap on the glasses (user request 2026-10-20). */
+    TAP, DOUBLE_TAP, MENU, SWIPE_FORWARD, SWIPE_BACK, BACK;
 
     companion object {
         fun fromKeyType(t: KeyType): GlassesKey? = when (t) {
             KeyType.CLICK -> TAP
             KeyType.DOUBLE_CLICK -> DOUBLE_TAP
-            KeyType.LONG_PRESS -> LONG_PRESS
+            // VERIFY: two-finger single tap delivery is from the CXR docs, not yet seen on hardware.
+            KeyType.TWO_FINGER_SINGLE_TAP -> MENU
             KeyType.TWO_FINGER_SWIPE_FORWARD -> SWIPE_FORWARD
             KeyType.TWO_FINGER_SWIPE_BACK -> SWIPE_BACK
-            else -> null // AI_START etc. belong to the system; never consume them
+            // Touch and hold starts the Rokid AI assistant, so LONG_PRESS (like AI_START) stays with the system.
+            else -> null
         }
 
         /** TODO(M3): fill in from on-device logging. DPAD guesses below are placeholders. */

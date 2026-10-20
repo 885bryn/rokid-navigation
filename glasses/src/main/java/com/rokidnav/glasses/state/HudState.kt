@@ -53,7 +53,7 @@ sealed interface HudMode {
     data object Map : HudMode
     /** Corner instructions and ETA only, map turned off: least light in the eye and least power. */
     data object Minimal : HudMode
-    /** Long-press menu. [index] is the highlighted item. */
+    /** Menu (two-finger tap). [index] is the highlighted item. */
     data class Menu(val page: MenuPage, val index: Int = 0) : HudMode
 }
 
