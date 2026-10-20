@@ -140,7 +140,7 @@ private fun SetupScreen(link:GlassesLink,events:List<String>,authorize:()->Unit,
         if(BuildConfig.DEBUG){
             HorizontalDivider(color=Color(0xFF25382D))
             Text("HUD preview",style=MaterialTheme.typography.titleMedium)
-            Text("The green HUD uses a demo route. Swipe, tap, double tap, or long press (stands in for the glasses' two-finger tap menu) to try its controls.",color=Color.LightGray)
+            Text("The green HUD uses a demo route. Tap to change the view; double tap exits.",color=Color.LightGray)
             OutlinedButton(onClick={runCatching(preview)}){Text("Preview on this phone")}
         }
         if(BuildConfig.MAPS_API_KEY.isBlank())Text("Google navigation needs an API key before live routing can be enabled.",color=Color.Gray)

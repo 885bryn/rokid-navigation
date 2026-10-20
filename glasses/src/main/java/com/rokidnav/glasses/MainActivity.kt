@@ -47,9 +47,6 @@ class MainActivity:AppCompatActivity() {
             override fun onDown(e:MotionEvent)=true
             override fun onSingleTapConfirmed(e:MotionEvent):Boolean {vm.onKey(GlassesKey.TAP);return true}
             override fun onDoubleTap(e:MotionEvent):Boolean {handleKey(GlassesKey.DOUBLE_TAP);return true}
-            // Phone preview only: a phone has no two-finger touchpad gesture, so long press stands in for
-            // MENU there. On the glasses touch and hold belongs to the Rokid AI assistant.
-            override fun onLongPress(e:MotionEvent){if(intent.getBooleanExtra("phonePreview",false) || intent.getBooleanExtra("demo",false))vm.onKey(GlassesKey.MENU)}
             override fun onFling(e1:MotionEvent?,e2:MotionEvent,velocityX:Float,velocityY:Float):Boolean {
                 val start=e1 ?: return false
                 if(kotlin.math.abs(e2.x-start.x)<hud.width*.1f)return false
@@ -75,7 +72,7 @@ class MainActivity:AppCompatActivity() {
     /**
      * Every input path lands here. Double-tap and Back are one "back" gesture: Rokid can report a single
      * double-click both as a broadcast and as a Back key, so a second report within 700 ms repeats the
-     * first decision instead of acting twice (e.g. closing the menu and then exiting). Returns true when
+     * first decision instead of acting twice (e.g. keeping a detour and then exiting). Returns true when
      * the HUD used the key; a back gesture it doesn't need returns to the Rokid home screen.
      */
     private fun handleKey(key:GlassesKey):Boolean {

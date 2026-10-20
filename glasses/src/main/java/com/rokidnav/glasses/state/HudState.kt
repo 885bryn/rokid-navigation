@@ -53,17 +53,5 @@ sealed interface HudMode {
     data object Map : HudMode
     /** Corner instructions and ETA only, map turned off: least light in the eye and least power. */
     data object Minimal : HudMode
-    /** Menu (two-finger tap). [index] is the highlighted item. */
-    data class Menu(val page: MenuPage, val index: Int = 0) : HudMode
 }
 
-enum class MenuPage { ROOT, TRIP_INFO, TRAFFIC, SETTINGS, CONFIRM_END }
-
-/** Root menu items in display order. */
-enum class MenuItem(val label: String) {
-    TRIP_INFO("Trip info"),
-    TRAFFIC("Traffic & routes"),
-    TOGGLE_VOICE("Voice on/off"),
-    SETTINGS("Display"),
-    END("End navigation"),
-}

@@ -122,7 +122,7 @@ fun SettingsScreen(app:RokidNavApp) {
     val policeStatus by app.policeProvider.status.collectAsState()
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(14.dp)) {
         Text("Display & alerts",style=MaterialTheme.typography.headlineMedium)
-        Text("The glasses use the bottom corners. Tap to change the view; tap with two fingers for the menu.")
+        Text("The glasses use the bottom corners. Tap the glasses to change the view. Trip details and settings are here on the phone.")
         Row {Switch(!settings.voiceMuted,{value->app.settings.update {it.copy(voiceMuted=!value)}});Text("Voice guidance")}
         OutlinedButton(onClick={app.settings.update {it.copy(units=if(it.units==Units.IMPERIAL)Units.METRIC else Units.IMPERIAL)}}){Text("Units: ${settings.units}")}
         OutlinedButton(onClick={app.settings.update {it.copy(zoom=(it.zoom+1)%3)}}){Text("Map zoom: ${when(settings.zoom){0->"Close";2->"Far";else->"Default"}}")}

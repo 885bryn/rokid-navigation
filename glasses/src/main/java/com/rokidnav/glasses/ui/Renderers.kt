@@ -79,14 +79,9 @@ class HudRenderer(context: Context) {
     private var alertKind = ""
     private var detourSaving = ""
     private var detourVia = ""
-    private var menuDestination = ""
     private var destination = ""
     private var exit = ""
     private var jamLabel = ""
-    private val menuLabels = arrayOf("Trip info", "Traffic & routes", "Voice guidance", "Display", "End navigation")
-    private val displayLabels = arrayOf("Units", "Zoom", "Back")
-    private var unitsLabel = ""
-    private var zoomLabel = ""
 
     fun prepare(next: HudState) {
         val old = s
@@ -237,9 +232,6 @@ class HudRenderer(context: Context) {
         }
         next.detour?.let { d -> detourSaving="Save ${Format.duration(d.savesSeconds)}"; detourVia=ellipsize("${d.via} · +${Format.distance(d.extraMeters,next.units)}",20f,284f) }
         destination=ellipsize(next.destinationName,26f,420f)
-        menuDestination=ellipsize("${next.destinationName} · $eta",18f,280f)
-        unitsLabel=if(next.units==Units.IMPERIAL) "mi / ft" else "km / m"
-        zoomLabel=when(next.mapZoom) {0->"Close"; 2->"Far"; else->"Default"}
         val along=next.position?.metersAlongRoute ?: 0
         val jam=next.traffic.firstOrNull { it.level==TrafficLevel.JAM && it.endMeters>along }
         jamLabel=if(jam==null) "" else "in ${Format.distance((jam.startMeters-along).coerceAtLeast(0),next.units)} · ${Format.distance(jam.endMeters-jam.startMeters,next.units)} long"
@@ -320,7 +312,6 @@ class HudRenderer(context: Context) {
         }
         when {
             s.navState==NavState.ARRIVED -> arrived(c)
-            s.mode is HudMode.Menu -> menu(c,s.mode as HudMode.Menu)
             s.navState==NavState.IDLE || s.navState==NavState.ENDED -> {
                 center(c,"Rokid Nav",240f,184f,44f,b=true); center(c,"Start a trip in Rokid Nav on your phone",240f,226f,24f,180)
                 center(c,"Trip running? Tap Show on glasses",240f,258f,20f,140)
@@ -489,13 +480,22 @@ class HudRenderer(context: Context) {
         // Streets: visible but clearly below the route. Residential 2.5 px at 45%, major 4 px at 65%.
         c.drawPath(minorRoads,paint(alpha=115,stroke=(if(compact)2f else 2.5f)/ppm))
         c.drawPath(majorRoads,paint(alpha=166,stroke=(if(compact)3f else 4f)/ppm))
-        // Route: a bright hollow tube with a black middle (user request 2026-10-20, replacing the solid
-        // line), plus a black outer edge that separates it from any street it runs along or crosses.
-        // Traffic is shown by the side ribbon in the expanded map and the delay badge, not on the route.
+        // Route: a bright hollow tube with a black middle (user request 2026-10-20), plus a black outer
+        // edge that separates it from any street it runs along or crosses. Congestion fills the middle:
+        // slow traffic dashed, a jam solid, so a jammed stretch reads as one thick bright line.
         val routeW=if(compact)8f else 12f
         c.drawPath(routePath,paint(black=true,stroke=(routeW+6f)/ppm))
         c.drawPath(routePath,paint(stroke=routeW/ppm))
         c.drawPath(routePath,paint(black=true,stroke=routeW*0.45f/ppm))
+        var seg=0
+        while(seg<trafficPaths.size) {
+            if(trafficLevels[seg]!=TrafficLevel.NORMAL) {
+                val p=paint(stroke=routeW*0.5f/ppm)
+                if(trafficLevels[seg]==TrafficLevel.SLOW)p.pathEffect=slowDash(ppm)
+                c.drawPath(trafficPaths[seg],p)
+            }
+            seg++
+        }
         // Turn arrow just past the turn, pointing the way to go, once the turn is in view.
         val toStep=s.maneuver?.distanceToStepMeters
         if(hasManeuverPoint && toStep!=null && toStep<aheadMeters && turnArrowAt(position.metersAlongRoute.coerceAtLeast(0)+toStep+25.0)) {
@@ -580,6 +580,15 @@ class HudRenderer(context: Context) {
         }
         }
     }
+    /** 7 px on / 6 px off on screen; rebuilt only when the scale changes by more than 10%. */
+    private fun slowDash(ppm:Float):DashPathEffect {
+        if(slowDashEffect==null || kotlin.math.abs(ppm-slowDashPpm)>slowDashPpm*0.1f) {
+            slowDashPpm=ppm;slowDashEffect=DashPathEffect(floatArrayOf(7f/ppm,6f/ppm),0f)
+        }
+        return slowDashEffect!!
+    }
+    private var slowDashEffect:DashPathEffect?=null
+    private var slowDashPpm=0f
     /** Sets [arrowX]/[arrowY]/[arrowDeg] to the route point [meters] along and its heading; false past the end. */
     private fun turnArrowAt(meters:Double):Boolean {
         var i=1
@@ -668,36 +677,6 @@ class HudRenderer(context: Context) {
         c.drawLine(30f,242f,30f+286f*((d.expiresAtMs-s.nowMs)/30_000f).coerceIn(0f,1f),242f,paint(stroke=4f))
         box(c,30f,264f,69f,287f,6f,fill=true);text(c,"TAP",37f,281f,15f,b=true,black=true);text(c,"take it",76f,282f,18f)
         box(c,159f,264f,218f,287f,6f,alpha=191);text(c,"2× TAP",165f,281f,15f,191,b=true);text(c,"keep",227f,282f,18f,191)
-    }
-    private fun menu(c:Canvas,m:HudMode.Menu) {
-        if(m.page==MenuPage.TRIP_INFO){trip(c);return}
-        text(c,when(m.page){MenuPage.TRAFFIC->"TRAFFIC & ROUTES";MenuPage.SETTINGS->"DISPLAY";MenuPage.CONFIRM_END->"END NAVIGATION";else->"MENU"},18f,38f,16f,153,b=true)
-        right(c,menuDestination,462f,38f,18f,153)
-        if(m.page==MenuPage.CONFIRM_END){center(c,"End this trip?",240f,170f,44f,b=true);center(c,"TAP to end · 2× TAP to keep going",240f,230f,22f);return}
-        if(m.page==MenuPage.TRAFFIC){text(c,delayLabel,30f,108f,44f,b=true);text(c,jamLabel,30f,152f,22f,217);box(c,18f,194f,462f,248f,12f);text(c,"Find faster route",34f,230f,26f,b=true);return}
-        val count=if(m.page==MenuPage.SETTINGS)4 else 5
-        var i=0
-        while(i<count) {
-            val top=52f+i*54f;val selected=m.index==i
-            if(selected){box(c,18f,top,462f,top+54,12f);c.drawLine(22f,top+14,22f,top+40,paint(stroke=3f))}
-            text(c,if(m.page==MenuPage.SETTINGS)displayLabels[i] else menuLabels[i],34f,top+36,26f,if(selected)255 else 200,selected,false)
-            val value=if(m.page==MenuPage.SETTINGS)when(i){0->unitsLabel;1->zoomLabel;else->""} else when(i){1->delayLabel;2->if(s.voiceMuted)"OFF" else "ON";else->""}
-            right(c,value,424f,top+33,20f,if(selected)255 else 163,black=false)
-            if(i!=2 && i!=4 && m.page==MenuPage.ROOT){c.drawLine(436f,top+20,444f,top+27,paint(black=false,stroke=2.6f));c.drawLine(444f,top+27,436f,top+34,paint(black=false,stroke=2.6f))}
-            i++
-        }
-        center(c,"SWIPE  move       TAP  select       2× TAP  back",240f,378f,15f,140)
-    }
-    private fun trip(c:Canvas) {
-        text(c,"TRIP INFO",18f,36f,16f,153,b=true);right(c,destination,462f,36f,18f,153)
-        text(c,"Arrive",18f,104f,22f,191);text(c,eta,84f,109f,64f,b=true)
-        var i=0
-        while(i<3){val l=18f+i*151f;box(c,l,129f,l+141f,197f,10f,alpha=230);text(c,when(i){0->remainingTime;1->remainingDistance;else->delayLabel},l+12,163f,30f,b=true);text(c,when(i){0->"left";1->"to go";else->"traffic"},l+12,186f,15f,149);i++}
-        text(c,"NEXT TURNS",18f,227f,15f,153,b=true)
-        val current=s.maneuver
-        if(current!=null){glyphs.draw(c,current.current.maneuver,18f,242f,26f,paint(stroke=8.4f));text(c,number,56f,266f,22f,b=true);text(c,road,132f,266f,22f,217)
-            current.next?.let { glyphs.draw(c,it.maneuver,18f,280f,26f,paint(alpha=191,stroke=8.4f));text(c,it.roadName,132f,304f,22f,191) }}
-        // Protocol currently carries only current + one next step; never invent a third turn/distance.
     }
     private fun arrived(c:Canvas) {
         c.drawCircle(240f,112f,42f,paint(stroke=6f));c.drawLine(221f,114f,234f,127f,paint(stroke=6f));c.drawLine(234f,127f,260f,99f,paint(stroke=6f))

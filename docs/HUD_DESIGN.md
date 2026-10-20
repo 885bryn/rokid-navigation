@@ -29,9 +29,10 @@ The native 480×640 viewport now uses a bottom-corner composition, uniformly fit
 - Alerts are a small chip in the map's top-left corner (compact) or top-right (expanded); trip stats
   always stay visible. Detour controls replace the maneuver block.
 - Tap cycles **corner map → big map → instructions only** (map off). A pending detour retains tap/2× tap accept/keep priority.
-  Alerts need no input. Double tap / Back exit to the Rokid home screen unless the menu, a detour offer
-  or the arrival screen needs them. A two-finger tap opens the existing menu (touch and hold stays with the Rokid AI assistant); closing/timeout restores the
-  previous compact or expanded mode. AI assistant input belongs to the system.
+  Alerts need no input. Double tap / Back exit to the Rokid home screen unless a detour offer or the
+  arrival screen needs them. There is no HUD menu (removed 2026-10-20: touch and hold belongs to the Rokid
+  AI assistant and the glasses deliver no two-finger tap); trip details and settings are on the phone.
+  AI assistant input belongs to the system.
 - Expanded uses Claude's proportionate 480×398 composition. No automatic expansion or attention-
   seeking animation occurs. Idle/arrival messages also stay low in the compact layout.
 
@@ -74,26 +75,18 @@ map turned off. Third view in the tap cycle; no map frames are drawn, so it uses
 Rokid temple touchpad. Broadcast names from the CXR docs; single-finger swipe delivery is unknown
 (probably KeyEvents) — log raw events on hardware in M3 and adjust `GlassesKey.fromKeyCode`.
 
-| Gesture | Map / Minimal | Detour prompt showing | Menu |
-|---|---|---|---|
-| Tap | cycle corner map → big map → instructions only | **accept detour** | select |
-| Double tap | **exit to Rokid home** (task kept, trip resumes on return) | **keep current route** | back / close |
-| Two-finger tap | open menu | open menu | close |
-| Touch and hold | Rokid AI assistant (not used by the HUD) | — | — |
-| Swipe forward | zoom in | — | next item |
-| Swipe back | zoom out | — | previous item |
-| AI button | system (never consumed) | | |
+| Gesture | Driving views | Detour prompt showing |
+|---|---|---|
+| Tap | cycle corner map → big map → instructions only | **accept detour** |
+| Double tap | **exit to Rokid home** (task kept, trip resumes on return) | **keep current route** |
+| Touch and hold | Rokid AI assistant (not used by the HUD) | — |
+| Swipe forward / back | zoom in / out (if the glasses deliver it) | — |
+| AI button | system (never consumed) | |
 
-## Menu (two-finger tap)
-Root list, all 5 rows visible at 54 px each, highlighted row filled:
-1. **Trip info** — arrival time, time left, distance left, next 3 maneuvers with distances.
-2. **Traffic & routes** — current delay, worst congestion ahead ("Jam in 2.1 mi, 1.3 mi long"),
-   "Find faster route" (sends SHOW_ALTERNATIVES → phone runs a poll and may send a detour_offer).
-3. **Voice on/off** — TOGGLE_VOICE.
-4. **Display** — units, default zoom. Brightness stays with the global Rokid setting.
-5. **End navigation** — confirm page (tap = end, double tap = cancel).
-
-Auto-close after 10 s without input. Alerts do not interrupt the menu; their chip shows after it closes.
+## Menu (removed 2026-10-20)
+The HUD has no menu. Touch and hold starts the Rokid AI assistant and the glasses never delivered the
+two-finger tap, so no gesture was left to open it. Trip info, traffic, voice, units, zoom and End
+navigation are on the phone.
 
 ## Visual spec (from the mockups; px at 480×398, scale by viewWidth / 480)
 
@@ -194,8 +187,8 @@ the arrow on the maneuver's side is bright. The demo trip's first turn carries s
   behind or out of reach. Names already shown keep their place; at most one new name per 2 s. At most
   4 names on the big map, 2 on the corner map.
 - **Big map zoom (2026-10-20):** shows 2.5× more road than the corner map, for an overview of the route.
-- **Traffic:** never drawn inside the route (user request: no dark marks in the line). Shown by the
-  expanded map's side ribbon and the status delay badge.
+- **Traffic (2026-10-20):** fills the tube's black middle: slow traffic dashed, a jam solid, so a
+  jammed stretch reads as one thick bright line. The big map's side ribbon and the delay badge stay.
 - **Turn arrow:** filled arrowhead with a black edge 25 m past the turn, pointing along the route, shown
   once the turn is within the visible distance.
 - **Streets:** residential 2.5 px at 45%, major 4 px at 65% (compact 2 / 3 px).

@@ -43,13 +43,6 @@ class HudStoreTest {
         assertEquals(HudMode.Compact, store.state.value.mode)
     }
 
-    @Test fun twoFingerTapOpensMenuDoubleTapCloses() {
-        store.onKey(GlassesKey.MENU)
-        assertEquals(HudMode.Menu(MenuPage.ROOT), store.state.value.mode)
-        store.onKey(GlassesKey.DOUBLE_TAP)
-        assertEquals(HudMode.Compact, store.state.value.mode)
-    }
-
     @Test fun alertCountsDownClearsAndEndsWithTrip() {
         val alert = com.rokidnav.protocol.Alert(1, "p1", com.rokidnav.protocol.AlertKind.POLICE,
             1000, 0.0, 0.01, "Police reported", "WzSabre")
@@ -78,24 +71,12 @@ class HudStoreTest {
         assertEquals(false,hud.state.value.phoneSilent)
     }
 
-    @Test fun newAlertsNeverInterruptTheMenu() {
-        val alert=com.rokidnav.protocol.Alert(1,"p1",com.rokidnav.protocol.AlertKind.POLICE,1000,0.0,0.0)
-        store.onKey(GlassesKey.MENU)
-        store.onMessage(alert)
-        assertEquals(HudMode.Menu(MenuPage.ROOT),store.state.value.mode)
-        assertEquals(1,store.state.value.alerts.size)
-    }
-
     @Test fun doubleTapAndBackGoToTheSystemUnlessTheHudNeedsThem() {
         // Plain driving view, even with an alert showing: hand it to the system (exit to Rokid home).
         store.onMessage(com.rokidnav.protocol.Alert(1,"p1",com.rokidnav.protocol.AlertKind.POLICE,1000,0.0,0.0))
         assertEquals(false,store.onKey(GlassesKey.DOUBLE_TAP))
         assertEquals(false,store.onKey(GlassesKey.BACK))
         assertEquals(1,store.state.value.alerts.size)                      // alerts are not dismissed by it
-        // Menu: back out of it.
-        store.onKey(GlassesKey.MENU)
-        assertEquals(true,store.onKey(GlassesKey.DOUBLE_TAP))
-        assertEquals(HudMode.Compact,store.state.value.mode)
         // Detour offer: double-tap keeps the current route.
         store.onMessage(DetourOffer(2,"d1",300,0,"via A",expiresAtMs=Long.MAX_VALUE))
         assertEquals(true,store.onKey(GlassesKey.DOUBLE_TAP))
@@ -126,22 +107,6 @@ class HudStoreTest {
         assertEquals(0,hud.state.value.alerts.size)
     }
 
-    @Test fun endTripRequiresConfirmAndMenuTimeoutIsDeterministic() {
-        var now=1000L
-        val actions=mutableListOf<GlassesAction>()
-        val hud=HudStore(clock={now}){actions+=it}
-        hud.onKey(GlassesKey.MENU)
-        repeat(4){hud.onKey(GlassesKey.SWIPE_FORWARD)}
-        hud.onKey(GlassesKey.TAP)
-        assertEquals(MenuPage.CONFIRM_END,(hud.state.value.mode as HudMode.Menu).page)
-        assertEquals(0,actions.size)
-        hud.onKey(GlassesKey.TAP)
-        assertEquals(ActionType.END_NAVIGATION,actions.single().action)
-        hud.onKey(GlassesKey.MENU)
-        now+=10_000
-        hud.tick()
-        assertEquals(HudMode.Compact,hud.state.value.mode)
-    }
     @Test fun staleMessagesCannotReplaceNewerTurnsAndSessionResetsSequence() {
         store.onMessage(com.rokidnav.protocol.ManeuverUpdate(20,com.rokidnav.protocol.Step(com.rokidnav.protocol.Maneuver.TURN_RIGHT),300,20))
         store.onMessage(com.rokidnav.protocol.ManeuverUpdate(19,com.rokidnav.protocol.Step(com.rokidnav.protocol.Maneuver.TURN_LEFT),500,40))
@@ -151,15 +116,11 @@ class HudStoreTest {
         store.onMessage(com.rokidnav.protocol.ManeuverUpdate(2,com.rokidnav.protocol.Step(com.rokidnav.protocol.Maneuver.TURN_LEFT),200,10))
         assertEquals(com.rokidnav.protocol.Maneuver.TURN_LEFT,store.state.value.maneuver!!.current.maneuver)
     }
-    @Test fun incompleteRouteRequestsOneResyncAndMenuReturnsToExpandedMode() {
+    @Test fun incompleteRouteRequestsOneResync() {
         var now=1000L;var resyncs=0
         val hud=HudStore(clock={now},requestResync={resyncs++}){}
         hud.onMessage(com.rokidnav.protocol.RouteChunk(1,"r",0,2,"??",100))
         now+=5000;hud.tick();hud.tick()
         assertEquals(1,resyncs)
-        hud.onKey(GlassesKey.TAP)
-        hud.onKey(GlassesKey.MENU)
-        now+=10000;hud.tick()
-        assertEquals(HudMode.Map,hud.state.value.mode)
     }
 }

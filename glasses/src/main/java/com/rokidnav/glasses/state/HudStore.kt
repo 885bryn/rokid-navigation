@@ -18,9 +18,7 @@ class HudStore(private val clock:()->Long=System::currentTimeMillis,private val 
     private val dismissed=HashSet<String>()
     private val alertUpdatedAt=HashMap<String,Long>()
     private var lastMessageAt=0L
-    private var menuTouched=0L
     private var arrivedAt=0L
-    private var returnMode:HudMode=HudMode.Compact
     fun onConnection(connected:Boolean){mutable.update {it.copy(linkConnected=connected)}}
     fun onMessage(m:NavMessage) {
         lastMessageAt=clock()
@@ -45,7 +43,7 @@ class HudStore(private val clock:()->Long=System::currentTimeMillis,private val 
             is TripProgress->mutable.update {it.copy(progress=m)}
             is TrafficSegments->if(m.routeId==routeId)mutable.update {it.copy(traffic=m.segments)}
             is RoadContext->if(m.routeId==routeId)acceptRoads(m)
-            // Alerts are passive: they never take over the menu or need a tap; the phone clears them once
+            // Alerts are passive: they never take over the screen or need a tap; the phone clears them once
             // passed, and tick() drops any the phone stops updating.
             is Alert->if(m.id !in dismissed){
                 alertUpdatedAt[m.id]=clock()
@@ -83,20 +81,17 @@ class HudStore(private val clock:()->Long=System::currentTimeMillis,private val 
     /**
      * Applies a key. Returns false when the HUD has no use for it, so the caller hands it to the system:
      * double-tap / Back then exits to the Rokid home screen. Double-tap is only kept where it has a job:
-     * back out of the menu, keep the current route on a detour offer, close the arrival screen.
+     * keep the current route on a detour offer, close the arrival screen. The HUD has no menu
+     * (removed 2026-10-20: the glasses deliver no spare gesture for it); trip and settings live on the phone.
      */
     fun onKey(key:GlassesKey):Boolean {
-        menuTouched=clock()
         val s=state.value
-        val menu=s.mode as? HudMode.Menu
-        if(menu!=null){menuKey(menu,key);return true}
         val d=s.detour
         when {
             d!=null && (key==GlassesKey.TAP || key==GlassesKey.DOUBLE_TAP)->{
                 sendAction(GlassesAction(0,if(key==GlassesKey.TAP)ActionType.ACCEPT_DETOUR else ActionType.DISMISS_DETOUR,d.offerId))
                 mutable.update {it.copy(detour=null)}
             }
-            key==GlassesKey.MENU->{returnMode=s.mode;mode(HudMode.Menu(MenuPage.ROOT))}
             key==GlassesKey.TAP->mode(when(s.mode){HudMode.Compact->HudMode.Map;HudMode.Map->HudMode.Minimal;else->HudMode.Compact})
             key==GlassesKey.SWIPE_FORWARD->{mutable.update {it.copy(mapZoom=(it.mapZoom-1).coerceAtLeast(0))};sendAction(GlassesAction(0,ActionType.ZOOM_IN))}
             key==GlassesKey.SWIPE_BACK->{mutable.update {it.copy(mapZoom=(it.mapZoom+1).coerceAtMost(2))};sendAction(GlassesAction(0,ActionType.ZOOM_OUT))}
@@ -106,30 +101,6 @@ class HudStore(private val clock:()->Long=System::currentTimeMillis,private val 
         return true
     }
     private fun mode(value:HudMode){mutable.update {it.copy(mode=value)}}
-    private fun menuKey(menu:HudMode.Menu,key:GlassesKey) {
-        if(key==GlassesKey.MENU){mode(returnMode);return}
-        if(key==GlassesKey.DOUBLE_TAP || key==GlassesKey.BACK){mode(if(menu.page==MenuPage.ROOT)returnMode else HudMode.Menu(MenuPage.ROOT));return}
-        val count=when(menu.page){MenuPage.ROOT->5;MenuPage.SETTINGS->3;else->1}
-        if(key==GlassesKey.SWIPE_FORWARD || key==GlassesKey.SWIPE_BACK){mode(menu.copy(index=(menu.index+if(key==GlassesKey.SWIPE_FORWARD)1 else count-1)%count));return}
-        if(key!=GlassesKey.TAP)return
-        when(menu.page) {
-            MenuPage.ROOT->when(menu.index) {
-                0->mode(HudMode.Menu(MenuPage.TRIP_INFO))
-                1->mode(HudMode.Menu(MenuPage.TRAFFIC))
-                2->{mutable.update {it.copy(voiceMuted=!it.voiceMuted)};sendAction(GlassesAction(0,ActionType.TOGGLE_VOICE))}
-                3->mode(HudMode.Menu(MenuPage.SETTINGS))
-                4->mode(HudMode.Menu(MenuPage.CONFIRM_END))
-            }
-            MenuPage.SETTINGS->when(menu.index) {
-                0->{mutable.update {it.copy(units=if(it.units==Units.IMPERIAL)Units.METRIC else Units.IMPERIAL)};sendAction(GlassesAction(0,ActionType.TOGGLE_UNITS))}
-                1->{mutable.update {it.copy(mapZoom=(it.mapZoom+1)%3)};sendAction(GlassesAction(0,ActionType.CYCLE_ZOOM))}
-                else->mode(HudMode.Menu(MenuPage.ROOT))
-            }
-            MenuPage.TRAFFIC->{sendAction(GlassesAction(0,ActionType.SHOW_ALTERNATIVES));mode(returnMode)}
-            MenuPage.CONFIRM_END->{sendAction(GlassesAction(0,ActionType.END_NAVIGATION));mode(returnMode)}
-            else->Unit
-        }
-    }
     fun tick(now:Long=clock()) {
         if(routePendingAt>0 && now-routePendingAt>=5000){routePendingAt=0;requestResync()}
         // The phone refreshes active alerts with every position fix; a silent one is stale (link drop).
@@ -140,7 +111,6 @@ class HudStore(private val clock:()->Long=System::currentTimeMillis,private val 
             phoneSilent=silent && s.navState in listOf(NavState.ACTIVE,NavState.REROUTING,NavState.GPS_LOST),
             alerts=if(stale.isEmpty())s.alerts else s.alerts.filterNot {it.id in stale},
             alertSeenAt=if(stale.isEmpty())s.alertSeenAt else s.alertSeenAt-stale,
-            mode=if(s.mode is HudMode.Menu && now-menuTouched>=10_000)returnMode else s.mode,
             navState=if(s.navState==NavState.ARRIVED && now-arrivedAt>=10_000)NavState.IDLE else s.navState)
             // Battery: the clock alone only matters while an alert or detour shows time-based content.
             // Otherwise an unchanged state is not re-emitted, so an idle HUD does not redraw every second.
